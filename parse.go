@@ -26,8 +26,8 @@ type (
 		Errors           map[string]error
 
 		// Generators that need to have their structures Re-Parsed once all references have been resolved
-		UnprocessedGenerators []*allOfGenerator
 		ReferenceResolver     referenceResolver
+		RootNode			  schemaNode
 	}
 
 	
@@ -124,18 +124,10 @@ func ParseSchema(schema []byte, opts *ParserOptions) (rootGenerator, error) {
 		ReferenceHandler: &refHandler,
 		Errors:           make(map[string]error),
 		ParserOptions:    withDefaultParseOptions(*opts),
+		RootNode:		  node,
 	}
 	generator, err := parseRoot(node, metadata)
-	for len(metadata.UnprocessedGenerators) > 0 {
-		generators := metadata.UnprocessedGenerators
-		metadata.UnprocessedGenerators = []*allOfGenerator{}
-		for _, unprocessedGenerator := range generators {
-			unprocessedGenerator.AfterParse(metadata)
-		}
-
-	}
 	
-
 	return generator, err
 }
 

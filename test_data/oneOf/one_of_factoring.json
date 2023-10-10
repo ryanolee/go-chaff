@@ -1,0 +1,7 @@
+{
+    "oneOf": [
+        {"type": "number", "multipleOf": 3},
+        {"type": "number", "multipleOf": 4.6},
+        {"type": "object", "properties": {"a": {"type": "string"}}}
+    ]
+}

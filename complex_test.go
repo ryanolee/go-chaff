@@ -7,7 +7,8 @@ import (
 )
 
 func TestComplexCase(t *testing.T){
-	t.Parallel()
-	//test.TestJsonSchemaDir(t, "test_data/complex", 100)
-	test.TestJsonSchema(t, "test_data/complex/dart-test.json", 100)
+	//t.Parallel()
+	
+	test.TestJsonSchemaDir(t, "test_data/complex", 100)
+	//test.TestJsonSchema(t, "test_data/oneOf/one_of_factoring.json", 100)
 }

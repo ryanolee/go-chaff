@@ -59,3 +59,15 @@ func minInt(a ...int) int {
 
 	return min
 }
+
+func getSchemaNode[T interface{}](nodeLists ...T) T {
+	var schemaNodes T
+
+	for _, nodeList := range nodeLists {
+		if len(nodeLists) > 0 {
+			schemaNodes = nodeList
+		}
+	}
+
+	return schemaNodes
+}

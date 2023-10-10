@@ -142,6 +142,7 @@ func parsePatternProperties(node schemaNode, metadata *parserMetadata) (map[stri
 func (g ObjectGenerator) Generate(opts *GeneratorOptions) interface{} {
 	// Generate Required Properties
 	generatedValues := make(map[string]interface{})
+	fmt.Println(g.Required)
 	for _, key := range g.Required {
 		generatedValues[key] = g.Properties[key].Generate(opts)
 	}
