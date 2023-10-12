@@ -9,6 +9,7 @@ import (
 
 // Based on a reference path and a schema node, resolve the schema node at the reference path
 func resolveReferencePath(node schemaNode, refPath string) (schemaNode, error) {
+	
 	if refPath == "" {
 		return node, nil
 	}
@@ -105,12 +106,14 @@ func resolveReferenceSlice(nodes []schemaNode, path string, resolvedPath string)
 	return resolveSubReferencePath(node, itemPath, resolvedPath)
 }
 
+var pathDeliminator = regexp.MustCompile(`\/`)  
+
 // Get the first token of a reference path and the rest of the path
 func getReferencePathToken(pathRef string) (string, string){
 	if !strings.Contains(pathRef, "/"){
 		return pathRef, ""
 	}
 	
-	refPathParts := strings.SplitAfterN(pathRef, "/", 2)
+	refPathParts := pathDeliminator.Split(pathRef, 2)
 	return refPathParts[0], refPathParts[1]
 }

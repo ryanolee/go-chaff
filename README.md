@@ -19,3 +19,11 @@ func main() {
 	}
 }
 ```
+
+
+# Current support:
+ * `string` (Including `pattern` through (regen)[https://github.com/zach-klippenstein/goregen/blob/master/regen.go] and `formats` through (go faker)[https://github.com/go-faker/faker])
+ * `number` and `integer` (Including `multipleOf`)
+ * Constant types: `enum`, `const`, `null`
+ * Combination types (`anyOf` / `oneOf` / `allOf`) **N.b Support for these is experimental at this stage. Expect things to break**
+ 

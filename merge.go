@@ -13,61 +13,32 @@ func newEmptySchemaNode() schemaNode {
 	}
 }
 
-func mergeSchemaNodesWithReplacement(metadata *parserMetadata, nodes ...schemaNode) (schemaNode, error) {
-	mergedNode := newEmptySchemaNode()
-
-	for _, node := range nodes {
-		if node.Ref != "" {
-			refNode, err := mergeResolveReference(metadata, node)
-			if err != nil {
-				continue
-			}
-			node = refNode
-		}
-
-		// Merge Type
-		if node.Type.SingleType != "" {
-			mergedNode.Type.SingleType = node.Type.SingleType
-			mergedNode.Type.MultipleTypes = nil
-		} else if len(node.Type.MultipleTypes) > 0 {
-			mergedNode.Type.MultipleTypes = node.Type.MultipleTypes
-			mergedNode.Type.SingleType = ""
-		}
-
-		node.Enum = getSchemaNode[[]interface{}](node.Enum, mergedNode.Enum)
-
-		// Merge properties
-		node.Properties = getSchemaNode[map[string]schemaNode](node.Properties, mergedNode.Properties)
-		node.PatternProperties = getSchemaNode[map[string]schemaNode](node.PatternProperties, mergedNode.PatternProperties)
-		node.PrefixItems = getSchemaNode[[]schemaNode](node.PrefixItems, mergedNode.PrefixItems)
-		
-
-		// Merge array items - @todo: Is this how the schema spec works?
-		//                            for merging prefixItems?
 
 
-		mergedNode.OneOf = getSchemaNode[[]schemaNode](mergedNode.OneOf, node.OneOf)
-		mergedNode.AnyOf = getSchemaNode[[]schemaNode](mergedNode.AnyOf, node.AnyOf)
-		mergedNode.AllOf = getSchemaNode[[]schemaNode](mergedNode.AllOf, node.AllOf)
-
-		mergedNode = mergeSchemaNodeSimpleProperties(mergedNode, node)
-	}
-
-	return mergedNode, nil
-}
-
-// Merges all sub properties of a given node recoursivley
+// Merges all sub properties of a given node  
 func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode, error) {
 	mergedNode := newEmptySchemaNode()
 
 	for _, node := range nodes {
-		if node.Ref != "" {
-			refNode, err := mergeResolveReference(metadata, node)
-			if err != nil {
-				continue
-			}
-			node = refNode
-		}
+		// Resolve references
+		//resolvedReference := false
+		
+		//for node.Ref != "" {
+		//	// Give up on the node if it is a circular reference
+		//	// We cannot easily resolve partial cases for this (especially for factoring or similar)
+		//	if metadata.ReferenceResolver.HasResolved(node.Ref) {
+		//		continue	
+		//	}
+		//	refNode, err := mergeResolveReference(metadata, node)
+		//	
+		//	if err != nil {
+		//		continue
+		//	}
+		//	metadata.ReferenceResolver.PushRefResolution(node.Ref)
+		//	resolvedReference = true
+		//	fmt.Println(metadata.ReferenceResolver.resolutions)	
+		//	node = refNode		
+		//}
 
 		// Merge Type
 		if node.Type.SingleType != "" {
@@ -118,6 +89,10 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 		mergedNode.AllOf = append(mergedNode.AllOf, node.AllOf...)
 
 		mergedNode = mergeSchemaNodeSimpleProperties(mergedNode, node)
+
+		//if resolvedReference {
+		//	metadata.ReferenceResolver.PopRefResolution()
+		//}
 	}
 
 	return mergedNode, nil

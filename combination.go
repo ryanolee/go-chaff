@@ -46,7 +46,6 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 
 		refPath := fmt.Sprintf("/%s/%d", nodeType, i)
 		generator, err := ref.ParseNodeInScope(refPath, mergedNode, metadata)
-		fmt.Println(refPath, generator, err)
 		if err != nil {
 			generators = append(generators, NullGenerator{})
 		} else {
