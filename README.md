@@ -1,7 +1,10 @@
 # go-chaff
-A Json Schema Faker for Go 🙈.
+A [Json Schema](https://json-schema.org/) Faker for Go 🙈.
 
 It will generate matching random for a given JSON schema
+
+## Installation
+```go get github.com/ryanolee/go-chaff@1```
 
 ## Usage
 ```go
