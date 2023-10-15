@@ -28,7 +28,7 @@ func TestNumberGenerate(t *testing.T) {
 				generator := &numberGenerator{
 					Min: testCase[0],
 					Max: testCase[1],
-					Type: TypeInteger,
+					Type: generatorTypeInteger,
 				}
 
 				result := generator.Generate(&GeneratorOptions{
@@ -55,7 +55,7 @@ func TestNumberGenerate(t *testing.T) {
 				generator := &numberGenerator{
 					Min: testCase[0],
 					Max: testCase[1],
-					Type: TypeNumber,
+					Type: generatorTypeNumber,
 				}
 
 				result := generator.Generate(&GeneratorOptions{
@@ -86,7 +86,7 @@ func TestNumberGenerate(t *testing.T) {
 				generator := &numberGenerator{
 					Min: testCase[0],
 					Max: testCase[1],
-					Type: TypeNumber,
+					Type: generatorTypeNumber,
 					MultipleOf: testCase[2],
 				}
 

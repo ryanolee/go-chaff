@@ -99,6 +99,8 @@ const (
 	typeNull   = "null"
 )
 
+// Parses a Json Schema file at the given path. If there is an error reading the file or
+// parsing the schema, an error will be returned
 func ParseSchemaFile(path string, opts *ParserOptions) (rootGenerator, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -110,6 +112,7 @@ func ParseSchemaFile(path string, opts *ParserOptions) (rootGenerator, error) {
 	return ParseSchema(data, opts)
 }
 
+// Parses a Json Schema byte array. If there is an error parsing the schema, an error will be returned.
 func ParseSchema(schema []byte, opts *ParserOptions) (rootGenerator, error) {
 	var node schemaNode
 	err := json.Unmarshal(schema, &node)
@@ -189,9 +192,9 @@ func parseType(nodeType string, node schemaNode, metadata *parserMetadata) (Gene
 	case typeArray:
 		return parseArray(node, metadata)
 	case typeNumber:
-		return parseNumber(node, TypeNumber)
+		return parseNumber(node, generatorTypeNumber)
 	case typeInteger:
-		return parseNumber(node, TypeInteger)
+		return parseNumber(node, generatorTypeInteger)
 	case typeString:
 		return parseString(node, metadata)
 	case typeBoolean:

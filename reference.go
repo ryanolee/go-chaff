@@ -19,7 +19,7 @@ type (
 // }
 func parseReference(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	if strings.Contains(node.Ref, "/allOf/") {
-		return ConstGenerator{
+		return constGenerator{
 			Value: "Invalid Reference containing '/allOf/'",
 		}, fmt.Errorf("references to things within allOf are not supported: %s", node.Ref)
 	}

@@ -8,12 +8,6 @@ import (
 
 const fullStringLiteral = "[~{FULL_STOP_LITERAL}~]"
 
-type (
-	RegexOptions struct {
-		regen.GeneratorArgs
-	}
-)
-
 func newRegexGenerator(pattern string, opts *regen.GeneratorArgs) (regen.Generator, error) {
 	if opts.SuppressRandomBytes {
 		pattern = strings.ReplaceAll(pattern, "\\.", fullStringLiteral)

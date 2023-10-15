@@ -5,12 +5,14 @@ import (
 )
 
 type (
+	// Root generator a given schema. Call the Generate method on this to generate a value
 	rootGenerator struct {
 		Generator Generator
 		// For any "$defs"
 		Defs map[string]Generator
 		// For any "definitions"
 		Definitions map[string]Generator
+		// Metadata related to parser operations
 		Metadata    *parserMetadata
 	}
 )
@@ -56,6 +58,7 @@ func parseDefinitions(path string, metadata *parserMetadata, definitions map[str
 	return generators
 }
 
+// Generates values based on the passed options
 func (g rootGenerator) Generate(opts *GeneratorOptions) interface{} {
 	opts = withGeneratorOptionsDefaults(*opts)
 	return g.Generator.Generate(opts)

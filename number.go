@@ -19,8 +19,8 @@ type (
 
 const (
 	infinitesimal = math.SmallestNonzeroFloat64
-	TypeInteger numberGeneratorType = "integer"
-	TypeNumber numberGeneratorType = "number"
+	generatorTypeInteger numberGeneratorType = "integer"
+	generatorTypeNumber numberGeneratorType = "number"
 
 	defaultOffset = 10
 )
@@ -112,13 +112,13 @@ func generateMultipleOf(rand rand.RandUtil, min float64, max float64, multiple f
 
 }
 func (g *numberGenerator) Generate(opts *GeneratorOptions) interface{} {
-	if g.Type == TypeInteger && g.MultipleOf != 0 {
+	if g.Type == generatorTypeInteger && g.MultipleOf != 0 {
 		return int(generateMultipleOf(*opts.Rand, g.Min, g.Max, g.MultipleOf))
-	} else if g.Type == TypeInteger && g.MultipleOf == 0 {
+	} else if g.Type == generatorTypeInteger && g.MultipleOf == 0 {
 		return int(math.Round(opts.Rand.RandomFloat(g.Min, g.Max)))
-	} else if g.Type == TypeNumber && g.MultipleOf != 0 {
+	} else if g.Type == generatorTypeNumber && g.MultipleOf != 0 {
 		return generateMultipleOf(*opts.Rand, g.Min, g.Max, g.MultipleOf)
-	} else if g.Type == TypeNumber && g.MultipleOf == 0 {
+	} else if g.Type == generatorTypeNumber && g.MultipleOf == 0 {
 		return opts.Rand.RandomFloat(g.Min, g.Max)
 	}
 

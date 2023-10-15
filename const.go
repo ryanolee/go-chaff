@@ -3,7 +3,7 @@ package chaff
 import "fmt"
 
 type (
-	ConstGenerator struct {
+	constGenerator struct {
 		Value interface{}
 	}
 )
@@ -13,16 +13,16 @@ type (
 // {
 //   "const": "foo"
 // }
-func parseConst(node schemaNode) (ConstGenerator, error) {
-	return ConstGenerator{
+func parseConst(node schemaNode) (constGenerator, error) {
+	return constGenerator{
 		Value: node.Const,
 	}, nil
 }
 
-func (g ConstGenerator) Generate(opts *GeneratorOptions) interface{} {
+func (g constGenerator) Generate(opts *GeneratorOptions) interface{} {
 	return g.Value
 }
 
-func (g ConstGenerator) String() string {
+func (g constGenerator) String() string {
 	return fmt.Sprintf("ConstGenerator[%s]", g.Value)
 }

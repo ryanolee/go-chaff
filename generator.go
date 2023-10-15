@@ -13,6 +13,9 @@ type (
 	}
 
 	GeneratorOptions struct {
+		// The source of randomness to use for the given generation.
+		// Please note that some parts of the generators use different sources of randomness.
+		// ("regex" generation and "format" strings)
 		Rand *rand.RandUtil
 
 		// The default minimum number value
