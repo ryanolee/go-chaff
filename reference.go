@@ -6,25 +6,30 @@ import (
 )
 
 type (
-	ReferenceGenerator struct {
+	referenceGenerator struct {
 		ReferenceStr     string
 		ReferenceHandler referenceHandler
 	}
 )
 
+// Parses the "$ref" keyword of a schema
+// Example:
+// {
+//   "$ref": "#/definitions/foo"
+// }
 func parseReference(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	if strings.Contains(node.Ref, "/allOf/") {
 		return ConstGenerator{
 			Value: "Invalid Reference containing '/allOf/'",
 		}, fmt.Errorf("references to things within allOf are not supported: %s", node.Ref)
 	}
-	return ReferenceGenerator{
+	return referenceGenerator{
 		ReferenceStr:     node.Ref,
 		ReferenceHandler: *metadata.ReferenceHandler,
 	}, nil
 }
 
-func (g ReferenceGenerator) Generate(opts *GeneratorOptions) interface{} {
+func (g referenceGenerator) Generate(opts *GeneratorOptions) interface{} {
 	reference, ok := g.ReferenceHandler.Lookup(g.ReferenceStr)
 	if !ok {
 		return nil
@@ -45,6 +50,6 @@ func (g ReferenceGenerator) Generate(opts *GeneratorOptions) interface{} {
 	return reference.Generator.Generate(opts)
 }
 
-func (g ReferenceGenerator) String() string {
+func (g referenceGenerator) String() string {
 	return fmt.Sprintf("ReferenceGenerator{%s}", g.ReferenceStr)
 }

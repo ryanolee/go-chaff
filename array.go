@@ -18,20 +18,30 @@ type (
 	}
 )
 
+// Parses the "array" keyword of a schema
+// Example:
+// {
+//   "type": "array",
+//   "items": {
+//     "type": "string"
+//   },
+//   "minItems": 1,
+//   "maxItems": 10
+// }
 func parseArray(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	// Validate Bounds
 	if node.MaxItems != 0 && node.MinItems > node.MaxItems {
-		return NullGenerator{}, fmt.Errorf("minItems must be less than or equal to maxItems (minItems: %d, maxItems: %d)", node.MinItems, node.MaxItems)
+		return nullGenerator{}, fmt.Errorf("minItems must be less than or equal to maxItems (minItems: %d, maxItems: %d)", node.MinItems, node.MaxItems)
 	}
 
 	if node.MaxContains != 0 && node.MinContains > node.MaxContains {
-		return NullGenerator{}, fmt.Errorf("minContains must be less than or equal to maxContains (minContains: %d, maxContains: %d)", node.MinContains, node.MaxContains)
+		return nullGenerator{}, fmt.Errorf("minContains must be less than or equal to maxContains (minContains: %d, maxContains: %d)", node.MinContains, node.MaxContains)
 	}
 
 	// Validate if tuple makes sense in this context
 	tupleLength := len(node.PrefixItems)
 	if tupleLength > node.MaxItems {
-		return NullGenerator{}, fmt.Errorf("tuple length must be less than or equal to maxItems (tupleLength: %d, maxItems: %d)", tupleLength, node.MaxItems)
+		return nullGenerator{}, fmt.Errorf("tuple length must be less than or equal to maxItems (tupleLength: %d, maxItems: %d)", tupleLength, node.MaxItems)
 	}
 
 	min := getInt(node.MinItems, node.MinContains)
@@ -77,7 +87,7 @@ func parseTupleGenerator(nodes []schemaNode, metadata *parserMetadata) []Generat
 		refPath := fmt.Sprintf("/prefixItems/%d", i)
 		generator, err := metadata.ReferenceHandler.ParseNodeInScope(refPath, item, metadata)
 		if err != nil {
-			generators = append(generators, NullGenerator{})
+			generators = append(generators, nullGenerator{})
 		} else {
 			generators = append(generators, generator)
 		}
@@ -123,7 +133,7 @@ func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
 	}
 
 	var itemGen Generator
-	itemGen = NullGenerator{}
+	itemGen = nullGenerator{}
 	if g.ItemGenerator != nil {
 		itemGen = g.ItemGenerator
 	} else if g.AdditionalItemsGenerator != nil {

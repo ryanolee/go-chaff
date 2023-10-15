@@ -103,7 +103,7 @@ func ParseSchemaFile(path string, opts *ParserOptions) (rootGenerator, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return rootGenerator{
-			Generator: NullGenerator{},
+			Generator: nullGenerator{},
 		}, err
 	}
 
@@ -115,7 +115,7 @@ func ParseSchema(schema []byte, opts *ParserOptions) (rootGenerator, error) {
 	err := json.Unmarshal(schema, &node)
 	if err != nil {
 		return rootGenerator{
-			Generator: NullGenerator{},
+			Generator: nullGenerator{},
 		}, err
 	}
 
@@ -185,7 +185,7 @@ func parseType(nodeType string, node schemaNode, metadata *parserMetadata) (Gene
 	// Handle object nodes
 	switch nodeType {
 	case typeObject:
-		return ParseObject(node, metadata)
+		return parseObject(node, metadata)
 	case typeArray:
 		return parseArray(node, metadata)
 	case typeNumber:
@@ -199,7 +199,7 @@ func parseType(nodeType string, node schemaNode, metadata *parserMetadata) (Gene
 	case typeNull:
 		return parseNull(node)
 	default:
-		return NullGenerator{}, nil
+		return nullGenerator{}, nil
 	}
 }
 

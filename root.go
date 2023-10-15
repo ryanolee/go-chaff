@@ -15,6 +15,21 @@ type (
 	}
 )
 
+// Parses the top-level properties of a schema (including "$defs" and "definitions")
+// Example:
+// {
+//   "type": "object",
+//   "$defs": {
+//     "foo": {
+//       "type": "string"
+//     }
+//   },
+//   "properties": {
+//     "bar": {
+//       "$ref": "#/$defs/foo"
+//     }
+//   }
+// }
 func parseRoot(node schemaNode, metadata *parserMetadata) (rootGenerator, error) {
 	def := parseDefinitions("$defs", metadata, node.Defs)
 	definitions := parseDefinitions("definitions", metadata, node.Definitions)

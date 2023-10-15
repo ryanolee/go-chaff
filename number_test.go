@@ -32,7 +32,7 @@ func TestNumberGenerate(t *testing.T) {
 				}
 
 				result := generator.Generate(&GeneratorOptions{
-					Rand: rand.NewSeededRandFromTime(),
+					Rand: rand.NewRandUtilFromTime(),
 				})
 
 				assert.GreaterOrEqual(t, result, int(testCase[0]))
@@ -59,7 +59,7 @@ func TestNumberGenerate(t *testing.T) {
 				}
 
 				result := generator.Generate(&GeneratorOptions{
-					Rand: rand.NewSeededRandFromTime(),
+					Rand: rand.NewRandUtilFromTime(),
 				})
 
 				assert.GreaterOrEqual(t, result, testCase[0])
@@ -91,7 +91,7 @@ func TestNumberGenerate(t *testing.T) {
 				}
 
 				result := generator.Generate(&GeneratorOptions{
-					Rand: rand.NewSeededRandFromTime(),
+					Rand: rand.NewRandUtilFromTime(),
 				}).(float64)
 				
 				assert.GreaterOrEqual(t, result, testCase[0])

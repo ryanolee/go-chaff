@@ -8,6 +8,11 @@ type (
 	}
 )
 
+// Parses the "enum" keyword of a schema
+// Example:
+// {
+//   "enum": ["foo", "bar"]
+// }
 func parseEnum(node schemaNode) (EnumGenerator, error) {
 	return EnumGenerator{
 		Values: node.Enum,

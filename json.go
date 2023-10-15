@@ -12,11 +12,13 @@ type (
 		DisallowAdditional bool
 	}
 
+	// Used to handle the fact that "type" can be a string or an array of strings
 	multipleType struct {
 		SingleType    string
 		MultipleTypes []string
 	}
 
+	// Used to handle the fact that "items" can be a schema node or an array of schema nodes
 	itemsData struct {
 		Node                    *schemaNode
 		Nodes                   []schemaNode

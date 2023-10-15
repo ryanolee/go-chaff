@@ -13,12 +13,17 @@ type (
 	}
 )
 
+// Parses the "type" keyword of a schema when it is an array
+// Example:
+// {
+//   "type": ["string", "number"]
+// }
 func parseMultipleType(node schemaNode, metadata *parserMetadata) (multipleTypeGenerator, error) {
 	generators := []Generator{}
 	for _, nodeType := range node.Type.MultipleTypes {
 		generator, err := parseType(nodeType, node, metadata)
 		if err != nil {
-			generators = append(generators, NullGenerator{})
+			generators = append(generators, nullGenerator{})
 		} else {
 			generators = append(generators, generator)
 		}

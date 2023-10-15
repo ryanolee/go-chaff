@@ -55,9 +55,15 @@ const (
 	formatRegex stringFormat = "regex"
 )
 
+// Parses the "type" keyword of a schema when it is a "string"
+// Example:
+// {
+//   "type": "string",
+//   "pattern": "^[a-zA-Z0-9]{3,30}$"
+// }
 func parseString(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	if node.Format != "" && node.Pattern != "" {
-		return NullGenerator{}, fmt.Errorf("cannot have both format and pattern on a string")
+		return nullGenerator{}, fmt.Errorf("cannot have both format and pattern on a string")
 	}
 
 	generator := stringGenerator{
@@ -68,7 +74,7 @@ func parseString(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	if node.Pattern != "" {
 		regenGenerator, err := newRegexGenerator(node.Pattern, metadata.ParserOptions.RegexStringOptions)
 		if err != nil {
-			return NullGenerator{}, fmt.Errorf("invalid regex pattern: %s", node.Pattern)
+			return nullGenerator{}, fmt.Errorf("invalid regex pattern: %s", node.Pattern)
 		}
 
 		generator.PatternGenerator = regenGenerator

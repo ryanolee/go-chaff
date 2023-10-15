@@ -15,14 +15,26 @@ type (
 	}
 )
 
+// Parses the "oneOf" or "anyOf" keyword of a schema. This generator is experimental and may not work as expected.
+// Example:
+// {
+//   "oneOf": [
+//     { "type": "string" },
+//     { "type": "number" }
+//   ]
+// }
+// One of has a similar implementation to anyOf, so they are both handled by this function
+// There are some edge cases that are not handled by this function, such as:
+//  - During "factoring" of the schema merging might not work as expected (Reference resolution is not supported as part of this)
+//  - oneOf Does not actually validate that only one of the schemas is valid.
 func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	ref := metadata.ReferenceHandler
 	if len(node.OneOf) == 0 && len(node.AnyOf) == 0 {
-		return NullGenerator{}, errors.New("no items specified for oneOf / anyOf")
+		return nullGenerator{}, errors.New("no items specified for oneOf / anyOf")
 	}
 
 	if len(node.OneOf) > 0 && len(node.AnyOf) > 0 {
-		return NullGenerator{}, errors.New("only one of [oneOf / anyOf] can be specified")
+		return nullGenerator{}, errors.New("only one of [oneOf / anyOf] can be specified")
 	}
 
 	target := node.OneOf
@@ -40,14 +52,14 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 
 		mergedNode, err := mergeSchemaNodes(metadata, baseNode, subSchema)
 		if err != nil {
-			generators = append(generators, NullGenerator{})
+			generators = append(generators, nullGenerator{})
 			continue
 		}
 
 		refPath := fmt.Sprintf("/%s/%d", nodeType, i)
 		generator, err := ref.ParseNodeInScope(refPath, mergedNode, metadata)
 		if err != nil {
-			generators = append(generators, NullGenerator{})
+			generators = append(generators, nullGenerator{})
 		} else {
 			generators = append(generators, generator)
 		}

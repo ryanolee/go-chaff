@@ -4,6 +4,11 @@ type (
 	booleanGenerator struct {}
 )
 
+// Parses the "boolean" keyword of a schema
+// Example:
+// {
+//   "type": "boolean"
+// }
 func parseBoolean(node schemaNode) (booleanGenerator, error) {
 	return booleanGenerator{}, nil
 }

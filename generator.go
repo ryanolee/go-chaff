@@ -13,7 +13,7 @@ type (
 	}
 
 	GeneratorOptions struct {
-		Rand *rand.SeededRand
+		Rand *rand.RandUtil
 
 		// The default minimum number value
 		DefaultNumberMinimum int

@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	ObjectGenerator struct {
+	objectGenerator struct {
 		Properties map[string]Generator
 
 		// Pattern Properties Regex -> Generator mapping
@@ -26,40 +26,51 @@ type (
 	}
 )
 
-func ParseObject(node schemaNode, metadata *parserMetadata) (Generator, error) {
+// Parses the "type" keyword of a schema when it is an object
+// Example:
+// {
+//   "type": "object",
+//   "properties": {
+//     "foo": {
+//       "type": "string"
+//     }
+//   },
+//   "required": ["foo"]
+// }
+func parseObject(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	// Validator Max and Min Properties
 	if node.MinProperties < 0 {
-		return NullGenerator{}, fmt.Errorf("minProperties must be greater than or equal to 0")
+		return nullGenerator{}, fmt.Errorf("minProperties must be greater than or equal to 0")
 	}
 
 	if node.MaxProperties < 0 {
-		return NullGenerator{}, fmt.Errorf("maxProperties must be greater than or equal to 0")
+		return nullGenerator{}, fmt.Errorf("maxProperties must be greater than or equal to 0")
 	}
 
 	if node.MaxProperties != 0 && node.MinProperties > node.MaxProperties {
-		return NullGenerator{}, fmt.Errorf("minProperties (%d) must be less than or equal to MaxProperties (%d)", node.MinProperties, node.MaxProperties)
+		return nullGenerator{}, fmt.Errorf("minProperties (%d) must be less than or equal to MaxProperties (%d)", node.MinProperties, node.MaxProperties)
 	}
 
 	// Validate Required Properties
 	if node.MaxProperties != 0 && len(node.Required) > node.MaxProperties {
-		return NullGenerator{}, fmt.Errorf("required properties must have a length of less than or equal to MaxProperties (Max Properties: %d, Length of required %d)", node.MaxProperties, len(node.Required))
+		return nullGenerator{}, fmt.Errorf("required properties must have a length of less than or equal to MaxProperties (Max Properties: %d, Length of required %d)", node.MaxProperties, len(node.Required))
 	}
 
 	for _, requiredProperty := range node.Required {
 		if _, ok := node.Properties[requiredProperty]; !ok {
-			return NullGenerator{}, fmt.Errorf("required property %s does not exist in properties", requiredProperty)
+			return nullGenerator{}, fmt.Errorf("required property %s does not exist in properties", requiredProperty)
 		}
 	}
 
 	// Validate additionalProperties
 	if node.AdditionalProperties.DisallowAdditional && node.PatternProperties == nil && node.MinProperties > len(node.Properties) {
-		return NullGenerator{}, fmt.Errorf("given additional properties are not allowed and there are no pattern properties the minProperties must be less than or equal to the number of"+
+		return nullGenerator{}, fmt.Errorf("given additional properties are not allowed and there are no pattern properties the minProperties must be less than or equal to the number of"+
 			"available properties. (minProperties: %d, propertiesDefined: %d)", node.MinProperties, len(node.Properties))
 	}
 
 	patternProperties, patternPropertiesRegex := parsePatternProperties(node, metadata)
 
-	objectGenerator := ObjectGenerator{
+	objectGenerator := objectGenerator{
 		Required:      node.Required,
 		MinProperties: node.MinProperties,
 		MaxProperties: node.MaxProperties,
@@ -70,7 +81,7 @@ func ParseObject(node schemaNode, metadata *parserMetadata) (Generator, error) {
 
 		DisallowAdditionalProperties: node.AdditionalProperties.DisallowAdditional,
 		AdditionalProperties:         parseAdditionalProperties(node, metadata),
-		FallbackGenerator:            NullGenerator{},
+		FallbackGenerator:            nullGenerator{},
 	}
 
 	return objectGenerator, nil
@@ -83,7 +94,7 @@ func parseProperties(node schemaNode, metadata *parserMetadata) map[string]Gener
 		refPath := fmt.Sprintf("/properties/%s", name)
 		propGenerator, err := ref.ParseNodeInScope(refPath, prop, metadata)
 		if err != nil {
-			propGenerator = NullGenerator{}
+			propGenerator = nullGenerator{}
 		}
 
 		properties[name] = propGenerator
@@ -101,7 +112,7 @@ func parseAdditionalProperties(node schemaNode, metadata *parserMetadata) Genera
 	additionalProperties, err := ref.ParseNodeInScope(refPath, *node.AdditionalProperties.Schema, metadata)
 
 	if err != nil {
-		return NullGenerator{}
+		return nullGenerator{}
 	}
 
 	return additionalProperties
@@ -122,7 +133,7 @@ func parsePatternProperties(node schemaNode, metadata *parserMetadata) (map[stri
 		// Parse the schema node
 		propGenerator, err := ref.ParseNodeInScope(refPath, property, metadata)
 		if err != nil {
-			propGenerator = NullGenerator{}
+			propGenerator = nullGenerator{}
 		}
 
 		regexGenerator, err := newRegexGenerator(regex, metadata.ParserOptions.RegexPatternPropertyOptions)
@@ -139,7 +150,7 @@ func parsePatternProperties(node schemaNode, metadata *parserMetadata) (map[stri
 	return properties, propertiesRegex
 }
 
-func (g ObjectGenerator) Generate(opts *GeneratorOptions) interface{} {
+func (g objectGenerator) Generate(opts *GeneratorOptions) interface{} {
 	// Generate Required Properties
 	generatedValues := make(map[string]interface{})
 	for _, key := range g.Required {
@@ -199,7 +210,7 @@ func (g ObjectGenerator) Generate(opts *GeneratorOptions) interface{} {
 	return generatedValues
 }
 
-func (g ObjectGenerator) GeneratePatternProperty(opts *GeneratorOptions) (string, interface{}) {
+func (g objectGenerator) GeneratePatternProperty(opts *GeneratorOptions) (string, interface{}) {
 	if len(g.PatternProperties) == 0 {
 		return "", nil
 	}
@@ -216,7 +227,7 @@ func (g ObjectGenerator) GeneratePatternProperty(opts *GeneratorOptions) (string
 	return targetRegexGenerator.Generate(), targetGenerator.Generate(opts)
 }
 
-func (g ObjectGenerator) String() string {
+func (g objectGenerator) String() string {
 	formattedString := ""
 	for name, prop := range g.Properties {
 		formattedString += fmt.Sprintf("%s: %s,", name, prop)

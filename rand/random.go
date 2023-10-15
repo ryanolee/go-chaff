@@ -7,43 +7,43 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-type SeededRand struct {
+type RandUtil struct {
 	Source rand.Source
 	Rand   *rand.Rand
 }
 
-func NewSeededRandFromString(stringSeed string) *SeededRand {
+func NewRandUtilFromString(stringSeed string) *RandUtil {
 	seed := int64(0)
 	for i, c := range stringSeed {
 		seed += int64(c) * int64(i+1)
 	}
-	return NewSeededRand(seed)
+	return NewRandUtil(seed)
 }
 
-func NewSeededRandFromTime() *SeededRand {
-	return NewSeededRand(time.Now().UnixNano())
+func NewRandUtilFromTime() *RandUtil {
+	return NewRandUtil(time.Now().UnixNano())
 }
 
-func NewSeededRand(seed int64) *SeededRand {
+func NewRandUtil(seed int64) *RandUtil {
 	source := rand.NewSource(seed)
 	r := rand.New(source)
-	return &SeededRand{
+	return &RandUtil{
 		Source: source,
 		Rand:   r,
 	}
 }
 
 // Generic functions
-func (sr *SeededRand) Choice(slice []interface{}) interface{} {
+func (sr *RandUtil) Choice(slice []interface{}) interface{} {
 	return slice[sr.Rand.Intn(len(slice))]
 }
 
 // Array functions
-func (sr *SeededRand) StringChoice(stringSlice *[]string) string {
+func (sr *RandUtil) StringChoice(stringSlice *[]string) string {
 	return (*stringSlice)[sr.Rand.Intn(len(*stringSlice))]
 }
 
-func (sr *SeededRand) StringChoiceMultiple(stringSlice *[]string, numChoices int) []string {
+func (sr *RandUtil) StringChoiceMultiple(stringSlice *[]string, numChoices int) []string {
 	// Pick NumChoices random choices from the string slice without duplicates
 	choices := funk.Shuffle(*stringSlice).([]string)
 
@@ -52,7 +52,7 @@ func (sr *SeededRand) StringChoiceMultiple(stringSlice *[]string, numChoices int
 }
 
 // Int functions
-func (sr *SeededRand) RandomInt(min int, max int) int {
+func (sr *RandUtil) RandomInt(min int, max int) int {
 	// In the the case that min == max, return min
 	if min == max {
 		return min
@@ -63,11 +63,11 @@ func (sr *SeededRand) RandomInt(min int, max int) int {
 }
 
 // Float functions
-func (sr *SeededRand) RandomFloat(min float64, max float64) float64 {
+func (sr *RandUtil) RandomFloat(min float64, max float64) float64 {
 	return sr.Rand.Float64()*(max-min) + min
 }
 
 // Bool functions
-func (sr *SeededRand) RandomBool() bool {
+func (sr *RandUtil) RandomBool() bool {
 	return sr.Rand.Intn(2) == 1
 }

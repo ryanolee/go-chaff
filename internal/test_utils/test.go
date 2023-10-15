@@ -53,7 +53,7 @@ func TestJsonSchema(test *testing.T, schemaPath string, cycles int) {
 		
 		for i := 0; i < cycles; i++ {
 			data, err := json.MarshalIndent(generator.Generate(&chaff.GeneratorOptions{
-				Rand: rand.NewSeededRandFromTime(),
+				Rand: rand.NewRandUtilFromTime(),
 				BypassCyclicReferenceCheck: true,
 			}), "", "    ")
 

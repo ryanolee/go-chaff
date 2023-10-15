@@ -25,17 +25,26 @@ const (
 	defaultOffset = 10
 )
 
+// Parses the "type" keyword of a schema when it is a "number" or "integer"
+// Example:
+// {
+//   "type": "number",
+//   "minimum": 0,
+//   "maximum": 100
+//   "multipleOf": 10
+// }
+
 func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error) {
 	var min float64
 	var max float64
 	
 	// Initial Validation
 	if node.Minimum != 0 && node.ExclusiveMinimum != 0 {
-		return NullGenerator{}, errors.New("cannot have both minimum and exclusive minimum")
+		return nullGenerator{}, errors.New("cannot have both minimum and exclusive minimum")
 	}
 
 	if node.Maximum != 0 && node.ExclusiveMaximum != 0 {
-		return NullGenerator{}, errors.New("cannot have both maximum and exclusive maximum")
+		return nullGenerator{}, errors.New("cannot have both maximum and exclusive maximum")
 	}
 
 	// Set min and max
@@ -57,19 +66,19 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 
 	// Validate min and max
 	if min > max {
-		return NullGenerator{}, errors.New("minimum cannot be greater than maximum")
+		return nullGenerator{}, errors.New("minimum cannot be greater than maximum")
 	}
 
 	// Validate multipleOf
 	if node.MultipleOf != 0 {
 		if node.MultipleOf <= 0 {
-			return NullGenerator{}, errors.New("multipleOf cannot be negative or zero")
+			return nullGenerator{}, errors.New("multipleOf cannot be negative or zero")
 		}
 
 		multiplesInRange := countMultiplesInRange(min, max, node.MultipleOf)
 
 		if multiplesInRange == 0 {
-			return NullGenerator{}, errors.New("minimum and maximum do not allow for any multiples of multipleOf")
+			return nullGenerator{}, errors.New("minimum and maximum do not allow for any multiples of multipleOf")
 		}
 	}
 	
@@ -89,7 +98,7 @@ func countMultiplesInRange(min float64, max float64, multiple float64) int {
 	return int(math.Floor(max / multiple)) - int(math.Floor(min / multiple))
 }
 
-func generateMultipleOf(rand rand.SeededRand, min float64, max float64, multiple float64) float64{
+func generateMultipleOf(rand rand.RandUtil, min float64, max float64, multiple float64) float64{
 	multiplesInRange := countMultiplesInRange(min, max, multiple)
 
 	if multiplesInRange == 0 {

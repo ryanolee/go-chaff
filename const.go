@@ -8,6 +8,11 @@ type (
 	}
 )
 
+// Parses the "const" keyword of a schema
+// Example:
+// {
+//   "const": "foo"
+// }
 func parseConst(node schemaNode) (ConstGenerator, error) {
 	return ConstGenerator{
 		Value: node.Const,
