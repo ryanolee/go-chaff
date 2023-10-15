@@ -62,9 +62,13 @@ type (
 )
 
 func withGeneratorOptionsDefaults(options GeneratorOptions) *GeneratorOptions {
+	randUtil := options.Rand
+	if options.Rand == nil {
+		randUtil = rand.NewRandUtilFromTime()
+	}
 	return &GeneratorOptions{
 		// General
-		Rand: options.Rand,
+		Rand: randUtil,
 
 		// Number
 		DefaultNumberMinimum: getInt(options.DefaultNumberMinimum, 0),

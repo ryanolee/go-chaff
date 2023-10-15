@@ -60,7 +60,7 @@ func parseDefinitions(path string, metadata *parserMetadata, definitions map[str
 
 // Generates values based on the passed options
 func (g rootGenerator) Generate(opts *GeneratorOptions) interface{} {
-	
+	opts = withGeneratorOptionsDefaults(*opts)
 	return g.Generator.Generate(opts)
 }
 

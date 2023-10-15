@@ -114,7 +114,7 @@ func ParseSchemaFile(path string, opts *ParserOptions) (rootGenerator, error) {
 
 // Parses a Json Schema file at the given path with default options. If there is an error reading the file or
 // parsing the schema, an error will be returned
-func ParseSchemaFileWithDefaultOptions(path string) (rootGenerator, error) {
+func ParseSchemaFileWithDefaults(path string) (rootGenerator, error) {
 	return ParseSchemaFile(path, &ParserOptions{})
 }
 
@@ -123,7 +123,7 @@ func ParseSchemaString(schema string, opts *ParserOptions) (rootGenerator, error
 	return ParseSchema([]byte(schema), opts)
 }
 
-func ParseSchemaStringWithDefaultOptions(schema string) (rootGenerator, error) {
+func ParseSchemaStringWithDefaults(schema string) (rootGenerator, error) {
 	return ParseSchemaString(schema, &ParserOptions{})
 }
 
@@ -150,7 +150,7 @@ func ParseSchema(schema []byte, opts *ParserOptions) (rootGenerator, error) {
 }
 
 // Parses a Json Schema byte array with default options. If there is an error parsing the schema, an error will be returned.
-func ParseSchemaWithDefaultOptions(schema []byte) (rootGenerator, error) {
+func ParseSchemaWithDefaults(schema []byte) (rootGenerator, error) {
 	return ParseSchema(schema, &ParserOptions{})
 }
 
