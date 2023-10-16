@@ -13,8 +13,6 @@ func newEmptySchemaNode() schemaNode {
 	}
 }
 
-
-
 // Merges all sub properties of a given node  
 func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode, error) {
 	mergedNode := newEmptySchemaNode()

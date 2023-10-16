@@ -31,6 +31,7 @@ func parseReference(node schemaNode, metadata *parserMetadata) (Generator, error
 
 func (g referenceGenerator) Generate(opts *GeneratorOptions) interface{} {
 	reference, ok := g.ReferenceHandler.Lookup(g.ReferenceStr)
+
 	if !ok {
 		return nil
 	}
@@ -40,7 +41,7 @@ func (g referenceGenerator) Generate(opts *GeneratorOptions) interface{} {
 		return fmt.Sprintf("Maximum reference depth exceeded: %d \n %s", opts.MaximumReferenceDepth, refResolver.GetFormattedResolutions())
 	}
 
-	if !refResolver.HasResolved(g.ReferenceStr) && !opts.BypassCyclicReferenceCheck {
+	if refResolver.HasResolved(g.ReferenceStr) && !opts.BypassCyclicReferenceCheck {
 		return fmt.Sprintf("Cyclic reference found: %s \n %s ", refResolver.GetFormattedResolutions(), g.ReferenceStr)
 	}
 

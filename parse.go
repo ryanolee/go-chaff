@@ -101,10 +101,10 @@ const (
 
 // Parses a Json Schema file at the given path. If there is an error reading the file or
 // parsing the schema, an error will be returned
-func ParseSchemaFile(path string, opts *ParserOptions) (rootGenerator, error) {
+func ParseSchemaFile(path string, opts *ParserOptions) (RootGenerator, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return rootGenerator{
+		return RootGenerator{
 			Generator: nullGenerator{},
 		}, err
 	}
@@ -114,25 +114,25 @@ func ParseSchemaFile(path string, opts *ParserOptions) (rootGenerator, error) {
 
 // Parses a Json Schema file at the given path with default options. If there is an error reading the file or
 // parsing the schema, an error will be returned
-func ParseSchemaFileWithDefaults(path string) (rootGenerator, error) {
+func ParseSchemaFileWithDefaults(path string) (RootGenerator, error) {
 	return ParseSchemaFile(path, &ParserOptions{})
 }
 
 // Parses a Json Schema string. If there is an error parsing the schema, an error will be returned.
-func ParseSchemaString(schema string, opts *ParserOptions) (rootGenerator, error) {
+func ParseSchemaString(schema string, opts *ParserOptions) (RootGenerator, error) {
 	return ParseSchema([]byte(schema), opts)
 }
 
-func ParseSchemaStringWithDefaults(schema string) (rootGenerator, error) {
+func ParseSchemaStringWithDefaults(schema string) (RootGenerator, error) {
 	return ParseSchemaString(schema, &ParserOptions{})
 }
 
 // Parses a Json Schema byte array. If there is an error parsing the schema, an error will be returned.
-func ParseSchema(schema []byte, opts *ParserOptions) (rootGenerator, error) {
+func ParseSchema(schema []byte, opts *ParserOptions) (RootGenerator, error) {
 	var node schemaNode
 	err := json.Unmarshal(schema, &node)
 	if err != nil {
-		return rootGenerator{
+		return RootGenerator{
 			Generator: nullGenerator{},
 		}, err
 	}
@@ -150,7 +150,7 @@ func ParseSchema(schema []byte, opts *ParserOptions) (rootGenerator, error) {
 }
 
 // Parses a Json Schema byte array with default options. If there is an error parsing the schema, an error will be returned.
-func ParseSchemaWithDefaults(schema []byte) (rootGenerator, error) {
+func ParseSchemaWithDefaults(schema []byte) (RootGenerator, error) {
 	return ParseSchema(schema, &ParserOptions{})
 }
 

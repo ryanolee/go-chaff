@@ -6,7 +6,7 @@ import (
 
 type (
 	// Root generator a given schema. Call the Generate method on this to generate a value
-	rootGenerator struct {
+	RootGenerator struct {
 		Generator Generator
 		// For any "$defs"
 		Defs map[string]Generator
@@ -32,12 +32,12 @@ type (
 //     }
 //   }
 // }
-func parseRoot(node schemaNode, metadata *parserMetadata) (rootGenerator, error) {
+func parseRoot(node schemaNode, metadata *parserMetadata) (RootGenerator, error) {
 	def := parseDefinitions("$defs", metadata, node.Defs)
 	definitions := parseDefinitions("definitions", metadata, node.Definitions)
 
 	generator, err := parseNode(node, metadata)
-	return rootGenerator{
+	return RootGenerator{
 		Generator:   generator,
 		Defs:        def,
 		Definitions: definitions,
@@ -59,17 +59,17 @@ func parseDefinitions(path string, metadata *parserMetadata, definitions map[str
 }
 
 // Generates values based on the passed options
-func (g rootGenerator) Generate(opts *GeneratorOptions) interface{} {
+func (g RootGenerator) Generate(opts *GeneratorOptions) interface{} {
 	opts = withGeneratorOptionsDefaults(*opts)
 	return g.Generator.Generate(opts)
 }
 
-func (g rootGenerator) GenerateWithDefaults() interface{} {
+func (g RootGenerator) GenerateWithDefaults() interface{} {
 	opts := withGeneratorOptionsDefaults(GeneratorOptions{})
 	return g.Generator.Generate(opts)
 }
 
-func (g rootGenerator) String() string {
+func (g RootGenerator) String() string {
 	formattedString := ""
 	for name, prop := range g.Definitions {
 		formattedString += fmt.Sprintf("%s: %s,", name, prop)

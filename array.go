@@ -123,6 +123,7 @@ func parseItemGenerator(additionalData itemsData, metadata *parserMetadata) Gene
 }
 
 func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
+	
 	tupleLength := len(g.TupleGenerators)
 	arrayData := make([]interface{}, 0)
 
@@ -140,9 +141,11 @@ func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
 		itemGen = g.AdditionalItemsGenerator
 	}
 
-	if itemGen != nil || g.DisallowAdditional {
+	if itemGen == nil || g.DisallowAdditional {
 		return arrayData
 	}
+
+	
 
 	minItems := getInt(g.MinItems, opts.DefaultArrayMinItems)
 	maxItems := getInt(g.MaxItems, opts.DefaultArrayMaxItems)

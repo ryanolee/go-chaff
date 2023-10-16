@@ -1,0 +1,17 @@
+builds:
+  - id: "go-chaff"
+    binary: go-chaff
+    main: cli/cli.go
+    ldflags:
+      - "-s -w"
+      - "-X 'main.version={{.Version}}'"
+      - "-X 'main.commit={{.Commit}}'"
+      - "-X 'main.buildDate={{.Date}}'"
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
