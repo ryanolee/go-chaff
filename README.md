@@ -3,6 +3,9 @@ A [Json Schema](https://json-schema.org/) Faker for Go 🙈.
 
 It will generate matching random for a given JSON schema
 
+## Documentation
+Documentation for the library functions can be [found here](https://pkg.go.dev/github.com/ryanolee/go-chaff).
+
 ## Installation
 ```go get github.com/ryanolee/go-chaff@1```
 
