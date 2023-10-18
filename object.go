@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ryanolee/go-chaff/internal/regen"
+	"github.com/ryanolee/go-chaff/internal/util"
 	"github.com/thoas/go-funk"
 )
 
@@ -161,19 +162,19 @@ func (g objectGenerator) Generate(opts *GeneratorOptions) interface{} {
 	// (Using a fallback generator if none are available)
 	optionalKeys := funk.UniqString(append(g.Required, funk.Keys(g.Properties).([]string)...))
 
-	min := getInt(g.MinProperties, opts.DefaultObjectMinProperties)
-	max := getInt(g.MaxProperties, opts.DefaultObjectMaxProperties)
+	min := util.GetInt(g.MinProperties, opts.DefaultObjectMinProperties)
+	max := util.GetInt(g.MaxProperties, opts.DefaultObjectMaxProperties)
 
 	if max < min {
 		max = min + opts.DefaultObjectMaxProperties
 	}
 
-	minimumExtrasToGenerate := maxInt(0, min-len(g.Required))
-	maximumExtrasToGenerate := maxInt(0, max-len(g.Required))
+	minimumExtrasToGenerate := util.MaxInt(0, min-len(g.Required))
+	maximumExtrasToGenerate := util.MaxInt(0, max-len(g.Required))
 
 	generatorTarget := opts.Rand.RandomInt(minimumExtrasToGenerate, maximumExtrasToGenerate)
 
-	numberOfOptionalKeysToGenerate := minInt(len(optionalKeys), generatorTarget)
+	numberOfOptionalKeysToGenerate := util.MinInt(len(optionalKeys), generatorTarget)
 	optionalKeysToGenerate := opts.Rand.StringChoiceMultiple(&optionalKeys, numberOfOptionalKeysToGenerate)
 
 	// Generate any optional keys

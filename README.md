@@ -68,7 +68,7 @@ echo '{"type": "string", "format": "ipv4"}' | go-chaff
  * Number / Integer: `multipleOf`, `min`, `max`, `exclusiveMin`, `exclusiveMax`
  * Constant types: `enum`, `const`, `null`
  * References: `$ref`, `$defs`, `definitions`, `$id` 
- * `object`: `properties`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
+ * Object: `properties`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
  * Array: `items`, `minItems`, `maxItems`, `contains`, `minContains`, `maxContains`, `prefixItems`, `additionalItems`
  * Combination types (`anyOf` / `oneOf` / `allOf`) **N.b These are experimental! Expect none compliant schema output for some of these**
 

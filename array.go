@@ -2,6 +2,8 @@ package chaff
 
 import (
 	"fmt"
+
+	"github.com/ryanolee/go-chaff/internal/util"
 )
 
 type (
@@ -44,8 +46,8 @@ func parseArray(node schemaNode, metadata *parserMetadata) (Generator, error) {
 		return nullGenerator{}, fmt.Errorf("tuple length must be less than or equal to maxItems (tupleLength: %d, maxItems: %d)", tupleLength, node.MaxItems)
 	}
 
-	min := getInt(node.MinItems, node.MinContains)
-	max := getInt(node.MaxItems, node.MaxContains)
+	min := util.GetInt(node.MinItems, node.MinContains)
+	max := util.GetInt(node.MaxItems, node.MaxContains)
 
 	// Force the generator to use only the tuple in the event that additional items
 	// are not allowed
@@ -145,16 +147,14 @@ func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
 		return arrayData
 	}
 
-	
-
-	minItems := getInt(g.MinItems, opts.DefaultArrayMinItems)
-	maxItems := getInt(g.MaxItems, opts.DefaultArrayMaxItems)
+	minItems := util.GetInt(g.MinItems, opts.DefaultArrayMinItems)
+	maxItems := util.GetInt(g.MaxItems, opts.DefaultArrayMaxItems)
 
 	if maxItems < minItems {
 		maxItems = minItems + opts.DefaultArrayMaxItems
 	}
 
-	remainingItemsToGenerate := maxInt(0, maxItems-tupleLength)
+	remainingItemsToGenerate := util.MaxInt(0, maxItems-tupleLength)
 
 	itemsToGenerate := opts.Rand.RandomInt(0, remainingItemsToGenerate)
 

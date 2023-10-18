@@ -2,6 +2,8 @@ package chaff
 
 import (
 	"fmt"
+
+	"github.com/ryanolee/go-chaff/internal/util"
 )
 
 func newEmptySchemaNode() schemaNode {
@@ -98,24 +100,24 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 
 func mergeSchemaNodeSimpleProperties(baseNode schemaNode, otherNode schemaNode) (schemaNode){
 	// Merge simple int properties
-	baseNode.Length = getInt(otherNode.Length, baseNode.Length)
-	baseNode.MinProperties = getInt(otherNode.MinProperties, baseNode.MinProperties)
-	baseNode.MaxProperties = getInt(otherNode.MaxProperties, baseNode.MaxProperties)
-	baseNode.MinItems = getInt(otherNode.MinItems, baseNode.MinItems)
-	baseNode.MaxItems = getInt(otherNode.MaxItems, baseNode.MaxItems)
-	baseNode.MinContains = getInt(otherNode.MinContains, baseNode.MinContains)
-	baseNode.MaxContains = getInt(otherNode.MaxContains, baseNode.MaxContains)
+	baseNode.Length = util.GetInt(otherNode.Length, baseNode.Length)
+	baseNode.MinProperties = util.GetInt(otherNode.MinProperties, baseNode.MinProperties)
+	baseNode.MaxProperties = util.GetInt(otherNode.MaxProperties, baseNode.MaxProperties)
+	baseNode.MinItems = util.GetInt(otherNode.MinItems, baseNode.MinItems)
+	baseNode.MaxItems = util.GetInt(otherNode.MaxItems, baseNode.MaxItems)
+	baseNode.MinContains = util.GetInt(otherNode.MinContains, baseNode.MinContains)
+	baseNode.MaxContains = util.GetInt(otherNode.MaxContains, baseNode.MaxContains)
 
 	// Merge simple float properties
-	baseNode.Minimum = getFloat(otherNode.Minimum, baseNode.Minimum)
-	baseNode.Maximum = getFloat(otherNode.Maximum, baseNode.Maximum)
-	baseNode.ExclusiveMinimum = getFloat(otherNode.ExclusiveMinimum, baseNode.ExclusiveMinimum)
-	baseNode.ExclusiveMaximum = getFloat(otherNode.ExclusiveMaximum, baseNode.ExclusiveMaximum)
-	baseNode.MultipleOf = getFloat(otherNode.MultipleOf, baseNode.MultipleOf)
+	baseNode.Minimum = util.GetFloat(otherNode.Minimum, baseNode.Minimum)
+	baseNode.Maximum = util.GetFloat(otherNode.Maximum, baseNode.Maximum)
+	baseNode.ExclusiveMinimum = util.GetFloat(otherNode.ExclusiveMinimum, baseNode.ExclusiveMinimum)
+	baseNode.ExclusiveMaximum = util.GetFloat(otherNode.ExclusiveMaximum, baseNode.ExclusiveMaximum)
+	baseNode.MultipleOf = util.GetFloat(otherNode.MultipleOf, baseNode.MultipleOf)
 
 	// Merge simple string properties
-	baseNode.Pattern = getString(otherNode.Pattern, baseNode.Pattern)
-	baseNode.Format = getString(otherNode.Format, baseNode.Format)
+	baseNode.Pattern = util.GetString(otherNode.Pattern, baseNode.Pattern)
+	baseNode.Format = util.GetString(otherNode.Format, baseNode.Format)
 
 	return baseNode
 }

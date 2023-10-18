@@ -3,6 +3,7 @@ package chaff
 import (
 	"fmt"
 
+	"github.com/ryanolee/go-chaff/internal/util"
 	"github.com/ryanolee/go-chaff/rand"
 )
 
@@ -71,25 +72,25 @@ func withGeneratorOptionsDefaults(options GeneratorOptions) *GeneratorOptions {
 		Rand: randUtil,
 
 		// Number
-		DefaultNumberMinimum: getInt(options.DefaultNumberMinimum, 0),
-		DefaultNumberMaximum: getInt(options.DefaultNumberMaximum, 100),
+		DefaultNumberMinimum: util.GetInt(options.DefaultNumberMinimum, 0),
+		DefaultNumberMaximum: util.GetInt(options.DefaultNumberMaximum, 100),
 
 		// String
-		DefaultStringMinLength: getInt(options.DefaultStringMinLength, 0),
-		DefaultStringMaxLength: getInt(options.DefaultStringMaxLength, 100),
+		DefaultStringMinLength: util.GetInt(options.DefaultStringMinLength, 0),
+		DefaultStringMaxLength: util.GetInt(options.DefaultStringMaxLength, 100),
 
 		// Array
-		DefaultArrayMinItems: getInt(options.DefaultArrayMinItems, 0),
-		DefaultArrayMaxItems: getInt(options.DefaultArrayMaxItems, 10),
+		DefaultArrayMinItems: util.GetInt(options.DefaultArrayMinItems, 0),
+		DefaultArrayMaxItems: util.GetInt(options.DefaultArrayMaxItems, 10),
 
 		// Object
-		DefaultObjectMinProperties: getInt(options.DefaultObjectMinProperties, 0),
-		DefaultObjectMaxProperties: getInt(options.DefaultObjectMaxProperties, 10),
-		SuppressFallbackValues:     getBool(options.SuppressFallbackValues, true),
+		DefaultObjectMinProperties: util.GetInt(options.DefaultObjectMinProperties, 0),
+		DefaultObjectMaxProperties: util.GetInt(options.DefaultObjectMaxProperties, 10),
+		SuppressFallbackValues:     util.GetBool(options.SuppressFallbackValues, true),
 
 		// References
-		BypassCyclicReferenceCheck: getBool(options.BypassCyclicReferenceCheck, false),
-		MaximumReferenceDepth:      getInt(options.MaximumReferenceDepth, 10),
+		BypassCyclicReferenceCheck: util.GetBool(options.BypassCyclicReferenceCheck, false),
+		MaximumReferenceDepth:      util.GetInt(options.MaximumReferenceDepth, 10),
 		ReferenceResolver:          referenceResolver{},
 	}
 }

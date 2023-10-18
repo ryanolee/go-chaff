@@ -7,8 +7,9 @@ import (
 )
 
 func TestComplexCase(t *testing.T){
-	//t.Parallel()
-	
+	// @todo This is expected to fail as it is a property based test against
+	//       all the schemas in schema store. It is a good indicator for current support / finding edge cases
+	//       but should be excluded from typical unit tests. This can also take a very long time to run.
+	t.Parallel()
 	test.TestJsonSchemaDir(t, "test_data/complex", 100)
-	//test.TestJsonSchema(t, "test_data/oneOf/one_of_factoring.json", 100)
 }
