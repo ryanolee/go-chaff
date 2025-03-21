@@ -10,9 +10,10 @@ type (
 
 // Parses the "enum" keyword of a schema
 // Example:
-// {
-//   "enum": ["foo", "bar"]
-// }
+//
+//	{
+//	  "enum": ["foo", "bar"]
+//	}
 func parseEnum(node schemaNode) (enumGenerator, error) {
 	return enumGenerator{
 		Values: node.Enum,
@@ -20,6 +21,7 @@ func parseEnum(node schemaNode) (enumGenerator, error) {
 }
 
 func (g enumGenerator) Generate(opts *GeneratorOptions) interface{} {
+	opts.overallComplexity++
 	return opts.Rand.Choice(g.Values)
 }
 

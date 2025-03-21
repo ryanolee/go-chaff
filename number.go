@@ -9,18 +9,18 @@ import (
 
 type (
 	numberGeneratorType string
-	numberGenerator struct {
-		Type numberGeneratorType
-		Min float64
-		Max float64
+	numberGenerator     struct {
+		Type       numberGeneratorType
+		Min        float64
+		Max        float64
 		MultipleOf float64
 	}
 )
 
 const (
-	infinitesimal = math.SmallestNonzeroFloat64
+	infinitesimal                            = math.SmallestNonzeroFloat64
 	generatorTypeInteger numberGeneratorType = "integer"
-	generatorTypeNumber numberGeneratorType = "number"
+	generatorTypeNumber  numberGeneratorType = "number"
 
 	defaultOffset = 10
 )
@@ -37,7 +37,7 @@ const (
 func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error) {
 	var min float64
 	var max float64
-	
+
 	// Initial Validation
 	if node.Minimum != 0 && node.ExclusiveMinimum != 0 {
 		return nullGenerator{}, errors.New("cannot have both minimum and exclusive minimum")
@@ -81,11 +81,11 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 			return nullGenerator{}, errors.New("minimum and maximum do not allow for any multiples of multipleOf")
 		}
 	}
-	
+
 	return &numberGenerator{
-		Type: genType,
-		Min: min,
-		Max: max,
+		Type:       genType,
+		Min:        min,
+		Max:        max,
 		MultipleOf: node.MultipleOf,
 	}, nil
 }
@@ -95,23 +95,23 @@ func countMultiplesInRange(min float64, max float64, multiple float64) int {
 		return int(math.Floor(max / multiple))
 	}
 
-	return int(math.Floor(max / multiple)) - int(math.Floor(min / multiple))
+	return int(math.Floor(max/multiple)) - int(math.Floor(min/multiple))
 }
 
-func generateMultipleOf(rand rand.RandUtil, min float64, max float64, multiple float64) float64{
+func generateMultipleOf(rand rand.RandUtil, min float64, max float64, multiple float64) float64 {
 	multiplesInRange := countMultiplesInRange(min, max, multiple)
 
 	if multiplesInRange == 0 {
 		return 0
 	}
 
-	lowerBound := math.Floor(min / multiple) * multiple
+	lowerBound := math.Floor(min/multiple) * multiple
 	randomMultiple := float64(rand.RandomInt(1, multiplesInRange)) * multiple
-	return  lowerBound + randomMultiple
-
+	return lowerBound + randomMultiple
 
 }
 func (g *numberGenerator) Generate(opts *GeneratorOptions) interface{} {
+	opts.overallComplexity++
 	if g.Type == generatorTypeInteger && g.MultipleOf != 0 {
 		return int(generateMultipleOf(*opts.Rand, g.Min, g.Max, g.MultipleOf))
 	} else if g.Type == generatorTypeInteger && g.MultipleOf == 0 {

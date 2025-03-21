@@ -1,0 +1,71 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+       "object_without_additional_properties": {
+           "type": "object",
+           "properties": {
+               "some_string": {
+                   "type": "string"
+               },
+               "some_number": {
+                   "type": "number"
+               },
+               "deep_object": {
+                   "type": "object",
+                   "properties": {
+                       "some_string": {
+                           "type": "string"
+                       },
+                       "some_number": {
+                           "type": "number"
+                       }
+                   }
+               }
+           },
+           "additionalProperties": false
+       },
+       "object_with_additional_properties": {
+           "type": "object",
+           "properties": {
+               "some_string": {
+                   "type": "string"
+               },
+               "some_number": {
+                   "type": "number"
+               },
+               "deep_object": {
+                   "type": "object",
+                   "properties": {
+                       "some_string": {
+                           "type": "string"
+                       },
+                       "some_number": {
+                           "type": "number"
+                       }
+                   }
+               }
+            },
+            "additionalProperties": {
+                "type": "string"
+            }
+       },
+       "object_with_only_additional_properties": {
+           "type": "object",
+           "additionalProperties": {
+               "type": "string"
+           }
+       },
+       "object with_forced_additional_properties": {
+           "type": "object",
+           "additionalProperties": {
+               "type": "string"
+           },
+           "minProperties": 20
+       }
+    },
+    "required": [
+        "object_without_additional_properties",
+        "object_with_additional_properties"
+    ]
+}

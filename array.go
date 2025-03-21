@@ -16,20 +16,21 @@ type (
 		MaxItems int
 
 		DisallowAdditional bool
-		schemaNode 	   schemaNode
+		schemaNode         schemaNode
 	}
 )
 
 // Parses the "array" keyword of a schema
 // Example:
-// {
-//   "type": "array",
-//   "items": {
-//     "type": "string"
-//   },
-//   "minItems": 1,
-//   "maxItems": 10
-// }
+//
+//	{
+//	  "type": "array",
+//	  "items": {
+//	    "type": "string"
+//	  },
+//	  "minItems": 1,
+//	  "maxItems": 10
+//	}
 func parseArray(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	// Validate Bounds
 	if node.MaxItems != 0 && node.MinItems > node.MaxItems {
@@ -42,7 +43,7 @@ func parseArray(node schemaNode, metadata *parserMetadata) (Generator, error) {
 
 	// Validate if tuple makes sense in this context
 	tupleLength := len(node.PrefixItems)
-	if tupleLength > node.MaxItems {
+	if tupleLength > node.MaxItems && node.MaxItems != 0 {
 		return nullGenerator{}, fmt.Errorf("tuple length must be less than or equal to maxItems (tupleLength: %d, maxItems: %d)", tupleLength, node.MaxItems)
 	}
 
@@ -125,7 +126,7 @@ func parseItemGenerator(additionalData itemsData, metadata *parserMetadata) Gene
 }
 
 func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
-	
+	opts.overallComplexity++
 	tupleLength := len(g.TupleGenerators)
 	arrayData := make([]interface{}, 0)
 
@@ -157,6 +158,11 @@ func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
 	remainingItemsToGenerate := util.MaxInt(0, maxItems-tupleLength)
 
 	itemsToGenerate := opts.Rand.RandomInt(0, remainingItemsToGenerate)
+
+	// Cull the remaining items if the complexity is too high
+	if opts.MaximumGenerationSteps > 0 && opts.overallComplexity > opts.MaximumGenerationSteps {
+		itemsToGenerate = 0
+	}
 
 	// Generate the remaining items up to a random number
 	// (This might skew the distribution of the length of the array)

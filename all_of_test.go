@@ -6,7 +6,7 @@ import (
 	test "github.com/ryanolee/go-chaff/internal/test_utils"
 )
 
-func TestFormat(t *testing.T) {
+func TestAllOf(t *testing.T) {
 	t.Parallel()
-	test.TestJsonSchemaDir(t, "test_data/string", 100)
+	test.TestJsonSchemaDir(t, "test_data/all_of", 100)
 }

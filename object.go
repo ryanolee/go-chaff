@@ -29,15 +29,16 @@ type (
 
 // Parses the "type" keyword of a schema when it is an object
 // Example:
-// {
-//   "type": "object",
-//   "properties": {
-//     "foo": {
-//       "type": "string"
-//     }
-//   },
-//   "required": ["foo"]
-// }
+//
+//	{
+//	  "type": "object",
+//	  "properties": {
+//	    "foo": {
+//	      "type": "string"
+//	    }
+//	  },
+//	  "required": ["foo"]
+//	}
 func parseObject(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	// Validator Max and Min Properties
 	if node.MinProperties < 0 {
@@ -152,6 +153,9 @@ func parsePatternProperties(node schemaNode, metadata *parserMetadata) (map[stri
 }
 
 func (g objectGenerator) Generate(opts *GeneratorOptions) interface{} {
+	// Handle complexity
+	opts.overallComplexity++
+
 	// Generate Required Properties
 	generatedValues := make(map[string]interface{})
 	for _, key := range g.Required {
@@ -173,6 +177,10 @@ func (g objectGenerator) Generate(opts *GeneratorOptions) interface{} {
 	maximumExtrasToGenerate := util.MaxInt(0, max-len(g.Required))
 
 	generatorTarget := opts.Rand.RandomInt(minimumExtrasToGenerate, maximumExtrasToGenerate)
+
+	if opts.MaximumGenerationSteps > 0 && opts.overallComplexity > opts.MaximumGenerationSteps {
+		generatorTarget = minimumExtrasToGenerate
+	}
 
 	numberOfOptionalKeysToGenerate := util.MinInt(len(optionalKeys), generatorTarget)
 	optionalKeysToGenerate := opts.Rand.StringChoiceMultiple(&optionalKeys, numberOfOptionalKeysToGenerate)
@@ -221,7 +229,7 @@ func (g objectGenerator) GeneratePatternProperty(opts *GeneratorOptions) (string
 	targetRegexGenerator := g.PatternPropertiesRegex[targetRegex]
 	targetGenerator := g.PatternProperties[targetRegex]
 
-	if targetGenerator == nil || targetRegexGenerator == nil{
+	if targetGenerator == nil || targetRegexGenerator == nil {
 		return "", nil
 	}
 

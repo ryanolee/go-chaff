@@ -1,0 +1,43 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "all_of_simple": {
+            "allOf": [
+                {"type": "string"},
+                {"maxLength": 5}
+            ]
+        },
+        "all_of_complex": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "some_string": {
+                            "type": "string"
+                        },
+                        "some_number": {
+                            "type": "number"
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "deep_object": {
+                            "type": "object",
+                            "properties": {
+                                "some_string": {
+                                    "type": "string"
+                                },
+                                "some_number": {
+                                    "type": "number"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

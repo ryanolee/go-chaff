@@ -16,6 +16,7 @@ func parseNull(node schemaNode) (nullGenerator, error) {
 }
 
 func (g nullGenerator) Generate(opts *GeneratorOptions) interface{} {
+	opts.overallComplexity++
 	return nil
 }
 

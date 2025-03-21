@@ -17,16 +17,18 @@ type (
 
 // Parses the "oneOf" or "anyOf" keyword of a schema. This generator is experimental and may not work as expected.
 // Example:
-// {
-//   "oneOf": [
-//     { "type": "string" },
-//     { "type": "number" }
-//   ]
-// }
+//
+//	{
+//	  "oneOf": [
+//	    { "type": "string" },
+//	    { "type": "number" }
+//	  ]
+//	}
+//
 // One of has a similar implementation to anyOf, so they are both handled by this function
 // There are some edge cases that are not handled by this function, such as:
-//  - During "factoring" of the schema merging might not work as expected (Reference resolution is not supported as part of this)
-//  - oneOf Does not actually validate that only one of the schemas is valid.
+//   - During "factoring" of the schema merging might not work as expected (Reference resolution is not supported as part of this)
+//   - oneOf Does not actually validate that only one of the schemas is valid.
 func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	ref := metadata.ReferenceHandler
 	if len(node.OneOf) == 0 && len(node.AnyOf) == 0 {

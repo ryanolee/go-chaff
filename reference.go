@@ -14,9 +14,10 @@ type (
 
 // Parses the "$ref" keyword of a schema
 // Example:
-// {
-//   "$ref": "#/definitions/foo"
-// }
+//
+//	{
+//	  "$ref": "#/definitions/foo"
+//	}
 func parseReference(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	if strings.Contains(node.Ref, "/allOf/") {
 		return constGenerator{
@@ -30,6 +31,7 @@ func parseReference(node schemaNode, metadata *parserMetadata) (Generator, error
 }
 
 func (g referenceGenerator) Generate(opts *GeneratorOptions) interface{} {
+	opts.overallComplexity++
 	reference, ok := g.ReferenceHandler.Lookup(g.ReferenceStr)
 
 	if !ok {
