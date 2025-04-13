@@ -1,0 +1,90 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "basic_tuple": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string" },
+                { "type": "number" },
+                { "type": "boolean" }
+            ]
+        },
+        "tuple_with_no_additional_items": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string" },
+                { "type": "number" }
+            ],
+            "additionalItems": false
+        },
+        "tuple_with_additional_items": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string" },
+                { "type": "number" }
+            ],
+            "additionalItems": { "type": "boolean" }
+        },
+        "complex_tuple": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string", "minLength": 3 },
+                { "type": "integer", "minimum": 0 },
+                { "type": "object", "properties": { "name": { "type": "string" } } },
+                { "type": "array", "items": { "type": "string" } }
+            ],
+            "additionalItems": false
+        },
+        "tuple_with_minItems": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string" },
+                { "type": "number" },
+                { "type": "boolean" }
+            ],
+            "minItems": 3,
+            "additionalItems": false
+        },
+        "tuple_with_maxItems": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string" },
+                { "type": "number" },
+                { "type": "boolean" }
+            ],
+            "maxItems": 3
+        },
+        "tuple_with_enums": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string", "enum": ["red", "green", "blue"] },
+                { "type": "number", "enum": [1, 2, 3] }
+            ]
+        },
+        "tuple_with_unevaluatedItems": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "number" },
+                { "type": "string" }
+            ],
+            "unevaluatedItems": false
+        },
+        "tuple_with_allowed_unevaluatedItems": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "number" },
+                { "type": "string" }
+            ],
+            "unevaluatedItems": { "type": "boolean" }
+        },
+        "tuple_with_contains": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string" },
+                { "type": "number" }
+            ],
+            "contains": { "type": "string", "minLength": 5 }
+        }
+    }
+}

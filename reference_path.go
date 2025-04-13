@@ -9,7 +9,7 @@ import (
 
 // Based on a reference path and a schema node, resolve the schema node at the reference path
 func resolveReferencePath(node schemaNode, refPath string) (schemaNode, error) {
-	
+
 	if refPath == "" {
 		return node, nil
 	}
@@ -21,7 +21,7 @@ func resolveReferencePath(node schemaNode, refPath string) (schemaNode, error) {
 func resolveSubReferencePath(node schemaNode, refPath string, resolvedPath string) (schemaNode, error) {
 	pathPart, path := getReferencePathToken(refPath)
 	resolvedPath = resolvedPath + "/" + pathPart
-	
+
 	if path == "" {
 		return node, nil
 	}
@@ -38,9 +38,9 @@ func resolveSubReferencePath(node schemaNode, refPath string, resolvedPath strin
 		}
 
 		return resolveSubReferencePath(*node.AdditionalProperties.Schema, path, resolvedPath)
-	
+
 	// Array
-	case "items":		
+	case "items":
 		part, _ := getReferencePathToken(path)
 		match, err := regexp.MatchString(`^\d+$`, part)
 		if !match || err != nil {
@@ -50,9 +50,12 @@ func resolveSubReferencePath(node schemaNode, refPath string, resolvedPath strin
 		return resolveReferenceSlice(node.Items.Nodes, path, resolvedPath)
 	case "prefixItems":
 		return resolveReferenceSlice(node.PrefixItems, path, resolvedPath)
+	case "contains":
+		return resolveSubReferencePath(*node.Contains, path, resolvedPath)
 	case "additionalItems":
-		return resolveSubReferencePath(*node.AdditionalItems, path, resolvedPath)
-	
+		return resolveFalseOrSchema(*node.AdditionalItems, path, resolvedPath)
+	case "unevaluatedItems":
+		return resolveFalseOrSchema(*node.UnevaluatedItems, path, resolvedPath)
 
 	// Combinations
 	case "allOf":
@@ -76,20 +79,28 @@ func resolveSubReferencePath(node schemaNode, refPath string, resolvedPath strin
 	}
 }
 
+func resolveFalseOrSchema(node schemaNodeOrFalse, path string, resolvedPath string) (schemaNode, error) {
+	if node.IsFalse {
+		return schemaNode{}, fmt.Errorf("[%s] No schema node for %s node is false", resolvedPath, path)
+	}
+
+	return resolveSubReferencePath(*node.Schema, path, resolvedPath)
+}
+
 // Resolve a reference property based on a map of schema nodes
 func resolveReferenceProperty(nodes map[string]schemaNode, path string, resolvedPath string) (schemaNode, error) {
 	propertyName, path := getReferencePathToken(path)
 	resolvedPath = resolvedPath + "/" + propertyName
 	node, ok := nodes[propertyName]
 	if !ok {
-		return schemaNode{}, fmt.Errorf("[%s] Property %s not found", resolvedPath,  propertyName)
+		return schemaNode{}, fmt.Errorf("[%s] Property %s not found", resolvedPath, propertyName)
 	}
 
 	return resolveSubReferencePath(node, path, resolvedPath)
 }
 
 // Resolve a reference based on a slice of schema nodes and a path
-func resolveReferenceSlice(nodes []schemaNode, path string, resolvedPath string)(schemaNode, error){
+func resolveReferenceSlice(nodes []schemaNode, path string, resolvedPath string) (schemaNode, error) {
 	part, itemPath := getReferencePathToken(path)
 	resolvedPath = resolvedPath + "/" + part
 	partInt, err := strconv.Atoi(part)
@@ -102,18 +113,18 @@ func resolveReferenceSlice(nodes []schemaNode, path string, resolvedPath string)
 	}
 
 	node := nodes[partInt]
-	
+
 	return resolveSubReferencePath(node, itemPath, resolvedPath)
 }
 
-var pathDeliminator = regexp.MustCompile(`\/`)  
+var pathDeliminator = regexp.MustCompile(`\/`)
 
 // Get the first token of a reference path and the rest of the path
-func getReferencePathToken(pathRef string) (string, string){
-	if !strings.Contains(pathRef, "/"){
+func getReferencePathToken(pathRef string) (string, string) {
+	if !strings.Contains(pathRef, "/") {
 		return pathRef, ""
 	}
-	
+
 	refPathParts := pathDeliminator.Split(pathRef, 2)
 	return refPathParts[0], refPathParts[1]
 }

@@ -68,8 +68,11 @@ type (
 		MinContains int         `json:"minContains"`
 		MaxContains int         `json:"maxContains"`
 
-		PrefixItems     []schemaNode `json:"prefixItems"`
-		AdditionalItems *schemaNode  `json:"additionalItems"`
+		PrefixItems      []schemaNode       `json:"prefixItems"`
+		AdditionalItems  *schemaNodeOrFalse `json:"additionalItems"`
+		UnevaluatedItems *schemaNodeOrFalse `json:"unevaluatedItems"`
+		UniqueItems      bool               `json:"uniqueItems"`
+
 		// Enum Properties
 		Enum []interface{} `json:"enum"`
 
@@ -297,7 +300,8 @@ func inferType(node schemaNode) string {
 		node.MinContains != 0 ||
 		node.MaxContains != 0 ||
 		node.PrefixItems != nil ||
-		node.AdditionalItems != nil {
+		node.AdditionalItems != nil ||
+		node.UnevaluatedItems != nil {
 		return typeArray
 	}
 

@@ -19,7 +19,7 @@ var (
 
 func main() {
 	// String Flags
-	path := flag.String("file", "../test-2.json", "Specify a file path to read the JSON Schema from")
+	path := flag.String("file", "", "Specify a file path to read the JSON Schema from")
 	output := flag.String("output", "", "Specify file path to write generated output to.")
 
 	// Bool Flags
