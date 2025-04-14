@@ -45,5 +45,12 @@ func (g ConstGenerator) String() string {
 ## References
 References are created over the course of the initial "parse" traversal. Every "referenceable" item is stored in am internal map of "References". When generating a value for a reference the generator will look up the reference in the map and call the `Generate` function on the referenced generator.
 
-Circular references by default cause an error (During the generation step) as given above as the generator can recurse infinitely. This can be overridden by passing the `GeneratorOptions` struct to the `Generate` function with the `AllowCircularReferences` set to `true`.
+Circular references by default cause an error (During the generation step) as given above as the generator can recurse infinitely. This can be overridden by passing the `GeneratorOptions` struct to the `Generate` function with the `AllowCircularReferences` set to `true`. The "Complexity" limitation constraint somewhat mitigates this but still can result in infinite recursion hence an overall limit set in config to avoid infinite loops.
 
+## Combinators
+Combinators cover `allOf`, `anyOf`, `oneOf` and `not`. 
+ * `not` is explicitly not supported it due to the general difficulties in exhaustively generating matching schemas.
+ * `allOf`  all of uses an a recursive merge algorithm to combine the nodes of a given set of schemas into a single resolvable schemas. References are resolved at compile time and merged down. This approach has the limitation of not being able to handle circular references and in such cases we make accept that the schema is unresolvable and make a best faith attempt to generate a value.
+ * `anyOf` and `oneOf` are implemented as a simple random selection of the given schemas. In the case of One of no provision is in place to ensure Exclusivity of the generated values. 
+
+Factoring is supported with the same caveats as above for circular references.

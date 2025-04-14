@@ -91,6 +91,14 @@ type (
 		Id          string                `json:"$id"`
 		Defs        map[string]schemaNode `json:"$defs"`
 		Definitions map[string]schemaNode `json:"definitions"`
+
+		// Unsupported Properties
+		Not               *schemaNode           `json:"not"`
+		If                *schemaNode           `json:"if"`
+		Then              *schemaNode           `json:"then"`
+		Else              *schemaNode           `json:"else"`
+		DependentRequired map[string][]string   `json:"dependentRequired"`
+		DependentSchemas  map[string]schemaNode `json:"dependentSchemas"`
 	}
 )
 
@@ -179,6 +187,10 @@ func parseNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
 }
 
 func parseSchemaNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
+	if err := assertNoUnsupported(node); err != nil {
+		return nullGenerator{}, err
+	}
+
 	// Handle reference nodes
 	if node.Ref != "" {
 		return parseReference(node, metadata)

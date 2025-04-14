@@ -24,3 +24,25 @@ func assertLowerUpperBound(lower int, upper int, lowerName string, upperName str
 
 	return nil
 }
+
+func assertNoUnsupported(node schemaNode) error {
+	if node.Not != nil {
+		return fmt.Errorf("'not' keyword is not supported")
+	}
+	if node.If != nil {
+		return fmt.Errorf("'if' conditional is not supported")
+	}
+	if node.Then != nil {
+		return fmt.Errorf("'then' conditional is not supported")
+	}
+	if node.Else != nil {
+		return fmt.Errorf("'else' conditional is not supported")
+	}
+	if len(node.DependentRequired) > 0 {
+		return fmt.Errorf("'dependentRequired' is not supported")
+	}
+	if len(node.DependentSchemas) > 0 {
+		return fmt.Errorf("'dependentSchemas' is not supported")
+	}
+	return nil
+}

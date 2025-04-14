@@ -42,7 +42,7 @@ func TestJsonSchema(test *testing.T, schemaPath string, cycles int) {
 			test.Fatalf("Failed to compile schema: %s", err)
 		}
 
-		generator, err := chaff.ParseSchemaFile(schemaPath, &chaff.ParserOptions{})
+		generator, err := chaff.ParseSchemaFileWithDefaults(schemaPath)
 		if err != nil {
 			test.Fatalf("Failed to compile generator: %s", err)
 		}
