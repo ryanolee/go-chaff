@@ -70,7 +70,7 @@ echo '{"type": "string", "format": "ipv4"}' | go-chaff
 ```
 
 # Current support:
- * Strings: (Including `pattern` through [regen](https://github.com/zach-klippenstein/goregen/blob/master/regen.go) and `formats` through [go faker](https://github.com/go-faker/faker))
+ * Strings: (Including `pattern` through [regen](https://github.com/zach-klippenstein/goregen/blob/master/regen.go) and `formats` through [go faker](https://github.com/go-faker/faker)), `minLength`, `maxLength` 
  * Number / Integer: `multipleOf`, `min`, `max`, `exclusiveMin`, `exclusiveMax`
  * Constant types: `enum`, `const`, `null`
  * References: `$ref`, `$defs`, `definitions`, `$id` 
