@@ -78,6 +78,11 @@ echo '{"type": "string", "format": "ipv4"}' | go-chaff
  * Array: `items`, `minItems`, `maxItems`, `contains`, `minContains`, `maxContains`, `prefixItems`, `additionalItems`, `unevalidatedItems`, `uniqueItems` (Limited support)
  * Combination types (`anyOf` / `oneOf` / `allOf`) **N.b These are experimental! Expect none compliant schema output for some of these**
 
+# Further feature support
+ * Schema factoring with `allOf` and `anyOf` (Experimental)
+ * Circular references (Experimental)
+ * Type inference
+
 # Credits / Dependencies
  * [Regen](https://github.com/zach-klippenstein/goregen) (@zach-klippenstein and @AnatolyRugalev)
  * [Faker](https://github.com/go-faker/faker)
