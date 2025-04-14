@@ -120,13 +120,21 @@ func opLiteral(regexp *syntax.Regexp, args *GeneratorArgs) (*internalGenerator, 
 func opAnyChar(regexp *syntax.Regexp, args *GeneratorArgs) (*internalGenerator, error) {
 	enforceOp(regexp, syntax.OpAnyChar)
 	return &internalGenerator{regexp.String(), func() string {
+		if args.LimitToAscii {
+			return runesToString(rune(args.rng.Intn(92) + 32))
+		}
 		return runesToString(rune(args.rng.Int31()))
 	}}, nil
 }
 
 func opAnyCharNotNl(regexp *syntax.Regexp, args *GeneratorArgs) (*internalGenerator, error) {
 	enforceOp(regexp, syntax.OpAnyCharNotNL)
-	charClass := newCharClass(1, rune(math.MaxInt32))
+	var charClass *tCharClass
+	if args.LimitToAscii {
+		charClass = newCharClass(32, 93) // Limit to printable ASCII characters.
+	} else {
+		charClass = newCharClass(0, rune(math.MaxInt32))
+	}
 	return createCharClassGenerator(regexp.String(), charClass, args)
 }
 
@@ -236,6 +244,10 @@ func enforceSingleSub(regexp *syntax.Regexp) error {
 func createCharClassGenerator(name string, charClass *tCharClass, args *GeneratorArgs) (*internalGenerator, error) {
 	return &internalGenerator{name, func() string {
 		i := args.rng.Int31n(charClass.TotalSize)
+		if charClass.TotalSize > 100000 {
+			i = args.rng.Int31n(93) + 32
+		}
+
 		r := charClass.GetRuneAt(i)
 		return runesToString(r)
 	}}, nil

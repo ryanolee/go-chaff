@@ -2,6 +2,7 @@ package chaff
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-faker/faker/v4"
@@ -13,6 +14,8 @@ type (
 		Format           stringFormat
 		Pattern          string
 		PatternGenerator regen.Generator
+		MinLength        int
+		MaxLength        int
 	}
 )
 
@@ -57,18 +60,36 @@ const (
 
 // Parses the "type" keyword of a schema when it is a "string"
 // Example:
-// {
-//   "type": "string",
-//   "pattern": "^[a-zA-Z0-9]{3,30}$"
-// }
+//
+//	{
+//	  "type": "string",
+//	  "pattern": "^[a-zA-Z0-9]{3,30}$"
+//	}
 func parseString(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	if node.Format != "" && node.Pattern != "" {
 		return nullGenerator{}, fmt.Errorf("cannot have both format and pattern on a string")
 	}
 
+	// Validate length bounds
+	if node.MaxLength < 0 || node.MinLength < 0 {
+		return nullGenerator{}, fmt.Errorf("min/max length cannot be negative")
+	}
+
+	if node.MinLength > node.MaxLength && node.MaxLength != 0 {
+		return nullGenerator{}, fmt.Errorf("minLength cannot be greater than maxLength")
+	}
+
+	hasPatternBasedBuilder := node.Pattern != "" || node.Format != ""
+	hasSetMinMaxLength := node.MaxLength != 0 || node.MinLength != 0
+	if hasPatternBasedBuilder && hasSetMinMaxLength {
+		return nullGenerator{}, fmt.Errorf("cannot have both pattern/format based builder and min/max length set at the same time")
+	}
+
 	generator := stringGenerator{
-		Format:  stringFormat(node.Format),
-		Pattern: node.Pattern,
+		Format:    stringFormat(node.Format),
+		Pattern:   node.Pattern,
+		MinLength: node.MinLength,
+		MaxLength: node.MaxLength,
 	}
 
 	if node.Pattern != "" {
@@ -84,21 +105,35 @@ func parseString(node schemaNode, metadata *parserMetadata) (Generator, error) {
 }
 
 func (g stringGenerator) Generate(opts *GeneratorOptions) interface{} {
-	if g.Pattern != "" {
-		return g.PatternGenerator.Generate()
-	}
-
+	opts.overallComplexity++
 	if g.Format != "" {
 		return generateFormat(g.Format, opts)
 	}
 
-	return faker.Sentence()
+	if g.Pattern != "" {
+		return g.PatternGenerator.Generate()
+	}
+
+	// Build a string with a single sentence in it
+	var sb strings.Builder
+	sb.Write([]byte(faker.Sentence()))
+
+	// Keep on filling it until there is a full sentence
+	for sb.Len() < g.MinLength {
+		sb.Write([]byte(faker.Sentence()))
+	}
+
+	// Truncate it if it get's too long
+	if g.MaxLength != 0 && sb.Len() > g.MaxLength {
+		return sb.String()[:g.MaxLength]
+	}
+
+	return sb.String()
 }
 
 func (g stringGenerator) String() string {
-	return "StringGenerator"
+	return fmt.Sprintf("StringGenerator[%s, %s]", g.Format, g.Pattern)
 }
-
 
 func generateFormat(format stringFormat, opts *GeneratorOptions) string {
 	switch format {

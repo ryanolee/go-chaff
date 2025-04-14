@@ -59,6 +59,15 @@ type (
 		// values it might not always be desireable. this option suppresses fallback_n values
 		// so that they will only appear to make up a "minimum value" forces them to
 		SuppressFallbackValues bool
+
+		// The maximum number of times to attempt to generate a unique value
+		// when using unique* constraints in schemas
+		MaximumUniqueGeneratorAttempts int
+
+		// The maximum number of steps to take when generating a value
+		// after which the the generator will begin to do the "bare minimum" to generate a value
+		MaximumGenerationSteps int
+		overallComplexity      int
 	}
 )
 
@@ -80,8 +89,9 @@ func withGeneratorOptionsDefaults(options GeneratorOptions) *GeneratorOptions {
 		DefaultStringMaxLength: util.GetInt(options.DefaultStringMaxLength, 100),
 
 		// Array
-		DefaultArrayMinItems: util.GetInt(options.DefaultArrayMinItems, 0),
-		DefaultArrayMaxItems: util.GetInt(options.DefaultArrayMaxItems, 10),
+		DefaultArrayMinItems:           util.GetInt(options.DefaultArrayMinItems, 0),
+		DefaultArrayMaxItems:           util.GetInt(options.DefaultArrayMaxItems, 10),
+		MaximumUniqueGeneratorAttempts: util.GetInt(options.MaximumUniqueGeneratorAttempts, 10),
 
 		// Object
 		DefaultObjectMinProperties: util.GetInt(options.DefaultObjectMinProperties, 0),
@@ -92,5 +102,9 @@ func withGeneratorOptionsDefaults(options GeneratorOptions) *GeneratorOptions {
 		BypassCyclicReferenceCheck: util.GetBool(options.BypassCyclicReferenceCheck, false),
 		MaximumReferenceDepth:      util.GetInt(options.MaximumReferenceDepth, 10),
 		ReferenceResolver:          referenceResolver{},
+
+		// Generation
+		MaximumGenerationSteps: util.GetInt(options.MaximumGenerationSteps, 100),
+		overallComplexity:      0,
 	}
 }

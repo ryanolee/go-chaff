@@ -26,11 +26,12 @@ type (
 		Errors           map[string]error
 
 		// Generators that need to have their structures Re-Parsed once all references have been resolved
-		ReferenceResolver     referenceResolver
-		RootNode			  schemaNode
-	}
+		ReferenceResolver referenceResolver
+		RootNode          schemaNode
 
-	
+		// Global merge depth for the schema
+		MergeDepth int
+	}
 
 	schemaNode struct {
 		// Shared Properties
@@ -46,8 +47,10 @@ type (
 		Required             []string              `json:"required"`
 
 		// String Properties
-		Pattern string `json:"pattern"`
-		Format  string `json:"format"`
+		Pattern   string `json:"pattern"`
+		Format    string `json:"format"`
+		MinLength int    `json:"minLength"`
+		MaxLength int    `json:"maxLength"`
 
 		// Number Properties
 		Minimum          float64 `json:"minimum"`
@@ -65,8 +68,11 @@ type (
 		MinContains int         `json:"minContains"`
 		MaxContains int         `json:"maxContains"`
 
-		PrefixItems     []schemaNode `json:"prefixItems"`
-		AdditionalItems *schemaNode  `json:"additionalItems"`
+		PrefixItems      []schemaNode       `json:"prefixItems"`
+		AdditionalItems  *schemaNodeOrFalse `json:"additionalItems"`
+		UnevaluatedItems *schemaNodeOrFalse `json:"unevaluatedItems"`
+		UniqueItems      bool               `json:"uniqueItems"`
+
 		// Enum Properties
 		Enum []interface{} `json:"enum"`
 
@@ -85,6 +91,14 @@ type (
 		Id          string                `json:"$id"`
 		Defs        map[string]schemaNode `json:"$defs"`
 		Definitions map[string]schemaNode `json:"definitions"`
+
+		// Unsupported Properties
+		Not               *schemaNode           `json:"not"`
+		If                *schemaNode           `json:"if"`
+		Then              *schemaNode           `json:"then"`
+		Else              *schemaNode           `json:"else"`
+		DependentRequired map[string][]string   `json:"dependentRequired"`
+		DependentSchemas  map[string]schemaNode `json:"dependentSchemas"`
 	}
 )
 
@@ -96,7 +110,7 @@ const (
 	typeInteger = "integer"
 	typeString  = "string"
 	typeBoolean = "boolean"
-	typeNull   = "null"
+	typeNull    = "null"
 )
 
 // Parses a Json Schema file at the given path. If there is an error reading the file or
@@ -142,10 +156,11 @@ func ParseSchema(schema []byte, opts *ParserOptions) (RootGenerator, error) {
 		ReferenceHandler: &refHandler,
 		Errors:           make(map[string]error),
 		ParserOptions:    withDefaultParseOptions(*opts),
-		RootNode:		  node,
+		RootNode:         node,
+		MergeDepth:       0,
 	}
 	generator, err := parseRoot(node, metadata)
-	
+
 	return generator, err
 }
 
@@ -172,6 +187,10 @@ func parseNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
 }
 
 func parseSchemaNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
+	if err := assertNoUnsupported(node); err != nil {
+		return nullGenerator{}, err
+	}
+
 	// Handle reference nodes
 	if node.Ref != "" {
 		return parseReference(node, metadata)
@@ -199,6 +218,13 @@ func parseSchemaNode(node schemaNode, metadata *parserMetadata) (Generator, erro
 	// Handle multiple type nodes
 	if node.Type.MultipleTypes != nil {
 		return parseMultipleType(node, metadata)
+	}
+
+	// In the case no explicit type is given
+	// attempt to infer the type from the node properties
+	if node.Type.SingleType == "" {
+		inferredNodeType := inferType(node)
+		return parseType(inferredNodeType, node, metadata)
 	}
 
 	return parseType(node.Type.SingleType, node, metadata)
@@ -235,7 +261,7 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 	defaultRegexOpts := &regen.GeneratorArgs{
 		MaxUnboundedRepeatCount: 10,
 		SuppressRandomBytes:     true,
-		Flags: syntax.PerlX,
+		Flags:                   syntax.PerlX,
 	}
 
 	if opts.RegexStringOptions == nil {
@@ -247,4 +273,50 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 	}
 
 	return parseOpts
+}
+
+// Infers the type of a schema node based on its properties
+func inferType(node schemaNode) string {
+	// Object Properties
+	if node.Properties != nil ||
+		node.AdditionalProperties.Schema != nil ||
+		node.PatternProperties != nil ||
+		node.MinProperties != 0 ||
+		node.MaxProperties != 0 ||
+		node.Required != nil {
+		return typeObject
+	}
+
+	// String Properties
+	if node.Pattern != "" ||
+		node.Format != "" ||
+		node.MinLength != 0 ||
+		node.MaxLength != 0 {
+		return typeString
+	}
+
+	// Number Properties
+	if node.Minimum != 0 ||
+		node.Maximum != 0 ||
+		node.ExclusiveMinimum != 0 ||
+		node.ExclusiveMaximum != 0 ||
+		node.MultipleOf != 0 {
+		return typeNumber
+	}
+
+	// Array Properties
+	if node.Items.Node != nil ||
+		node.MinItems != 0 ||
+		node.MaxItems != 0 ||
+		node.Contains != nil ||
+		node.MinContains != 0 ||
+		node.MaxContains != 0 ||
+		node.PrefixItems != nil ||
+		node.AdditionalItems != nil ||
+		node.UnevaluatedItems != nil {
+		return typeArray
+	}
+
+	// If we can't infer the type, default to null
+	return typeNull
 }

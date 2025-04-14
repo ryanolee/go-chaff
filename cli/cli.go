@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	version = "UNKNOWN"
-	commit  = "UNKNOWN"
-	buildDate    = "UNKNOWN"
+	version   = "UNKNOWN"
+	commit    = "UNKNOWN"
+	buildDate = "UNKNOWN"
 )
 
 func main() {
@@ -40,7 +40,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	var generator chaff.RootGenerator;
+	var generator chaff.RootGenerator
 	var err error
 
 	if *path != "" {
@@ -69,7 +69,7 @@ func main() {
 	} else {
 		res, err = json.Marshal(result)
 	}
-	
+
 	checkErr(err)
 
 	if *output != "" {
@@ -77,27 +77,27 @@ func main() {
 	} else {
 		fmt.Print(string(res))
 	}
-	
+
 }
 
-func writeFile(data []byte, filepath string){
+func writeFile(data []byte, filepath string) {
 	_, err := os.Stat(filepath)
-	
+
 	if !errors.Is(err, os.ErrNotExist) {
-		checkErr(fmt.Errorf("file '%s' already exists", filepath ))
+		checkErr(fmt.Errorf("file '%s' already exists", filepath))
 	}
 
 	file, err := os.Create(filepath)
-	
+
 	checkErr(err)
 	_, err = file.Write(data)
 	checkErr(err)
-	
+
 	err = file.Close()
 	checkErr(err)
 }
 
-func readStdin() []byte{
+func readStdin() []byte {
 	if hasStdin() {
 		stdin, err := io.ReadAll(os.Stdin)
 		checkErr(err)
@@ -112,7 +112,7 @@ func hasStdin() bool {
 	return (stat.Mode() & os.ModeCharDevice) == 0
 }
 
-func checkErr(err error){
+func checkErr(err error) {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

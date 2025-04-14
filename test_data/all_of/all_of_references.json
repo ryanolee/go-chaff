@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+       "some_string": {
+           "type": "string"
+       },
+       "some_format": {
+           "format": "email"
+       },
+       "some_string_indirect": {
+           "$ref": "#/properties/some_string"
+       },
+       "some_format_indirect": {
+           "$ref": "#/properties/some_format"
+       },
+       "all_of": {
+            "allOf": [
+                {
+                    "$ref": "#/properties/some_string"
+                },
+                {
+                    "$ref": "#/properties/some_format"
+                }
+            ]
+       },
+       "all_of_indirect": {
+            "allOf": [
+                {
+                    "$ref": "#/properties/some_string_indirect"
+                },
+                {
+                    "$ref": "#/properties/some_format_indirect"
+                }
+            ]
+       },
+       "all_of_reference": {
+            "$ref": "#/properties/all_of"
+       },
+       "all_of_containing_reference_to_all_of": {
+            "allOf": [
+                {
+                    "$ref": "#/properties/all_of"
+                }
+            ]
+       }
+    }
+}

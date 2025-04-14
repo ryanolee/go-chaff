@@ -1,0 +1,95 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "inferred_object_from_properties": {
+            "properties": {
+                "name": { "type": "string" }
+            }
+        },
+        "inferred_object_from_additionalProperties": {
+            "additionalProperties": { "type": "string" }
+        },
+        "inferred_object_from_patternProperties": {
+            "patternProperties": {
+                "^[a-z]+$": { "type": "string" }
+            }
+        },
+        "inferred_object_from_minProperties": {
+            "minProperties": 1
+        },
+        "inferred_object_from_maxProperties": {
+            "maxProperties": 5
+        },
+        "inferred_object_from_required": {
+            "properties": {
+                "id": { "type": "number" },
+                "name": { "type": "string" }
+            },
+            "required": ["id", "name"]
+        },
+        
+        "inferred_string_from_pattern": {
+            "pattern": "^[a-zA-Z0-9]+$"
+        },
+        "inferred_string_from_format": {
+            "format": "email"
+        },
+        "inferred_string_from_minLength": {
+            "minLength": 3
+        },
+        "inferred_string_from_maxLength": {
+            "maxLength": 50
+        },
+        
+        "inferred_number_from_minimum": {
+            "minimum": 0
+        },
+        "inferred_number_from_maximum": {
+            "maximum": 100
+        },
+        "inferred_number_from_exclusiveMinimum": {
+            "exclusiveMinimum": 0
+        },
+        "inferred_number_from_exclusiveMaximum": {
+            "exclusiveMaximum": 100
+        },
+        "inferred_number_from_multipleOf": {
+            "multipleOf": 5
+        },
+        
+        "inferred_array_from_items": {
+            "items": { "type": "string" }
+        },
+        "inferred_array_from_minItems": {
+            "minItems": 1
+        },
+        "inferred_array_from_maxItems": {
+            "maxItems": 5
+        },
+        "inferred_array_from_contains": {
+            "contains": { "type": "number" }
+        },
+        "inferred_array_from_minContains": {
+            "contains": { "type": "string" },
+            "minContains": 2
+        },
+        "inferred_array_from_maxContains": {
+            "contains": { "type": "string" },
+            "maxContains": 4
+        },
+        "inferred_array_from_prefixItems": {
+            "prefixItems": [
+                { "type": "string" },
+                { "type": "number" }
+            ]
+        },
+        "inferred_array_from_additionalItems": {
+            "items": { "type": "string" },
+            "additionalItems": { "type": "number" }
+        },
+        "inferred_null_as_default": {
+            "description": "This property has no type-inferring attributes, so should default to null"
+        }
+    }
+}

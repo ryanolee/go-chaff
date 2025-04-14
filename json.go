@@ -24,6 +24,12 @@ type (
 		Nodes                   []schemaNode
 		DisallowAdditionalItems bool
 	}
+
+	// Used to handle cases where the given value can be a schema node or  a false value
+	schemaNodeOrFalse struct {
+		Schema  *schemaNode
+		IsFalse bool
+	}
 )
 
 func (a *additionalData) UnmarshalJSON(data []byte) error {
@@ -93,5 +99,25 @@ func (i *itemsData) UnmarshalJSON(data []byte) error {
 
 	i.Nodes = nodes
 	i.Node = node
+	return nil
+}
+
+func (s *schemaNodeOrFalse) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	if string(data) == "false" {
+		s.IsFalse = true
+		return nil
+	}
+
+	var schema schemaNode
+	err := json.Unmarshal(data, &schema)
+	if err != nil {
+		return err
+	}
+
+	s.Schema = &schema
 	return nil
 }

@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "testMinLength": {
+            "type": "string",
+            "minLength": 3
+        },
+        "testMaxLength": {
+            "type": "string",
+            "maxLength": 3
+        },
+        "tesLengthRange": {
+            "type": "string",
+            "minLength": 30,
+            "maxLength": 50
+        }
+    }
+}

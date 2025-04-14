@@ -1,0 +1,54 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "testDateTime": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "testTime": {
+            "type": "string",
+            "format": "time"
+        },
+        "testDate": {
+            "type": "string",
+            "format": "date"
+        },
+        "testEmail": {
+            "type": "string",
+            "format": "email"
+        },
+        "testHostname": {
+            "type": "string",
+            "format": "hostname"
+        },
+        "testIPv4": {
+            "type": "string",
+            "format": "ipv4"
+        },
+        "testIPv6": {
+            "type": "string",
+            "format": "ipv6"
+        },
+        "testURI": {
+            "type": "string",
+            "format": "uri"
+        },
+        "testURIReference": {
+            "type": "string",
+            "format": "uri-reference"
+        },
+        "testIRI": {
+            "type": "string",
+            "format": "iri"
+        },
+        "testIRIReference": {
+            "type": "string",
+            "format": "iri-reference"
+        },
+        "testRegex": {
+            "type": "string",
+            "format": "regex"
+        }
+    }
+}

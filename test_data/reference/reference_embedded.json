@@ -1,0 +1,79 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "some_object": {
+            "type": "object",
+            "properties": {
+                "some_string": {
+                    "type": "string"
+                },
+                "some_number": {
+                    "type": "number"
+                },
+                "deep_object": {
+                    "type": "object",
+                    "properties": {
+                        "some_string": {
+                            "type": "string"
+                        },
+                        "some_number": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "some_string",
+                        "some_number"
+                    ]
+                }
+            },
+            "required": [
+                "some_string",
+                "some_number"
+            ]
+        },
+        "some_array": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "some_string": {
+                        "type": "string"
+                    },
+                    "some_number": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "some_string",
+                    "some_number"
+                ]
+            }
+        },
+        "deep_object_reference": {
+            "$ref": "#/properties/some_object/properties/deep_object"
+        },
+        "object_reference": {
+            "$ref": "#/properties/some_object"
+        },
+        "array_reference": {
+            "$ref": "#/properties/some_array"
+        },
+        "indirect_reference": {
+            "$ref": "#/properties/object_reference"
+        },
+        "indirect_array_reference": {
+            "$ref": "#/properties/array_reference"
+        },
+        "double_indirect_reference": {
+            "$ref": "#/properties/indirect_reference"
+        },
+        "double_indirect_array_reference": {
+            "$ref": "#/properties/indirect_array_reference"
+        }
+    },
+    "required": [
+        "some_object",
+        "some_array"
+    ]
+}

@@ -29,15 +29,16 @@ type (
 
 // Parses the "type" keyword of a schema when it is an object
 // Example:
-// {
-//   "type": "object",
-//   "properties": {
-//     "foo": {
-//       "type": "string"
-//     }
-//   },
-//   "required": ["foo"]
-// }
+//
+//	{
+//	  "type": "object",
+//	  "properties": {
+//	    "foo": {
+//	      "type": "string"
+//	    }
+//	  },
+//	  "required": ["foo"]
+//	}
 func parseObject(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	// Validator Max and Min Properties
 	if node.MinProperties < 0 {
@@ -55,12 +56,6 @@ func parseObject(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	// Validate Required Properties
 	if node.MaxProperties != 0 && len(node.Required) > node.MaxProperties {
 		return nullGenerator{}, fmt.Errorf("required properties must have a length of less than or equal to MaxProperties (Max Properties: %d, Length of required %d)", node.MaxProperties, len(node.Required))
-	}
-
-	for _, requiredProperty := range node.Required {
-		if _, ok := node.Properties[requiredProperty]; !ok {
-			return nullGenerator{}, fmt.Errorf("required property %s does not exist in properties", requiredProperty)
-		}
 	}
 
 	// Validate additionalProperties
@@ -152,10 +147,21 @@ func parsePatternProperties(node schemaNode, metadata *parserMetadata) (map[stri
 }
 
 func (g objectGenerator) Generate(opts *GeneratorOptions) interface{} {
+	// Handle complexity
+	opts.overallComplexity++
+
 	// Generate Required Properties
 	generatedValues := make(map[string]interface{})
 	for _, key := range g.Required {
-		generatedValues[key] = g.Properties[key].Generate(opts)
+		// If no properties are defined, generate a nil value
+		if g.Properties == nil {
+			generatedValues[key] = fmt.Sprintf("required_%s_%d", key, opts.Rand.RandomInt(0, 9999999))
+		} else if _, ok := g.Properties[key]; !ok {
+			generatedValues[key] = fmt.Sprintf("required_%s_%d", key, opts.Rand.RandomInt(0, 9999999))
+		} else {
+			// Generate the required property
+			generatedValues[key] = g.Properties[key].Generate(opts)
+		}
 	}
 
 	// Generate A random distribution of optional properties, pattern properties, and additional properties
@@ -165,8 +171,9 @@ func (g objectGenerator) Generate(opts *GeneratorOptions) interface{} {
 	min := util.GetInt(g.MinProperties, opts.DefaultObjectMinProperties)
 	max := util.GetInt(g.MaxProperties, opts.DefaultObjectMaxProperties)
 
+	// Make sure the max is always greater than the min
 	if max < min {
-		max = min + opts.DefaultObjectMaxProperties
+		max = min + max
 	}
 
 	minimumExtrasToGenerate := util.MaxInt(0, min-len(g.Required))
@@ -174,12 +181,22 @@ func (g objectGenerator) Generate(opts *GeneratorOptions) interface{} {
 
 	generatorTarget := opts.Rand.RandomInt(minimumExtrasToGenerate, maximumExtrasToGenerate)
 
+	if opts.MaximumGenerationSteps > 0 && opts.overallComplexity > opts.MaximumGenerationSteps {
+		generatorTarget = minimumExtrasToGenerate
+	}
+
 	numberOfOptionalKeysToGenerate := util.MinInt(len(optionalKeys), generatorTarget)
 	optionalKeysToGenerate := opts.Rand.StringChoiceMultiple(&optionalKeys, numberOfOptionalKeysToGenerate)
 
 	// Generate any optional keys
 	for _, key := range optionalKeysToGenerate {
-		generatedValues[key] = g.Properties[key].Generate(opts)
+		if g.Properties == nil {
+			generatedValues[key] = fmt.Sprintf("optional_%s_%d", key, opts.Rand.RandomInt(0, 9999999))
+		} else if _, ok := g.Properties[key]; !ok {
+			generatedValues[key] = fmt.Sprintf("optional_%s_%d", key, opts.Rand.RandomInt(0, 9999999))
+		} else {
+			generatedValues[key] = g.Properties[key].Generate(opts)
+		}
 	}
 
 	generatorTarget -= len(optionalKeysToGenerate)
@@ -208,6 +225,21 @@ func (g objectGenerator) Generate(opts *GeneratorOptions) interface{} {
 		}
 	}
 
+	// In the event the number of generated parameters due to config options
+	// results in fewer than the minimum number of properties being generated
+	// generate atleast the minimum number of properties required for satisfiability
+	if len(generatedValues) < min {
+		generator := g.FallbackGenerator
+		if g.AdditionalProperties != nil {
+			generator = g.AdditionalProperties
+		}
+
+		for i := len(generatedValues); i < min; i++ {
+			generatedValues[fmt.Sprintf("min_filler_%d", i)] = generator.Generate(opts)
+		}
+
+	}
+
 	return generatedValues
 }
 
@@ -221,7 +253,7 @@ func (g objectGenerator) GeneratePatternProperty(opts *GeneratorOptions) (string
 	targetRegexGenerator := g.PatternPropertiesRegex[targetRegex]
 	targetGenerator := g.PatternProperties[targetRegex]
 
-	if targetGenerator == nil || targetRegexGenerator == nil{
+	if targetGenerator == nil || targetRegexGenerator == nil {
 		return "", nil
 	}
 

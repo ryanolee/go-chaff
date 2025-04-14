@@ -70,13 +70,18 @@ echo '{"type": "string", "format": "ipv4"}' | go-chaff
 ```
 
 # Current support:
- * Strings: (Including `pattern` through [regen](https://github.com/zach-klippenstein/goregen/blob/master/regen.go) and `formats` through [go faker](https://github.com/go-faker/faker))
+ * Strings: (Including `pattern` through [regen](https://github.com/zach-klippenstein/goregen/blob/master/regen.go) and `formats` through [go faker](https://github.com/go-faker/faker)), `minLength`, `maxLength` 
  * Number / Integer: `multipleOf`, `min`, `max`, `exclusiveMin`, `exclusiveMax`
  * Constant types: `enum`, `const`, `null`
  * References: `$ref`, `$defs`, `definitions`, `$id` 
  * Object: `properties`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
- * Array: `items`, `minItems`, `maxItems`, `contains`, `minContains`, `maxContains`, `prefixItems`, `additionalItems`
+ * Array: `items`, `minItems`, `maxItems`, `contains`, `minContains`, `maxContains`, `prefixItems`, `additionalItems`, `unevalidatedItems`, `uniqueItems` (Limited support)
  * Combination types (`anyOf` / `oneOf` / `allOf`) **N.b These are experimental! Expect none compliant schema output for some of these**
+
+# Further feature support
+ * Schema factoring with `allOf` and `anyOf` (Experimental)
+ * Circular references (Experimental)
+ * Type inference
 
 # Credits / Dependencies
  * [Regen](https://github.com/zach-klippenstein/goregen) (@zach-klippenstein and @AnatolyRugalev)
@@ -88,6 +93,6 @@ echo '{"type": "string", "format": "ipv4"}' | go-chaff
  * Better test coverage (Property based and unit of various generators)
  * Handle many edge cases where this package might not generate schema compliant results
  * Overcome the limitations of the current `oneOf`, `anyOf` and `allOf` keywords implementation.
- * Add support for `if` / `else` keywords
+ * Add support for `if` / `else` / `not` keywords
 
  
