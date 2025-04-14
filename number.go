@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math"
 
+	"github.com/ryanolee/go-chaff/internal/util"
 	"github.com/ryanolee/go-chaff/rand"
 )
 
@@ -54,14 +55,16 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 		min = float64(node.ExclusiveMinimum) + infinitesimal
 	}
 
+	// Give room for many multiples
+	offset := util.GetFloat(node.MultipleOf*100, defaultOffset)
 	if node.Maximum != 0 {
 		max = float64(node.Maximum)
 	} else if node.ExclusiveMaximum != 0 {
 		max = float64(node.ExclusiveMaximum) - infinitesimal
 	} else if min != 0 {
-		max = min + defaultOffset
+		max = min + offset
 	} else {
-		max = defaultOffset
+		max = offset
 	}
 
 	// Validate min and max
