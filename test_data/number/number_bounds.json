@@ -28,6 +28,13 @@
 
         "test_positive_or_zero": { "type": "number", "minimum": 0 },
         "test_negative_or_zero": { "type": "number", "maximum": 0 },
+        
+        "test_negative_min_inclusive": { "type": "number", "minimum": -1000 },
+        "test_negative_max_inclusive": { "type": "number", "maximum": -1 },
+        "test_negative_range_inclusive": { "type": "number", "minimum": -1000, "maximum": -1 },
+        "test_negative_max_exclusive": { "type": "number", "exclusiveMaximum": -1 },
+        "test_negative_min_exclusive": { "type": "number", "exclusiveMinimum": -1000 },
+        "test_negative_range_exclusive": { "type": "number", "exclusiveMinimum": -1000, "exclusiveMaximum": -1 },
 
         "test_small_positive_fraction": { "type": "number", "minimum": 0.0000001, "maximum": 0.0001 },
         "test_small_negative_fraction": { "type": "number", "minimum": -0.0001, "maximum": -0.0000001 },
