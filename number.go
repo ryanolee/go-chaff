@@ -22,6 +22,7 @@ type (
 const (
 	infinitesimal = math.SmallestNonzeroFloat64
 
+	// Bound to slightly less than the max float64 value to avoid unserializable inf values
 	upperBound = math.MaxFloat64 / 1000
 	lowerBound = -(math.MaxFloat64 / 1000)
 
