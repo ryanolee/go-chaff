@@ -2,6 +2,7 @@ package chaff
 
 import (
 	"errors"
+	"fmt"
 	"math"
 
 	"github.com/ryanolee/go-chaff/internal/util"
@@ -19,7 +20,11 @@ type (
 )
 
 const (
-	infinitesimal                            = math.SmallestNonzeroFloat64
+	infinitesimal = math.SmallestNonzeroFloat64
+
+	upperBound = math.MaxFloat64 / 1000
+	lowerBound = -(math.MaxFloat64 / 1000)
+
 	generatorTypeInteger numberGeneratorType = "integer"
 	generatorTypeNumber  numberGeneratorType = "number"
 
@@ -36,40 +41,57 @@ const (
 // }
 
 func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error) {
-	var min float64
-	var max float64
+	var min float64 = math.Inf(-1)
+	var max float64 = math.Inf(1)
 
 	// Initial Validation
-	if node.Minimum != 0 && node.ExclusiveMinimum != 0 {
+	if node.Minimum != nil && node.ExclusiveMinimum != nil {
 		return nullGenerator{}, errors.New("cannot have both minimum and exclusive minimum")
 	}
 
-	if node.Maximum != 0 && node.ExclusiveMaximum != 0 {
+	if node.Maximum != nil && node.ExclusiveMaximum != nil {
 		return nullGenerator{}, errors.New("cannot have both maximum and exclusive maximum")
 	}
 
 	// Set min and max
-	if node.Minimum != 0 {
-		min = float64(node.Minimum)
-	} else if node.ExclusiveMinimum != 0 {
-		min = float64(node.ExclusiveMinimum) + infinitesimal
+	if node.Minimum != nil {
+		min = float64(*node.Minimum)
+	} else if node.ExclusiveMinimum != nil {
+		min = float64(*node.ExclusiveMinimum) + infinitesimal
 	}
 
-	// Give room for many multiples
+	// Set maximum
+	if node.Maximum != nil {
+		max = float64(*node.Maximum)
+	} else if node.ExclusiveMaximum != nil {
+		max = float64(*node.ExclusiveMaximum) - infinitesimal
+	}
+
+	// Set default min and max if they are still infinite
+	// Or clamp them to be within a reasonable range of each other
 	offset := util.GetFloat(node.MultipleOf*100, defaultOffset)
-	if node.Maximum != 0 {
-		max = float64(node.Maximum)
-	} else if node.ExclusiveMaximum != 0 {
-		max = float64(node.ExclusiveMaximum) - infinitesimal
-	} else if min != 0 {
+
+	if math.IsInf(min, 0) && !math.IsInf(max, 0) {
+		min = max - offset
+	} else if !math.IsInf(min, 0) && math.IsInf(max, 0) {
 		max = min + offset
-	} else {
+	} else if math.IsInf(min, 0) && math.IsInf(max, 0) {
+		min = -offset
 		max = offset
+	}
+
+	// Finally clamp min and max to be within upper and lower bounds
+	if min < lowerBound {
+		min = lowerBound
+	}
+
+	if max > upperBound {
+		max = upperBound
 	}
 
 	// Validate min and max
 	if min > max {
-		return nullGenerator{}, errors.New("minimum cannot be greater than maximum")
+		return nullGenerator{}, fmt.Errorf("minimum cannot be greater than maximum (min: %f, max: %f)", min, max)
 	}
 
 	// Validate multipleOf
@@ -120,7 +142,7 @@ func (g *numberGenerator) Generate(opts *GeneratorOptions) interface{} {
 	} else if g.Type == generatorTypeInteger && g.MultipleOf == 0 {
 		return int(math.Round(opts.Rand.RandomFloat(g.Min, g.Max)))
 	} else if g.Type == generatorTypeNumber && g.MultipleOf != 0 {
-		return generateMultipleOf(*opts.Rand, g.Min, g.Max, g.MultipleOf)
+		return util.Round(generateMultipleOf(*opts.Rand, g.Min, g.Max, g.MultipleOf), g.MultipleOf)
 	} else if g.Type == generatorTypeNumber && g.MultipleOf == 0 {
 		return opts.Rand.RandomFloat(g.Min, g.Max)
 	}

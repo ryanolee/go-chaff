@@ -123,10 +123,10 @@ func mergeSchemaNodeSimpleProperties(baseNode schemaNode, otherNode schemaNode) 
 	baseNode.MaxLength = util.GetInt(otherNode.MaxLength, baseNode.MaxLength)
 
 	// Merge simple float properties
-	baseNode.Minimum = util.GetFloat(otherNode.Minimum, baseNode.Minimum)
-	baseNode.Maximum = util.GetFloat(otherNode.Maximum, baseNode.Maximum)
-	baseNode.ExclusiveMinimum = util.GetFloat(otherNode.ExclusiveMinimum, baseNode.ExclusiveMinimum)
-	baseNode.ExclusiveMaximum = util.GetFloat(otherNode.ExclusiveMaximum, baseNode.ExclusiveMaximum)
+	baseNode.Minimum = util.GetFloatPtr(otherNode.Minimum, baseNode.Minimum)
+	baseNode.Maximum = util.GetFloatPtr(otherNode.Maximum, baseNode.Maximum)
+	baseNode.ExclusiveMinimum = util.GetFloatPtr(otherNode.ExclusiveMinimum, baseNode.ExclusiveMinimum)
+	baseNode.ExclusiveMaximum = util.GetFloatPtr(otherNode.ExclusiveMaximum, baseNode.ExclusiveMaximum)
 	baseNode.MultipleOf = util.GetFloat(otherNode.MultipleOf, baseNode.MultipleOf)
 
 	// Merge simple string properties

@@ -1,0 +1,63 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "test_integer_basic": { "type": "integer" },
+        "test_number_basic": { "type": "number" },
+
+        "test_zero": { "type": "number", "const": 0 },
+
+        "test_min_inclusive": { "type": "number", "minimum": -100 },
+        "test_min_exclusive": { "type": "number", "exclusiveMinimum": -100 },
+        "test_max_inclusive": { "type": "number", "maximum": 100 },
+        "test_max_exclusive": { "type": "number", "exclusiveMaximum": 100 },
+
+        "test_range_inclusive": { "type": "number", "minimum": -10, "maximum": 10 },
+        "test_range_exclusive": { "type": "number", "exclusiveMinimum": -10, "exclusiveMaximum": 10 },
+        "test_mixed_boundaries": { "type": "number", "minimum": 1, "exclusiveMaximum": 5 },
+
+        "test_large_integer": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+        "test_very_large_number": { "type": "number", "minimum": -1e308, "maximum": 1e308 },
+        "test_small_magnitude": { "type": "number", "minimum": -1e-308, "maximum": 1e-308 },
+
+        "test_multiple_of_integer": { "type": "integer", "multipleOf": 7 },
+        "test_multiple_of_power_two": { "type": "integer", "multipleOf": 1024 },
+
+        "test_positive_integer_range": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "test_negative_integer_range": { "type": "integer", "minimum": -1000, "maximum": -1 },
+
+        "test_positive_or_zero": { "type": "number", "minimum": 0 },
+        "test_negative_or_zero": { "type": "number", "maximum": 0 },
+
+        "test_small_positive_fraction": { "type": "number", "minimum": 0.0000001, "maximum": 0.0001 },
+        "test_small_negative_fraction": { "type": "number", "minimum": -0.0001, "maximum": -0.0000001 },
+
+        "test_open_interval_near_zero": { "type": "number", "exclusiveMinimum": -1, "exclusiveMaximum": 1 },
+
+        "test_chained_constraints": {
+            "type": "number",
+            "minimum": 10,
+            "maximum": 1000,
+            "multipleOf": 2
+        },
+
+        "test_extreme_signed_32": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 },
+        "test_extreme_unsigned_32": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+
+        "test_extreme_signed_64": { "type": "integer", "minimum": -9223372036854775808, "maximum": 9223372036854775807 },
+
+        "test_power_of_ten_span": { "type": "number", "minimum": 1e-12, "maximum": 1e12 },
+
+        "test_boundary_at_one": { "type": "number", "minimum": 1, "exclusiveMaximum": 2 },
+        "test_boundary_below_one": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+
+        "test_round_trip_safe_int": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+
+        "test_multiple_of_fraction": { "type": "number", "multipleOf": 0.125, "minimum": 0, "maximum": 2 },
+
+        "test_denormal_like": { "type": "number", "minimum": 5e-324, "maximum": 1e-320 },
+
+        "test_close_to_one": { "type": "number", "minimum": 0.999999, "maximum": 1.000001 }
+    },
+    "additionalProperties": false
+}
