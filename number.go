@@ -71,14 +71,13 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 	// Set default min and max if they are still infinite
 	// Or clamp them to be within a reasonable range of each other
 	offset := util.GetFloat(node.MultipleOf*100, defaultOffset)
-
-	if math.IsInf(min, 0) && !math.IsInf(max, 0) {
-		min = max - offset
-	} else if !math.IsInf(min, 0) && math.IsInf(max, 0) {
-		max = min + offset
-	} else if math.IsInf(min, 0) && math.IsInf(max, 0) {
-		min = -offset
+	if math.IsInf(min, -1) && math.IsInf(max, 1) {
+		min = 0
 		max = offset
+	} else if math.IsInf(min, -1) {
+		min = max - offset
+	} else if math.IsInf(max, 1) {
+		max = min + offset
 	}
 
 	// Finally clamp min and max to be within upper and lower bounds
