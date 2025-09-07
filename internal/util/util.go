@@ -1,5 +1,7 @@
 package util
 
+import "math"
+
 // Returns the first non-empty string
 func GetString(values ...string) string {
 	for _, value := range values {
@@ -31,6 +33,20 @@ func GetFloat(values ...float64) float64 {
 	}
 
 	return 0
+}
+
+func GetFloatPtr(values ...*float64) *float64 {
+	for _, value := range values {
+		if value != nil {
+			return value
+		}
+	}
+
+	return nil
+}
+
+func Round(x, unit float64) float64 {
+	return math.Round(x/unit) * unit
 }
 
 // Returns the true if value or defaultValue are true
@@ -66,3 +82,6 @@ func MinInt(a ...int) int {
 	return min
 }
 
+func FloatPtr(f float64) *float64 {
+	return &f
+}

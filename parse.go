@@ -53,11 +53,11 @@ type (
 		MaxLength int    `json:"maxLength"`
 
 		// Number Properties
-		Minimum          float64 `json:"minimum"`
-		Maximum          float64 `json:"maximum"`
-		ExclusiveMinimum float64 `json:"exclusiveMinimum"`
-		ExclusiveMaximum float64 `json:"exclusiveMaximum"`
-		MultipleOf       float64 `json:"multipleOf"`
+		Minimum          *float64 `json:"minimum,omitempty"`
+		Maximum          *float64 `json:"maximum,omitempty"`
+		ExclusiveMinimum *float64 `json:"exclusiveMinimum,omitempty"`
+		ExclusiveMaximum *float64 `json:"exclusiveMaximum,omitempty"`
+		MultipleOf       float64  `json:"multipleOf"`
 
 		// Array Properties
 		Items    itemsData `json:"items"`
@@ -296,10 +296,10 @@ func inferType(node schemaNode) string {
 	}
 
 	// Number Properties
-	if node.Minimum != 0 ||
-		node.Maximum != 0 ||
-		node.ExclusiveMinimum != 0 ||
-		node.ExclusiveMaximum != 0 ||
+	if node.Minimum != nil ||
+		node.Maximum != nil ||
+		node.ExclusiveMinimum != nil ||
+		node.ExclusiveMaximum != nil ||
 		node.MultipleOf != 0 {
 		return typeNumber
 	}
