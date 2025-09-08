@@ -20,7 +20,9 @@ type (
 )
 
 const (
-	infinitesimal = math.SmallestNonzeroFloat64
+	// Anything smaller than this and Golangs math.Floor and math.Ceil functions
+	// begin to misbehave due to floating point precision issues
+	infinitesimal = 0.1e-13
 
 	// Bound to slightly less than the max float64 value to avoid unserializable inf values
 	upperBound = math.MaxFloat64 / 1000
@@ -80,13 +82,19 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 		max = min + offset
 	}
 
-	// Finally clamp min and max to be within upper and lower bounds
+	// clamp min and max to be within upper and lower bounds
 	if min < lowerBound {
 		min = lowerBound
 	}
 
 	if max > upperBound {
 		max = upperBound
+	}
+
+	// If we are an integer type, round min and max to the nearest integers
+	if genType == generatorTypeInteger {
+		min = math.Ceil(min)
+		max = math.Floor(max)
 	}
 
 	// Validate min and max
@@ -96,8 +104,12 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 
 	// Validate multipleOf
 	if node.MultipleOf != 0 {
-		if node.MultipleOf <= 0 {
-			return nullGenerator{}, errors.New("multipleOf cannot be negative or zero")
+		if node.MultipleOf < 0 {
+			return nullGenerator{}, errors.New("multipleOf cannot be negative")
+		} else if node.MultipleOf != 0 && node.MultipleOf < infinitesimal {
+			return nullGenerator{}, fmt.Errorf("multipleOf must be at least %e", infinitesimal)
+		} else if genType == generatorTypeInteger && math.Trunc(node.MultipleOf) != node.MultipleOf {
+			return nullGenerator{}, errors.New("integer type cannot have a non-integer multipleOf")
 		}
 
 		multiplesInRange := countMultiplesInRange(min, max, node.MultipleOf)
@@ -105,6 +117,11 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 		if multiplesInRange == 0 {
 			return nullGenerator{}, errors.New("minimum and maximum do not allow for any multiples of multipleOf")
 		}
+	}
+
+	// Return a constant value if min and max are equal
+	if min == max {
+		return constGenerator{Value: min}, nil
 	}
 
 	return &numberGenerator{
