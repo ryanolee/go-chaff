@@ -36,6 +36,13 @@
         "test_negative_min_exclusive": { "type": "number", "exclusiveMinimum": -1000 },
         "test_negative_range_exclusive": { "type": "number", "exclusiveMinimum": -1000, "exclusiveMaximum": -1 },
 
+        "test_min_integer": { "type": "integer", "minimum": -100 },
+        "test_max_integer": { "type": "integer", "maximum": 100},
+        "test_exclusive_min_integer": { "type": "integer", "exclusiveMinimum": -100 },
+        "test_exclusive_max_integer": { "type": "integer", "exclusiveMaximum": 100},
+
+        "test_matching_bounds": { "type": "number", "minimum": 42, "maximum": 42 },
+
         "test_small_positive_fraction": { "type": "number", "minimum": 0.0000001, "maximum": 0.0001 },
         "test_small_negative_fraction": { "type": "number", "minimum": -0.0001, "maximum": -0.0000001 },
 
