@@ -93,6 +93,10 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 
 	// If we are an integer type, round min and max to the nearest integers
 	if genType == generatorTypeInteger {
+		if math.Abs(min-max) < 1 {
+			return nullGenerator{}, fmt.Errorf("minimum and maximum do not allow for any integers (min: %f, max: %f)", min, max)
+		}
+
 		min = math.Ceil(min)
 		max = math.Floor(max)
 	}
