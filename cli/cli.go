@@ -55,8 +55,14 @@ func main() {
 	}
 
 	if *verbose {
+		fmt.Printf("Schema compiled successfully to the following generator tree: %s\n", generator)
+
+		if len(generator.Metadata.Errors) != 0 {
+			fmt.Println("Passed schema failed to fully compile with the following errors:")
+		}
+
 		for key, value := range generator.Metadata.Errors {
-			fmt.Printf("[%s]%e", key, value)
+			fmt.Printf(" - [%s] %s \n", key, value)
 		}
 	}
 

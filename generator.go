@@ -64,10 +64,23 @@ type (
 		// when using unique* constraints in schemas
 		MaximumUniqueGeneratorAttempts int
 
+		// The maximum number of times to attempt to satisfy "if" statements
+		// before giving up
+		MaximumIfAttempts int
+
+		// The maximum number of times to attempt to satisfy "oneOf" statements
+		// before giving up
+		MaximumOneOfAttempts int
+
 		// The maximum number of steps to take when generating a value
 		// after which the the generator will begin to do the "bare minimum" to generate a value
 		MaximumGenerationSteps int
-		overallComplexity      int
+
+		// The maximum number of steps to take before giving up entirely and aborting generation
+		// This is a hard cap on generation steps to prevent extremely long generation times
+		CutoffGenerationSteps int
+
+		overallComplexity int
 	}
 )
 
@@ -89,9 +102,8 @@ func withGeneratorOptionsDefaults(options GeneratorOptions) *GeneratorOptions {
 		DefaultStringMaxLength: util.GetInt(options.DefaultStringMaxLength, 100),
 
 		// Array
-		DefaultArrayMinItems:           util.GetInt(options.DefaultArrayMinItems, 0),
-		DefaultArrayMaxItems:           util.GetInt(options.DefaultArrayMaxItems, 10),
-		MaximumUniqueGeneratorAttempts: util.GetInt(options.MaximumUniqueGeneratorAttempts, 10),
+		DefaultArrayMinItems: util.GetInt(options.DefaultArrayMinItems, 0),
+		DefaultArrayMaxItems: util.GetInt(options.DefaultArrayMaxItems, 10),
 
 		// Object
 		DefaultObjectMinProperties: util.GetInt(options.DefaultObjectMinProperties, 0),
@@ -103,8 +115,22 @@ func withGeneratorOptionsDefaults(options GeneratorOptions) *GeneratorOptions {
 		MaximumReferenceDepth:      util.GetInt(options.MaximumReferenceDepth, 10),
 		ReferenceResolver:          referenceResolver{},
 
+		// Reattempts
+		MaximumUniqueGeneratorAttempts: util.GetInt(options.MaximumUniqueGeneratorAttempts, 100),
+		MaximumIfAttempts:              util.GetInt(options.MaximumIfAttempts, 100),
+		MaximumOneOfAttempts:           util.GetInt(options.MaximumOneOfAttempts, 100),
+
 		// Generation
 		MaximumGenerationSteps: util.GetInt(options.MaximumGenerationSteps, 100),
+		CutoffGenerationSteps:  util.GetInt(options.CutoffGenerationSteps, 2000),
 		overallComplexity:      0,
 	}
+}
+
+func (g *GeneratorOptions) ShouldCutoff() bool {
+	return g.CutoffGenerationSteps > 0 && g.overallComplexity > g.CutoffGenerationSteps
+}
+
+func (g *GeneratorOptions) ShouldMinimize() bool {
+	return g.MaximumGenerationSteps > 0 && g.overallComplexity > g.MaximumGenerationSteps
 }

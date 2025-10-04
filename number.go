@@ -44,16 +44,36 @@ const (
 // }
 
 func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error) {
+
+	min, max, err := resolveMinMaxForNode(node, genType == generatorTypeInteger)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing number node: %w", err)
+	}
+
+	// Return a constant value if min and max are equal
+	if min == max {
+		return constGenerator{Value: min}, nil
+	}
+
+	return &numberGenerator{
+		Type:       genType,
+		Min:        min,
+		Max:        max,
+		MultipleOf: util.GetZeroIfNil(node.MultipleOf, 0),
+	}, nil
+}
+
+func resolveMinMaxForNode(node schemaNode, mustBeAnInteger bool) (float64, float64, error) {
 	var min float64 = math.Inf(-1)
 	var max float64 = math.Inf(1)
 
 	// Initial Validation
 	if node.Minimum != nil && node.ExclusiveMinimum != nil {
-		return nullGenerator{}, errors.New("cannot have both minimum and exclusive minimum")
+		return 0, 0, errors.New("cannot have both minimum and exclusive minimum")
 	}
 
 	if node.Maximum != nil && node.ExclusiveMaximum != nil {
-		return nullGenerator{}, errors.New("cannot have both maximum and exclusive maximum")
+		return 0, 0, errors.New("cannot have both maximum and exclusive maximum")
 	}
 
 	// Set min and max
@@ -72,7 +92,7 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 
 	// Set default min and max if they are still infinite
 	// Or clamp them to be within a reasonable range of each other
-	offset := util.GetFloat(node.MultipleOf*100, defaultOffset)
+	offset := util.GetFloat(util.GetZeroIfNil(node.MultipleOf, 0)*100, defaultOffset)
 	if math.IsInf(min, -1) && math.IsInf(max, 1) {
 		min = 0
 		max = offset
@@ -92,9 +112,10 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 	}
 
 	// If we are an integer type, round min and max to the nearest integers
-	if genType == generatorTypeInteger {
-		if math.Abs(min-max) < 1 {
-			return nullGenerator{}, fmt.Errorf("minimum and maximum do not allow for any integers (min: %f, max: %f)", min, max)
+	if mustBeAnInteger {
+		// If min and max are both non-integer values and round to the same integer
+		if math.Floor(min) == math.Floor(max) {
+			return 0, 0, fmt.Errorf("minimum and maximum do not allow for any integers (min: %f, max: %f)", min, max)
 		}
 
 		min = math.Ceil(min)
@@ -103,37 +124,27 @@ func parseNumber(node schemaNode, genType numberGeneratorType) (Generator, error
 
 	// Validate min and max
 	if min > max {
-		return nullGenerator{}, fmt.Errorf("minimum cannot be greater than maximum (min: %f, max: %f)", min, max)
+		return 0, 0, fmt.Errorf("minimum cannot be greater than maximum (min: %f, max: %f)", min, max)
 	}
 
 	// Validate multipleOf
-	if node.MultipleOf != 0 {
-		if node.MultipleOf < 0 {
-			return nullGenerator{}, errors.New("multipleOf cannot be negative")
-		} else if node.MultipleOf != 0 && node.MultipleOf < infinitesimal {
-			return nullGenerator{}, fmt.Errorf("multipleOf must be at least %e", infinitesimal)
-		} else if genType == generatorTypeInteger && math.Trunc(node.MultipleOf) != node.MultipleOf {
-			return nullGenerator{}, errors.New("integer type cannot have a non-integer multipleOf")
+	if node.MultipleOf != nil {
+		multipleOf := *node.MultipleOf
+		if multipleOf < 0 {
+			return 0, 0, errors.New("multipleOf cannot be negative")
+		} else if multipleOf != 0 && multipleOf < infinitesimal {
+			return 0, 0, fmt.Errorf("multipleOf must be at least %e", infinitesimal)
+		} else if mustBeAnInteger && math.Trunc(multipleOf) != multipleOf {
+			return 0, 0, errors.New("integer type cannot have a non-integer multipleOf")
 		}
 
-		multiplesInRange := countMultiplesInRange(min, max, node.MultipleOf)
+		multiplesInRange := countMultiplesInRange(min, max, multipleOf)
 
 		if multiplesInRange == 0 {
-			return nullGenerator{}, errors.New("minimum and maximum do not allow for any multiples of multipleOf")
+			return 0, 0, errors.New("minimum and maximum do not allow for any multiples of multipleOf")
 		}
 	}
-
-	// Return a constant value if min and max are equal
-	if min == max {
-		return constGenerator{Value: min}, nil
-	}
-
-	return &numberGenerator{
-		Type:       genType,
-		Min:        min,
-		Max:        max,
-		MultipleOf: node.MultipleOf,
-	}, nil
+	return min, max, nil
 }
 
 func countMultiplesInRange(min float64, max float64, multiple float64) int {

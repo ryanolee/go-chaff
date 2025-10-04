@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ryanolee/go-chaff/internal/util"
+	jsonschemaV6 "github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/thoas/go-funk"
 )
 
@@ -31,18 +33,21 @@ type (
 //   - oneOf Does not actually validate that only one of the schemas is valid.
 func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	ref := metadata.ReferenceHandler
-	if len(node.OneOf) == 0 && len(node.AnyOf) == 0 {
+	oneOf := util.GetZeroIfNil(node.OneOf, []schemaNode{})
+	anyOf := util.GetZeroIfNil(node.AnyOf, []schemaNode{})
+
+	if len(oneOf) == 0 && len(anyOf) == 0 {
 		return nullGenerator{}, errors.New("no items specified for oneOf / anyOf")
 	}
 
-	if len(node.OneOf) > 0 && len(node.AnyOf) > 0 {
+	if len(oneOf) > 0 && len(anyOf) > 0 {
 		return nullGenerator{}, errors.New("only one of [oneOf / anyOf] can be specified")
 	}
 
-	target := node.OneOf
+	target := oneOf
 	nodeType := "oneOf"
-	if len(node.AnyOf) > 0 {
-		target = node.AnyOf
+	if len(anyOf) > 0 {
+		target = anyOf
 		nodeType = "anyOf"
 	}
 
@@ -67,6 +72,27 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 		}
 	}
 
+	if len(oneOf) > 1 {
+		oneOfConstraint, err := NewOneOfConstraint(node, metadata)
+		if err != nil {
+			return nullGenerator{}, err
+		}
+
+		return constrainedGenerator{
+			internalGenerator: combinationGenerator{
+				Generators: generators,
+				Type:       nodeType,
+			},
+			constraints: []constraint{oneOfConstraint},
+		}, nil
+	}
+
+	if len(generators) == 1 {
+		return generators[0], nil
+	} else if len(generators) == 0 {
+		return nullGenerator{}, fmt.Errorf("no valid generators could be created for %s", nodeType)
+	}
+
 	return combinationGenerator{
 		Generators: generators,
 		Type:       nodeType,
@@ -84,4 +110,78 @@ func (g combinationGenerator) String() string {
 		return generator.String()
 	}).([]string)
 	return fmt.Sprintf("CombinationGenerator[%s]{%s}", g.Type, strings.Join(formattedGenerators, ","))
+}
+
+func NewOneOfConstraint(node schemaNode, metadata *parserMetadata) (*oneOfConstraint, error) {
+	schemas := []*jsonschemaV6.Schema{}
+
+	if node.OneOf == nil || len(*node.OneOf) == 0 {
+		return nil, fmt.Errorf("no oneOf schemas found")
+	}
+
+	for key, node := range *node.OneOf {
+		path := fmt.Sprintf("oneOf/%d", key)
+		compiledSchema, err := metadata.SchemaManager.ParseSchemaNode(metadata, node, path)
+
+		if err != nil {
+			metadata.Errors[path] = err
+			continue
+		}
+
+		schemas = append(schemas, compiledSchema)
+	}
+
+	return &oneOfConstraint{
+		schemas: schemas,
+	}, nil
+}
+
+func (oc *oneOfConstraint) Apply(generator Generator, generatorOptions *GeneratorOptions, generatedValue interface{}) interface{} {
+	for i := 0; i < generatorOptions.MaximumIfAttempts; i++ {
+		generatorOptions.overallComplexity++
+		if oc.constraintPassed(generatedValue) {
+			return generatedValue
+		}
+
+		generatedValue = generator.Generate(generatorOptions)
+	}
+
+	return fmt.Sprintf("Failed to generate a valid value for the following oneOf constraint after %d attempts", generatorOptions.MaximumUniqueGeneratorAttempts)
+}
+
+func (oc *oneOfConstraint) constraintPassed(value interface{}) bool {
+	matchingSchemas := 0
+	for _, schema := range oc.schemas {
+		if schema.Validate(value) == nil {
+			matchingSchemas++
+		}
+
+		if matchingSchemas > 1 {
+			return false
+		}
+
+	}
+
+	return matchingSchemas == 1
+}
+
+func (oc *oneOfConstraint) String() string {
+	return fmt.Sprintf("OneOfConstraint[NumSchemas: %d]", len(oc.schemas))
+}
+
+func (g constrainedGenerator) Generate(opts *GeneratorOptions) interface{} {
+	generatedValue := g.internalGenerator.Generate(opts)
+	for _, constraint := range g.constraints {
+		opts.overallComplexity++
+		generatedValue = constraint.Apply(g.internalGenerator, opts, generatedValue)
+	}
+
+	return generatedValue
+}
+
+func (g constrainedGenerator) String() string {
+	constraintStrings := funk.Map(g.constraints, func(c constraint) string {
+		return c.String()
+	}).([]string)
+	return fmt.Sprintf("ConstrainedGenerator{constraints: %s, internalGenerator: %s}", strings.Join(constraintStrings, ","), g.internalGenerator)
 }

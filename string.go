@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/ryanolee/go-chaff/internal/regen"
+	"github.com/ryanolee/go-chaff/internal/util"
 )
 
 type (
@@ -66,36 +67,38 @@ const (
 //	  "pattern": "^[a-zA-Z0-9]{3,30}$"
 //	}
 func parseString(node schemaNode, metadata *parserMetadata) (Generator, error) {
-	if node.Format != "" && node.Pattern != "" {
+	if node.Format != nil && node.Pattern != nil {
 		return nullGenerator{}, fmt.Errorf("cannot have both format and pattern on a string")
 	}
 
 	// Validate length bounds
-	if node.MaxLength < 0 || node.MinLength < 0 {
+	minLength := util.GetZeroIfNil(node.MinLength, 0)
+	maxLength := util.GetZeroIfNil(node.MaxLength, 0)
+	if maxLength < 0 || minLength < 0 {
 		return nullGenerator{}, fmt.Errorf("min/max length cannot be negative")
 	}
 
-	if node.MinLength > node.MaxLength && node.MaxLength != 0 {
+	if minLength > maxLength && maxLength != 0 {
 		return nullGenerator{}, fmt.Errorf("minLength cannot be greater than maxLength")
 	}
 
-	hasPatternBasedBuilder := node.Pattern != "" || node.Format != ""
-	hasSetMinMaxLength := node.MaxLength != 0 || node.MinLength != 0
+	hasPatternBasedBuilder := node.Pattern != nil || node.Format != nil
+	hasSetMinMaxLength := node.MinLength != nil || node.MaxLength != nil
 	if hasPatternBasedBuilder && hasSetMinMaxLength {
 		return nullGenerator{}, fmt.Errorf("cannot have both pattern/format based builder and min/max length set at the same time")
 	}
 
 	generator := stringGenerator{
-		Format:    stringFormat(node.Format),
-		Pattern:   node.Pattern,
-		MinLength: node.MinLength,
-		MaxLength: node.MaxLength,
+		Format:    stringFormat(util.GetZeroIfNil(node.Format, "")),
+		Pattern:   util.GetZeroIfNil(node.Pattern, ""),
+		MinLength: minLength,
+		MaxLength: maxLength,
 	}
 
-	if node.Pattern != "" {
-		regenGenerator, err := newRegexGenerator(node.Pattern, metadata.ParserOptions.RegexStringOptions)
+	if node.Pattern != nil {
+		regenGenerator, err := newRegexGenerator(*node.Pattern, metadata.ParserOptions.RegexStringOptions)
 		if err != nil {
-			return nullGenerator{}, fmt.Errorf("invalid regex pattern: %s", node.Pattern)
+			return nullGenerator{}, fmt.Errorf("invalid regex pattern: %s", *node.Pattern)
 		}
 
 		generator.PatternGenerator = regenGenerator

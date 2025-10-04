@@ -48,7 +48,11 @@ func (sr *RandUtil) StringChoiceMultiple(stringSlice *[]string, numChoices int) 
 	choices := funk.Shuffle(*stringSlice).([]string)
 
 	return choices[:numChoices]
+}
 
+// @todo - Reimplement to use std rand source
+func (sr *RandUtil) Shuffle(in []interface{}) []interface{} {
+	return funk.Shuffle(in).([]interface{})
 }
 
 // Int functions

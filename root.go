@@ -2,6 +2,8 @@ package chaff
 
 import (
 	"fmt"
+
+	"github.com/ryanolee/go-chaff/internal/util"
 )
 
 type (
@@ -13,28 +15,29 @@ type (
 		// For any "definitions"
 		Definitions map[string]Generator
 		// Metadata related to parser operations
-		Metadata    *parserMetadata
+		Metadata *parserMetadata
 	}
 )
 
 // Parses the top-level properties of a schema (including "$defs" and "definitions")
 // Example:
-// {
-//   "type": "object",
-//   "$defs": {
-//     "foo": {
-//       "type": "string"
-//     }
-//   },
-//   "properties": {
-//     "bar": {
-//       "$ref": "#/$defs/foo"
-//     }
-//   }
-// }
+//
+//	{
+//	  "type": "object",
+//	  "$defs": {
+//	    "foo": {
+//	      "type": "string"
+//	    }
+//	  },
+//	  "properties": {
+//	    "bar": {
+//	      "$ref": "#/$defs/foo"
+//	    }
+//	  }
+//	}
 func parseRoot(node schemaNode, metadata *parserMetadata) (RootGenerator, error) {
-	def := parseDefinitions("$defs", metadata, node.Defs)
-	definitions := parseDefinitions("definitions", metadata, node.Definitions)
+	def := parseDefinitions("$defs", metadata, util.GetZeroIfNil(node.Defs, map[string]schemaNode{}))
+	definitions := parseDefinitions("definitions", metadata, util.GetZeroIfNil(node.Definitions, map[string]schemaNode{}))
 
 	generator, err := parseNode(node, metadata)
 	return RootGenerator{

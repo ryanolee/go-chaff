@@ -22,6 +22,10 @@ func resolveSubReferencePath(node schemaNode, refPath string, resolvedPath strin
 	pathPart, path := getReferencePathToken(refPath)
 	resolvedPath = resolvedPath + "/" + pathPart
 
+	if node.AnyOf != nil {
+		return schemaNode{}, fmt.Errorf("[%s] anyOf nodes cannot be referenced", resolvedPath)
+	}
+
 	if path == "" {
 		return node, nil
 	}
@@ -64,6 +68,16 @@ func resolveSubReferencePath(node schemaNode, refPath string, resolvedPath strin
 		return resolveReferenceSlice(node.AnyOf, path, resolvedPath)
 	case "oneOf":
 		return resolveReferenceSlice(node.OneOf, path, resolvedPath)
+	case "not":
+		return resolveSubReferencePath(*node.Not, path, resolvedPath)
+
+	// Conditionals
+	case "if":
+		return resolveSubReferencePath(*node.If, path, resolvedPath)
+	case "then":
+		return resolveSubReferencePath(*node.Then, path, resolvedPath)
+	case "else":
+		return resolveSubReferencePath(*node.Else, path, resolvedPath)
 
 		// Definitions
 	case "definitions":
@@ -88,10 +102,14 @@ func resolveFalseOrSchema(node schemaNodeOrFalse, path string, resolvedPath stri
 }
 
 // Resolve a reference property based on a map of schema nodes
-func resolveReferenceProperty(nodes map[string]schemaNode, path string, resolvedPath string) (schemaNode, error) {
+func resolveReferenceProperty(nodes *map[string]schemaNode, path string, resolvedPath string) (schemaNode, error) {
+	if nodes == nil {
+		return schemaNode{}, fmt.Errorf("[%s] No properties defined", resolvedPath)
+	}
+
 	propertyName, path := getReferencePathToken(path)
 	resolvedPath = resolvedPath + "/" + propertyName
-	node, ok := nodes[propertyName]
+	node, ok := (*nodes)[propertyName]
 	if !ok {
 		return schemaNode{}, fmt.Errorf("[%s] Property %s not found", resolvedPath, propertyName)
 	}
@@ -100,7 +118,11 @@ func resolveReferenceProperty(nodes map[string]schemaNode, path string, resolved
 }
 
 // Resolve a reference based on a slice of schema nodes and a path
-func resolveReferenceSlice(nodes []schemaNode, path string, resolvedPath string) (schemaNode, error) {
+func resolveReferenceSlice(nodes *[]schemaNode, path string, resolvedPath string) (schemaNode, error) {
+	if nodes == nil {
+		return schemaNode{}, fmt.Errorf("[%s] No array items defined", resolvedPath)
+	}
+
 	part, itemPath := getReferencePathToken(path)
 	resolvedPath = resolvedPath + "/" + part
 	partInt, err := strconv.Atoi(part)
@@ -108,11 +130,11 @@ func resolveReferenceSlice(nodes []schemaNode, path string, resolvedPath string)
 		return schemaNode{}, fmt.Errorf("[%s] Invalid array index (Must be a number) %s", resolvedPath, part)
 	}
 
-	if len(nodes) > partInt || partInt < 0 {
+	if len(*nodes) > partInt || partInt < 0 {
 		return schemaNode{}, fmt.Errorf("[%s] Array index out of bounds %d", resolvedPath, partInt)
 	}
 
-	node := nodes[partInt]
+	node := (*nodes)[partInt]
 
 	return resolveSubReferencePath(node, itemPath, resolvedPath)
 }

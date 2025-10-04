@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "properties": {
+    "simple_if_then": {
+      "type": "string",
+      "if": {
+        "type": "string",
+        "maxLength": 5
+      },
+      "then": {
+        "type": "string",
+        "minLength": 2
+      }
+    },
+    "simple_if_else": {
+      "type": "string",
+      "if": {
+        "type": "string",
+        "maxLength": 5
+      },
+      "else": {
+        "type": "string",
+        "minLength": 2
+      }
+    },
+    "simple_if_then_else": {
+      "type": "string",
+      "if": {
+        "type": "string",
+        "maxLength": 5
+      },
+      "then": {
+        "type": "string",
+        "minLength": 2
+      },
+      "else": {
+        "type": "string",
+        "pattern": "^[a-z]+$"
+      }
+    },
+    "allof_if_then_multiple_conditions": {
+      "type": ["string", "number", "boolean"],
+      "allOf": [
+        {
+          "if": {
+            "type": "string",
+            "maxLength": 5
+          },
+          "then": {
+            "minLength": 2
+          }
+        },
+        {
+          "if": {
+            "type": "number",
+            "maximum": 10
+          },
+          "then": {
+            "minimum": 0
+          }
+        },
+        {
+          "if": { "type": "boolean" },
+          "then": { "const": true }
+        }
+      ]
+    }
+  },
+  "required": ["simple_if_then", "simple_if_else", "simple_if_then_else", "allof_if_then_multiple_conditions"]
+}

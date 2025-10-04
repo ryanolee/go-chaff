@@ -6,6 +6,7 @@ import (
 	"regexp/syntax"
 
 	"github.com/ryanolee/go-chaff/internal/regen"
+	"github.com/ryanolee/go-chaff/internal/util"
 )
 
 type (
@@ -31,74 +32,82 @@ type (
 
 		// Global merge depth for the schema
 		MergeDepth int
+
+		// Schema management for compiling schemas for internal value validation (Required for where subschemas need to be matched for random value generation)
+		SchemaManager *schemaManager
 	}
 
 	schemaNode struct {
 		// Shared Properties
-		Type   multipleType `json:"type"`
-		Length int          `json:"length"` // Shared by String and Array
+		Type   *multipleType `json:"type,omitempty"`
+		Length *int          `json:"length,omitempty"` // Shared by String and Array
 
 		// Object Properties
-		Properties           map[string]schemaNode `json:"properties"`
-		AdditionalProperties additionalData        `json:"additionalProperties"`
-		PatternProperties    map[string]schemaNode `json:"patternProperties"`
-		MinProperties        int                   `json:"minProperties"`
-		MaxProperties        int                   `json:"maxProperties"`
-		Required             []string              `json:"required"`
+		Properties           *map[string]schemaNode `json:"properties,omitempty"`
+		AdditionalProperties *additionalData        `json:"additionalProperties,omitempty"`
+		PatternProperties    *map[string]schemaNode `json:"patternProperties,omitempty"`
+		MinProperties        *int                   `json:"minProperties,omitempty"`
+		MaxProperties        *int                   `json:"maxProperties,omitempty"`
+		Required             *[]string              `json:"required,omitempty"`
 
 		// String Properties
-		Pattern   string `json:"pattern"`
-		Format    string `json:"format"`
-		MinLength int    `json:"minLength"`
-		MaxLength int    `json:"maxLength"`
+		Pattern   *string `json:"pattern,omitempty"`
+		Format    *string `json:"format,omitempty"`
+		MinLength *int    `json:"minLength,omitempty"`
+		MaxLength *int    `json:"maxLength,omitempty"`
 
 		// Number Properties
 		Minimum          *float64 `json:"minimum,omitempty"`
 		Maximum          *float64 `json:"maximum,omitempty"`
 		ExclusiveMinimum *float64 `json:"exclusiveMinimum,omitempty"`
 		ExclusiveMaximum *float64 `json:"exclusiveMaximum,omitempty"`
-		MultipleOf       float64  `json:"multipleOf"`
+		MultipleOf       *float64 `json:"multipleOf,omitempty"`
 
 		// Array Properties
-		Items    itemsData `json:"items"`
-		MinItems int       `json:"minItems"`
-		MaxItems int       `json:"maxItems"`
+		Items    *itemsData `json:"items,omitempty"`
+		MinItems *int       `json:"minItems,omitempty"` // N Done
+		MaxItems *int       `json:"maxItems,omitempty"` // N Done
 
-		Contains    *schemaNode `json:"contains"`
-		MinContains int         `json:"minContains"`
-		MaxContains int         `json:"maxContains"`
+		Contains    *schemaNode `json:"contains,omitempty"`
+		MinContains *int        `json:"minContains,omitempty"` // N Done
+		MaxContains *int        `json:"maxContains,omitempty"` // N Done
 
-		PrefixItems      []schemaNode       `json:"prefixItems"`
-		AdditionalItems  *schemaNodeOrFalse `json:"additionalItems"`
-		UnevaluatedItems *schemaNodeOrFalse `json:"unevaluatedItems"`
-		UniqueItems      bool               `json:"uniqueItems"`
+		PrefixItems      *[]schemaNode      `json:"prefixItems,omitempty"`
+		AdditionalItems  *schemaNodeOrFalse `json:"additionalItems,omitempty"`
+		UnevaluatedItems *schemaNodeOrFalse `json:"unevaluatedItems,omitempty"`
+		UniqueItems      *bool              `json:"uniqueItems,omitempty"`
 
 		// Enum Properties
-		Enum []interface{} `json:"enum"`
+		Enum *[]interface{} `json:"enum,omitempty"`
 
 		// Constant Properties
-		Const interface{} `json:"const"`
+		Const *interface{} `json:"const,omitempty"`
 
 		// Combination Properties
 		// TODO: Implement these
-		//Not *SchemaNode `json:"not"`
-		AllOf []schemaNode `json:"allOf"`
-		AnyOf []schemaNode `json:"anyOf"`
-		OneOf []schemaNode `json:"oneOf"`
+		Not   *schemaNode   `json:"not,omitempty"`
+		AllOf *[]schemaNode `json:"allOf,omitempty"`
+		AnyOf *[]schemaNode `json:"anyOf,omitempty"`
+		OneOf *[]schemaNode `json:"oneOf,omitempty"`
 
 		// Reference Operator
-		Ref         string                `json:"$ref"`
-		Id          string                `json:"$id"`
-		Defs        map[string]schemaNode `json:"$defs"`
-		Definitions map[string]schemaNode `json:"definitions"`
+		Ref         *string                `json:"$ref,omitempty"`
+		Id          *string                `json:"$id,omitempty"`
+		Defs        *map[string]schemaNode `json:"$defs,omitempty"`
+		Definitions *map[string]schemaNode `json:"definitions,omitempty"`
+
+		// Conditional logic
+		If   *schemaNode `json:"if,omitempty"`
+		Then *schemaNode `json:"then,omitempty"`
+		Else *schemaNode `json:"else,omitempty"`
 
 		// Unsupported Properties
-		Not               *schemaNode           `json:"not"`
-		If                *schemaNode           `json:"if"`
-		Then              *schemaNode           `json:"then"`
-		Else              *schemaNode           `json:"else"`
-		DependentRequired map[string][]string   `json:"dependentRequired"`
-		DependentSchemas  map[string]schemaNode `json:"dependentSchemas"`
+		DependentRequired map[string][]string   `json:"dependentRequired,omitempty"`
+		DependentSchemas  map[string]schemaNode `json:"dependentSchemas,omitempty"`
+
+		// Internal functionality
+		// Used to keep track of ifs from allOf statements that have been merged into this node (or factored into said node)
+		mergedIf []ifStatement
 	}
 )
 
@@ -111,6 +120,13 @@ const (
 	typeString  = "string"
 	typeBoolean = "boolean"
 	typeNull    = "null"
+	typeUnknown = "unknown"
+)
+
+var (
+	typeAll = []string{
+		typeObject, typeArray, typeNumber, typeInteger, typeString, typeBoolean, typeNull,
+	}
 )
 
 // Parses a Json Schema file at the given path. If there is an error reading the file or
@@ -151,9 +167,17 @@ func ParseSchema(schema []byte, opts *ParserOptions) (RootGenerator, error) {
 		}, err
 	}
 
+	schemaManager, err := newSchemaManager(schema)
+	if err != nil {
+		return RootGenerator{
+			Generator: nullGenerator{},
+		}, err
+	}
+
 	refHandler := newReferenceHandler()
 	metadata := &parserMetadata{
 		ReferenceHandler: &refHandler,
+		SchemaManager:    schemaManager,
 		Errors:           make(map[string]error),
 		ParserOptions:    withDefaultParseOptions(*opts),
 		RootNode:         node,
@@ -177,8 +201,8 @@ func parseNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
 		metadata.Errors[refHandler.CurrentPath] = err
 	}
 
-	if node.Id != "" {
-		refHandler.AddIdReference(node.Id, node, gen)
+	if node.Id != nil {
+		refHandler.AddIdReference(*node.Id, node, gen)
 	}
 
 	refHandler.AddReference(node, gen)
@@ -192,7 +216,7 @@ func parseSchemaNode(node schemaNode, metadata *parserMetadata) (Generator, erro
 	}
 
 	// Handle reference nodes
-	if node.Ref != "" {
+	if node.Ref != nil {
 		return parseReference(node, metadata)
 	}
 
@@ -205,29 +229,46 @@ func parseSchemaNode(node schemaNode, metadata *parserMetadata) (Generator, erro
 		return parseCombination(node, metadata)
 	}
 
+	// Handle not nodes
+	if node.Not != nil {
+		return parseNot(node, metadata)
+	}
+
+	// Handle conditional nodes
+	if node.If != nil || len(node.mergedIf) != 0 {
+		return parseIf(node, metadata)
+	}
+
 	// Handle enum nodes
-	if len(node.Enum) != 0 {
-		return parseEnum(node)
+	if node.Enum != nil && len(*node.Enum) != 0 {
+		return parseEnum(node, metadata)
 	}
 
 	// Handle constant nodes
 	if node.Const != nil {
-		return parseConst(node)
+		return parseConst(node, metadata)
 	}
 
 	// Handle multiple type nodes
-	if node.Type.MultipleTypes != nil {
+	if node.Type != nil && node.Type.MultipleTypes != nil {
 		return parseMultipleType(node, metadata)
 	}
 
-	// In the case no explicit type is given
-	// attempt to infer the type from the node properties
-	if node.Type.SingleType == "" {
-		inferredNodeType := inferType(node)
-		return parseType(inferredNodeType, node, metadata)
+	// In the case an explicit type is given use that type directly
+	if node.Type != nil && node.Type.SingleType != "" {
+		return parseType(node.Type.SingleType, node, metadata)
 	}
 
-	return parseType(node.Type.SingleType, node, metadata)
+	// Attempt to infer the type of node given the passed properties
+	inferredNodeType := inferType(node)
+
+	// In no property type is given assume "any" type is valid in the passed case
+	if inferredNodeType == typeUnknown {
+		node.Type.MultipleTypes = typeAll
+		return parseMultipleType(node, metadata)
+	}
+
+	return parseType(inferredNodeType, node, metadata)
 }
 
 func parseType(nodeType string, node schemaNode, metadata *parserMetadata) (Generator, error) {
@@ -278,45 +319,26 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 // Infers the type of a schema node based on its properties
 func inferType(node schemaNode) string {
 	// Object Properties
-	if node.Properties != nil ||
-		node.AdditionalProperties.Schema != nil ||
-		node.PatternProperties != nil ||
-		node.MinProperties != 0 ||
-		node.MaxProperties != 0 ||
-		node.Required != nil {
+	if util.AnyNotNil(node.Properties, node.PatternProperties, node.MinProperties, node.MaxProperties, node.Required) ||
+		(node.AdditionalProperties != nil && node.AdditionalProperties.Schema != nil) {
 		return typeObject
 	}
 
 	// String Properties
-	if node.Pattern != "" ||
-		node.Format != "" ||
-		node.MinLength != 0 ||
-		node.MaxLength != 0 {
+	if util.AnyNotNil(node.Pattern, node.Format, node.MinLength, node.MaxLength) {
 		return typeString
 	}
 
 	// Number Properties
-	if node.Minimum != nil ||
-		node.Maximum != nil ||
-		node.ExclusiveMinimum != nil ||
-		node.ExclusiveMaximum != nil ||
-		node.MultipleOf != 0 {
+	if util.AnyNotNil(node.Minimum, node.Maximum, node.ExclusiveMinimum, node.ExclusiveMaximum, node.MultipleOf) {
 		return typeNumber
 	}
 
 	// Array Properties
-	if node.Items.Node != nil ||
-		node.MinItems != 0 ||
-		node.MaxItems != 0 ||
-		node.Contains != nil ||
-		node.MinContains != 0 ||
-		node.MaxContains != 0 ||
-		node.PrefixItems != nil ||
-		node.AdditionalItems != nil ||
-		node.UnevaluatedItems != nil {
+	if util.AnyNotNil(node.Items.Node, node.MinItems, node.MaxItems, node.Contains, node.MinContains, node.MaxContains, node.PrefixItems, node.AdditionalItems, node.UnevaluatedItems) {
 		return typeArray
 	}
 
 	// If we can't infer the type, default to null
-	return typeNull
+	return typeUnknown
 }

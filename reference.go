@@ -19,13 +19,18 @@ type (
 //	  "$ref": "#/definitions/foo"
 //	}
 func parseReference(node schemaNode, metadata *parserMetadata) (Generator, error) {
-	if strings.Contains(node.Ref, "/allOf/") {
+	if node.Ref == nil {
+		return nullGenerator{}, fmt.Errorf("reference node missing $ref property")
+	}
+
+	if strings.Contains(*node.Ref, "/allOf/") {
 		return constGenerator{
 			Value: "Invalid Reference containing '/allOf/'",
-		}, fmt.Errorf("references to things within allOf are not supported: %s", node.Ref)
+		}, fmt.Errorf("references to things within allOf are not supported: %s", *node.Ref)
 	}
+
 	return referenceGenerator{
-		ReferenceStr:     node.Ref,
+		ReferenceStr:     *node.Ref,
 		ReferenceHandler: *metadata.ReferenceHandler,
 	}, nil
 }

@@ -21,7 +21,7 @@ type (
 	// Used to handle the fact that "items" can be a schema node or an array of schema nodes
 	itemsData struct {
 		Node                    *schemaNode
-		Nodes                   []schemaNode
+		Nodes                   *[]schemaNode
 		DisallowAdditionalItems bool
 	}
 
@@ -57,6 +57,29 @@ func (a *additionalData) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (a *additionalData) MarshalJSON() ([]byte, error) {
+	if a.DisallowAdditional {
+		return []byte("false"), nil
+	}
+
+	if a.Schema != nil {
+		return json.Marshal(a.Schema)
+	}
+
+	return []byte("true"), nil
+}
+
+func newMultipleTypeFromSlice(types []string) multipleType {
+	multipleType := multipleType{}
+	if len(types) == 1 {
+		multipleType.SingleType = types[0]
+	} else if len(types) > 1 {
+		multipleType.MultipleTypes = types
+	}
+
+	return multipleType
+}
+
 func (m *multipleType) UnmarshalJSON(data []byte) error {
 	if len(data) == 0 {
 		return nil
@@ -79,6 +102,16 @@ func (m *multipleType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (m *multipleType) MarshalJSON() ([]byte, error) {
+	if m.SingleType != "" {
+		return json.Marshal(m.SingleType)
+	} else if len(m.MultipleTypes) > 0 {
+		return json.Marshal(m.MultipleTypes)
+	}
+
+	return []byte("null"), nil
+}
+
 func (i *itemsData) UnmarshalJSON(data []byte) error {
 	if len(data) == 0 {
 		return nil
@@ -89,7 +122,7 @@ func (i *itemsData) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	var nodes []schemaNode
+	var nodes *[]schemaNode
 	var node *schemaNode
 	nodeErr := json.Unmarshal(data, &node)
 	nodesErr := json.Unmarshal(data, &nodes)
@@ -100,6 +133,20 @@ func (i *itemsData) UnmarshalJSON(data []byte) error {
 	i.Nodes = nodes
 	i.Node = node
 	return nil
+}
+
+func (i *itemsData) MarshalJSON() ([]byte, error) {
+	if i.DisallowAdditionalItems {
+		return []byte("false"), nil
+	}
+
+	if i.Node != nil {
+		return json.Marshal(i.Node)
+	} else if i.Nodes != nil {
+		return json.Marshal(i.Nodes)
+	}
+
+	return []byte("null"), nil
 }
 
 func (s *schemaNodeOrFalse) UnmarshalJSON(data []byte) error {
@@ -120,4 +167,16 @@ func (s *schemaNodeOrFalse) UnmarshalJSON(data []byte) error {
 
 	s.Schema = &schema
 	return nil
+}
+
+func (s *schemaNodeOrFalse) MarshalJSON() ([]byte, error) {
+	if s.IsFalse {
+		return []byte("false"), nil
+	}
+
+	if s.Schema != nil {
+		return json.Marshal(s.Schema)
+	}
+
+	return []byte("null"), nil
 }
