@@ -118,7 +118,7 @@ func notApplyType(metadata *parserMetadata, newNode *schemaNode, constraintColle
 	// Collect type
 	newNodeType, err := resolveType(node, notNode)
 	if err != nil {
-		metadata.Errors[metadata.ReferenceHandler.CurrentPath] = err
+		metadata.Errors.AddError(err)
 		return err
 	}
 
@@ -396,7 +396,6 @@ func resolveBoundsInt(metadata *parserMetadata,
 	minPtr *int, maxPtr *int,
 	notMinPtr *int, notMaxPtr *int,
 ) (*int, *int) {
-
 	var resolvedMin int = 0
 	var resolvedMax int = 0
 	max := util.GetZeroIfNil(maxPtr, 0)
@@ -444,7 +443,7 @@ func warnUnsupportedField(metadata *parserMetadata, fieldName string, fieldEmpty
 
 func warnField(metadata *parserMetadata, fieldName string, err error) {
 	if err != nil {
-		errorPath := fmt.Sprintf("%s/%s", metadata.ReferenceHandler.CurrentPath, fieldName)
-		metadata.Errors[errorPath] = err
+		errorPath := fmt.Sprintf("/%s", fieldName)
+		metadata.Errors.AddErrorWithSubpath(errorPath, err)
 	}
 }

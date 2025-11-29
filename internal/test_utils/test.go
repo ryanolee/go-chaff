@@ -13,6 +13,10 @@ import (
 )
 
 func TestJsonSchemaDir(test *testing.T, dirPath string, cycles int) {
+	TestJsonSchemaDirWithConfig(test, dirPath, cycles, nil)
+}
+
+func TestJsonSchemaDirWithConfig(test *testing.T, dirPath string, cycles int, options *chaff.ParserOptions) {
 	files, err := ioutil.ReadDir(dirPath)
 	if err != nil {
 		test.Fatalf("Failed to read directory: %s", err)
@@ -27,11 +31,11 @@ func TestJsonSchemaDir(test *testing.T, dirPath string, cycles int) {
 			continue
 		}
 
-		TestJsonSchema(test, fmt.Sprintf("%s/%s", dirPath, file.Name()), cycles)
+		TestJsonSchema(test, fmt.Sprintf("%s/%s", dirPath, file.Name()), cycles, nil)
 	}
 }
 
-func TestJsonSchema(test *testing.T, schemaPath string, cycles int) {
+func TestJsonSchema(test *testing.T, schemaPath string, cycles int, options *chaff.ParserOptions) {
 	test.Run(fmt.Sprintf("GenerativeTest[%s,cycles:%d]", schemaPath, cycles), func(test *testing.T) {
 		if cycles < 1 {
 			cycles = 100
@@ -42,12 +46,15 @@ func TestJsonSchema(test *testing.T, schemaPath string, cycles int) {
 			test.Fatalf("Failed to compile schema: %s", err)
 		}
 
-		generator, err := chaff.ParseSchemaFileWithDefaults(schemaPath)
+		if options == nil {
+			options = &chaff.ParserOptions{}
+		}
+		generator, err := chaff.ParseSchemaFile(schemaPath, options)
 		if err != nil {
 			test.Fatalf("Failed to compile generator: %s", err)
 		}
 
-		if len(generator.Metadata.Errors) > 0 {
+		if generator.Metadata.Errors.HasErrors() {
 			test.Fatalf("Failed to compile generator: %s", generator.Metadata.Errors)
 		}
 

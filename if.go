@@ -1,6 +1,7 @@
 package chaff
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -61,8 +62,8 @@ func parseIf(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	for i, ifStatement := range mergedIf {
 		compiled, err := ifStatement.Compile(node, metadata, fmt.Sprintf("/if/%d", i))
 		if err != nil {
-			path := fmt.Sprintf("%s/if/%d/config_compile_error", metadata.ReferenceHandler.CurrentPath, i)
-			metadata.Errors[path] = err
+			path := fmt.Sprintf("if/%d/config_compile_error", i)
+			metadata.Errors.AddErrorWithSubpath(path, err)
 			continue
 		}
 
@@ -70,7 +71,7 @@ func parseIf(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	}
 
 	if len(constraints) == 0 {
-		metadata.Errors[metadata.ReferenceHandler.CurrentPath+"/if/config_compile_error"] = fmt.Errorf("no valid if statements could be compiled")
+		metadata.Errors.AddErrorWithSubpath("/if/config_compile_error", errors.New("no valid if statements could be compiled"))
 		return internalGenerator, nil
 	}
 

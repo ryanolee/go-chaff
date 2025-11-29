@@ -144,8 +144,8 @@ func parsePatternProperties(node schemaNode, metadata *parserMetadata) (map[stri
 
 		regexGenerator, err := newRegexGenerator(regex, metadata.ParserOptions.RegexPatternPropertyOptions)
 		if err != nil {
-			errPath := fmt.Sprintf("%s/regex/%s", ref.CurrentPath, regex)
-			metadata.Errors[errPath] = fmt.Errorf("failed to create regex generator for %s. Error given: %s", regex, err)
+			errPath := fmt.Sprintf("/regex/%s", regex)
+			metadata.Errors.AddErrorWithSubpath(errPath, fmt.Errorf("failed to create regex generator for %s. Error given: %s", regex, err))
 			regexGenerator = nil
 		}
 
@@ -285,5 +285,5 @@ func (g objectGenerator) String() string {
 		regexString += fmt.Sprintf("%s: %s,", regex, prop)
 	}
 
-	return fmt.Sprintf("ObjectGenerator{properties: %s, patternProperties: %s, additionalProperties: %s}", formattedString, regexString, g.AdditionalProperties)
+	return fmt.Sprintf("ObjectGenerator{properties: %s, patternProperties: %s, additionalProperties: %v}", formattedString, regexString, g.DisallowAdditionalProperties)
 }

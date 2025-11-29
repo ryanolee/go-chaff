@@ -124,7 +124,7 @@ func NewOneOfConstraint(node schemaNode, metadata *parserMetadata) (*oneOfConstr
 		compiledSchema, err := metadata.SchemaManager.ParseSchemaNode(metadata, node, path)
 
 		if err != nil {
-			metadata.Errors[path] = err
+			metadata.Errors.AddErrorWithSubpath(path, err)
 			continue
 		}
 

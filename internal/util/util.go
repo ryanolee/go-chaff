@@ -3,6 +3,7 @@ package util
 import (
 	"encoding/json"
 	"math"
+	"regexp"
 	"strings"
 
 	"github.com/thoas/go-funk"
@@ -172,4 +173,17 @@ func UnmarshalJsonStringToMap(data string) interface{} {
 	}
 
 	return result
+}
+
+// Regex to named capture groups
+func RegexMatchNamedCaptureGroups(r *regexp.Regexp, str string) map[string]string {
+	matches := r.FindStringSubmatch(str)
+	results := map[string]string{}
+	for i, name := range r.SubexpNames() {
+		if i != 0 && name != "" {
+			results[name] = matches[i]
+		}
+	}
+
+	return results
 }

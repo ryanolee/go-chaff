@@ -2,6 +2,7 @@ package chaff
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"regexp/syntax"
 
@@ -17,14 +18,59 @@ type (
 
 		// Options for the regex generator used for pattern properties
 		RegexPatternPropertyOptions *regen.GeneratorArgs
+
+		// Parser fetch configurations for external document fetching
+		DocumentFetchOptions DocumentFetchOptions
+
+		// Base path to resolve relative document references against for $ref resolution when fetching external documents
+		RelativeTo string
+	}
+
+	// Options for fetching external documents during parsing.
+	// Should be used with cautions Especially if schemas passed to the schema faker can be from untrusted sources.
+	DocumentFetchOptions struct {
+		// HTTP Fetch Options
+		HTTPFetchOptions HTTPFetchOptions
+
+		// File System Fetch Options
+		FileSystemFetchOptions FileSystemFetchOptions
+	}
+
+	// Options for fetching external documents over HTTP
+	HTTPFetchOptions struct {
+		// If go-chaff is allowed to make HTTP requests to resolve schema references
+		Enabled bool
+
+		// Allowed hosts to fetch from (If empty, all hosts are allowed)
+		AllowedHosts []string
+
+		// Allow insecure connections (http)
+		AllowInsecure bool
+	}
+
+	// Options for fetching external documents from the file system
+	FileSystemFetchOptions struct {
+		// If go-chaff is allowed to access the file system to resolve schema references
+		//    THIS SHOULD BE DISABLED UNLESS YOU REALLY REALLY NEED IT
+		//    Please if doing so, limit the AllowedPaths field as much as possible )
+		Enabled bool
+
+		// Overrides allowOutsideCwd to specifically allow for access to a list of paths schemas might reference
+		// relative paths will be resolved against the current working directory at the time the parser is initialized
+		// Symlinks that resolve to outside of the allowed paths will still be blocked
+		AllowedPaths []string
+
+		// Failsafe to prevent directory traversal attacks
+		AllowOutsideCwd bool
 	}
 
 	// Struct containing metadata for parse operations within the JSON Schema
 	parserMetadata struct {
+
 		// Used to keep track of every referenceable route
 		ReferenceHandler *referenceHandler
 		ParserOptions    ParserOptions
-		Errors           map[string]error
+		Errors           *errorCollection
 
 		// Generators that need to have their structures Re-Parsed once all references have been resolved
 		ReferenceResolver referenceResolver
@@ -35,6 +81,9 @@ type (
 
 		// Schema management for compiling schemas for internal value validation (Required for where subschemas need to be matched for random value generation)
 		SchemaManager *schemaManager
+
+		// Document resolver for resolving external document references during parsing
+		DocumentResolver *documentResolver
 	}
 
 	schemaNode struct {
@@ -132,11 +181,23 @@ var (
 // Parses a Json Schema file at the given path. If there is an error reading the file or
 // parsing the schema, an error will be returned
 func ParseSchemaFile(path string, opts *ParserOptions) (RootGenerator, error) {
+	path, err := getRealPath(path)
+	if err != nil {
+		return RootGenerator{
+			Generator: nullGenerator{},
+		}, err
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return RootGenerator{
 			Generator: nullGenerator{},
 		}, err
+	}
+
+	// Resolve relative path base for fetching external documents unless already set
+	if opts.RelativeTo == "" {
+		opts.RelativeTo = "file://" + path
 	}
 
 	return ParseSchema(data, opts)
@@ -174,16 +235,29 @@ func ParseSchema(schema []byte, opts *ParserOptions) (RootGenerator, error) {
 		}, err
 	}
 
-	refHandler := newReferenceHandler()
+	optsWithDefault := withDefaultParseOptions(*opts)
+	documentResolver := newDocumentResolver(optsWithDefault, &node)
+	refHandler := newReferenceHandler(documentResolver)
+	errorCollection := newErrorCollection(refHandler, documentResolver)
 	metadata := &parserMetadata{
-		ReferenceHandler: &refHandler,
+		ReferenceHandler: refHandler,
 		SchemaManager:    schemaManager,
-		Errors:           make(map[string]error),
-		ParserOptions:    withDefaultParseOptions(*opts),
+		Errors:           errorCollection,
+		ParserOptions:    optsWithDefault,
 		RootNode:         node,
 		MergeDepth:       0,
+		DocumentResolver: documentResolver,
 	}
+
 	generator, err := parseRoot(node, metadata)
+
+	for metadata.DocumentResolver.HasMoreDocumentsToParse() {
+		fmt.Printf("Parsing next external document...\n")
+		_, err := metadata.DocumentResolver.ParseNextDocument(metadata)
+		if err != nil {
+			metadata.Errors.AddErrorWithSubpath("document_parse_error", err)
+		}
+	}
 
 	return generator, err
 }
@@ -198,7 +272,7 @@ func parseNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	gen, err := parseSchemaNode(node, metadata)
 
 	if err != nil {
-		metadata.Errors[refHandler.CurrentPath] = err
+		metadata.Errors.AddError(err)
 	}
 
 	if node.Id != nil {
@@ -297,6 +371,8 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 	parseOpts := ParserOptions{
 		RegexStringOptions:          opts.RegexStringOptions,
 		RegexPatternPropertyOptions: opts.RegexPatternPropertyOptions,
+		DocumentFetchOptions:        opts.DocumentFetchOptions,
+		RelativeTo:                  opts.RelativeTo,
 	}
 
 	defaultRegexOpts := &regen.GeneratorArgs{
@@ -305,13 +381,8 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 		Flags:                   syntax.PerlX,
 	}
 
-	if opts.RegexStringOptions == nil {
-		parseOpts.RegexStringOptions = defaultRegexOpts
-	}
-
-	if opts.RegexPatternPropertyOptions == nil {
-		parseOpts.RegexPatternPropertyOptions = defaultRegexOpts
-	}
+	parseOpts.RegexStringOptions = util.GetPtr(parseOpts.RegexStringOptions, defaultRegexOpts)
+	parseOpts.RegexPatternPropertyOptions = util.GetPtr(parseOpts.RegexStringOptions, defaultRegexOpts)
 
 	return parseOpts
 }

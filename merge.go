@@ -20,9 +20,11 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 		resolvedReference := false
 
 		for node.Ref != nil {
+			document := metadata.DocumentResolver.GetDocumentForResolvedPath(*node.Ref)
+
 			// Give up on the node if it is a circular reference
 			// We cannot easily resolve partial cases for this (especially for factoring or similar)
-			if metadata.ReferenceResolver.HasResolved(*node.Ref) {
+			if metadata.ReferenceResolver.HasResolved(document, *node.Ref) {
 				node.Ref = nil
 				break
 			}
@@ -34,7 +36,7 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 				break
 			}
 
-			metadata.ReferenceResolver.PushRefResolution(*node.Ref)
+			metadata.ReferenceResolver.PushRefResolution(document, *node.Ref)
 			resolvedReference = true
 			node = refNode
 		}
@@ -64,8 +66,8 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 			for key, value := range nodeProperties {
 				node, err := mergeSchemaNodes(metadata, mergedProperties[key], value)
 				if err != nil {
-					errPath := fmt.Sprintf("%s/properties/%s/config_merge_error", metadata.ReferenceHandler.CurrentPath, key)
-					metadata.Errors[errPath] = err
+					errPath := fmt.Sprintf("/properties/%s/config_merge_error", key)
+					metadata.Errors.AddErrorWithSubpath(errPath, err)
 
 					warnConfigMergeError(metadata, fmt.Sprintf("properties/%s", key), err)
 				}
@@ -122,7 +124,10 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 		mergedNode = mergeSchemaNodeSimpleProperties(mergedNode, node)
 
 		if resolvedReference {
+			// Pop the reference resolution and set the document being resolved back to the previous one
 			metadata.ReferenceResolver.PopRefResolution()
+			document, _ := metadata.ReferenceResolver.GetCurrentResolution()
+			metadata.DocumentResolver.SetDocumentBeingResolved(document)
 		}
 	}
 
@@ -156,36 +161,42 @@ func mergeSchemaNodeSimpleProperties(baseNode schemaNode, otherNode schemaNode) 
 }
 
 func warnConfigMergeError(metadata *parserMetadata, field string, err error) {
-	errPath := fmt.Sprintf("%s/config_merge_error", metadata.ReferenceHandler.CurrentPath)
-	metadata.Errors[errPath] = fmt.Errorf("error merging field %s: %w", field, err)
+	metadata.Errors.AddErrorWithSubpath("/config_merge_error", fmt.Errorf("error merging field %s: %w", field, err))
 }
 
 func mergeResolveReference(metadata *parserMetadata, node schemaNode) (schemaNode, error) {
 	var err error
 	resolvedPaths := []string{}
-	refNode := node
+	refNode := &node
 	for refNode.Ref != nil {
 		ref := util.GetZeroIfNil(refNode.Ref, "")
-		refNode, err = resolveReferencePath(metadata.RootNode, ref)
+		refNode, err = metadata.DocumentResolver.ResolvePath(metadata, ref)
 
 		if err != nil {
-			errPath := fmt.Sprintf("%s/config_ref_merge_error[%s]", metadata.ReferenceHandler.CurrentPath, ref)
+			errPath := fmt.Sprintf("/config_ref_merge_error[%s]", ref)
 			formattedErr := fmt.Errorf("failed to resolve ref [%s] Error given: %e", ref, err)
-			metadata.Errors[errPath] = formattedErr
+			metadata.Errors.AddErrorWithSubpath(errPath, formattedErr)
+			return schemaNode{}, formattedErr
+		}
+
+		if refNode == nil {
+			errPath := fmt.Sprintf("/config_ref_merge_error[%s]", ref)
+			formattedErr := fmt.Errorf("failed to resolve ref [%s] Error given: resolved to nil", ref)
+			metadata.Errors.AddErrorWithSubpath(errPath, formattedErr)
 			return schemaNode{}, formattedErr
 		}
 
 		resolvedPaths = append(resolvedPaths, ref)
 
 		if funk.Contains(resolvedPaths, ref) {
-			errPath := fmt.Sprintf("%s/$ref", metadata.ReferenceHandler.CurrentPath)
+
 			err = fmt.Errorf("circular reference detected while building composition element reference path %s", ref)
-			metadata.Errors[errPath] = err
+			metadata.Errors.AddErrorWithSubpath("/$ref", err)
 			return schemaNode{}, err
 		}
 	}
 
-	return refNode, nil
+	return *refNode, nil
 
 }
 
