@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/common/metadata.json",
+  "title": "Request Metadata",
+  "type": "object",
+  "properties": {
+    "requestId": {
+      "$ref": "./types.json#/definitions/uuid"
+    },
+    "timestamp": {
+      "$ref": "./types.json#/definitions/timestamp"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["development", "staging", "production"]
+    },
+    "client": {
+      "$ref": "./client.json"
+    }
+  }
+}

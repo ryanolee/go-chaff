@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schemas/schema_definition.json",
+  "title": "Schema Definition",
+  "description": "Self-referencing schema definition",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["string", "number", "integer", "boolean", "array", "object", "null"]
+    },
+    "format": {
+      "type": "string"
+    },
+    "properties": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "schema_definition.json"
+      }
+    },
+    "items": {
+      "$ref": "schema_definition.json"
+    },
+    "$ref": {
+      "type": "string"
+    },
+    "enum": {
+      "type": "array"
+    },
+    "minimum": {
+      "type": "number"
+    },
+    "maximum": {
+      "type": "number"
+    },
+    "minLength": {
+      "type": "integer"
+    },
+    "maxLength": {
+      "type": "integer"
+    },
+    "pattern": {
+      "type": "string"
+    }
+  }
+}

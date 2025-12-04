@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/auth/api-key.json",
+  "title": "API Key Authentication",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "apiKey"
+    },
+    "key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "location": {
+      "type": "string",
+      "enum": ["header", "query", "cookie"]
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the header, query param, or cookie"
+    }
+  },
+  "required": ["type", "key", "location", "name"]
+}

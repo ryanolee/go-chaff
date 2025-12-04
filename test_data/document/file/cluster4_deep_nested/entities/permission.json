@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "entities/permission.json",
+  "title": "Permission",
+  "type": "object",
+  "properties": {
+    "resource": {
+      "type": "string"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["read", "write", "delete", "admin"]
+      }
+    },
+    "grantedBy": {
+      "$ref": "user.json"
+    },
+    "scope": {
+      "$ref": "../modules/module.json"
+    }
+  },
+  "required": ["resource", "actions"]
+}

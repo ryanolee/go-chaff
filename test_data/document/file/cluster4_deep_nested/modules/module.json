@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "modules/module.json",
+  "title": "Application Module",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "../core/types/identifier.json"
+    },
+    "name": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "$ref": "module.json"
+      }
+    },
+    "plugins": {
+      "type": "array",
+      "items": {
+        "$ref": "plugins/plugin.json"
+      }
+    },
+    "eventHandlers": {
+      "type": "array",
+      "items": {
+        "$ref": "../events/handler.json"
+      }
+    },
+    "owner": {
+      "$ref": "../entities/user.json"
+    }
+  },
+  "required": ["id", "name"]
+}

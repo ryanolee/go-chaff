@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "main.json",
+  "title": "API Definition",
+  "description": "API with deep references",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "pattern": "^v[0-9]+$"
+    },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "$ref": "endpoints/endpoint.json"
+      }
+    },
+    "authentication": {
+      "$ref": "auth/auth_basic.json"
+    },
+    "globalHeaders": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": ["apiVersion", "endpoints"]
+}

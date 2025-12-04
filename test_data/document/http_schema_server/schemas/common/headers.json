@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/common/headers.json",
+  "title": "HTTP Headers",
+  "type": "object",
+  "additionalProperties": {
+    "oneOf": [
+      { "type": "string" },
+      { 
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    ]
+  },
+  "properties": {
+    "Content-Type": {
+      "type": "string"
+    },
+    "Authorization": {
+      "type": "string"
+    },
+    "Accept": {
+      "type": "string"
+    },
+    "User-Agent": {
+      "type": "string"
+    },
+    "X-Request-Id": {
+      "$ref": "./types.json#/definitions/uuid"
+    }
+  }
+}

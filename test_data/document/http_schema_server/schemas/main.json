@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/main.json",
+  "title": "API Request",
+  "description": "Main schema for HTTP API requests",
+  "type": "object",
+  "properties": {
+    "request": {
+      "$ref": "./request.json"
+    },
+    "response": {
+      "$ref": "./response.json"
+    },
+    "metadata": {
+      "$ref": "./common/metadata.json"
+    }
+  },
+  "required": ["request"]
+}

@@ -1,0 +1,56 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "not_empty_string": {
+            "type": "string",
+            "not": {
+                "maxLength": 0
+            }
+        },
+        "not_long_string": {
+            "type": "string",
+            "minLength": 1,
+            "not": {
+                "minLength": 100
+            }
+        },
+        "not_short_string": {
+            "type": "string",
+            "maxLength": 100,
+            "not": {
+                "maxLength": 5
+            }
+        },
+        "not_specific_pattern": {
+            "type": "string",
+            "minLength": 1,
+            "not": {
+                "pattern": "^[0-9]+$"
+            }
+        },
+        "string_length_range_with_not": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50,
+            "not": {
+                "minLength": 20,
+                "maxLength": 30
+            }
+        },
+        "not_specific_prefix_pattern": {
+            "type": "string",
+            "minLength": 5,
+            "not": {
+                "pattern": "^ERROR:"
+            }
+        },
+        "not_whitespace_only": {
+            "type": "string",
+            "minLength": 1,
+            "not": {
+                "pattern": "^\\s*$"
+            }
+        } 
+    }
+}

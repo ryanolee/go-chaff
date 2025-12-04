@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "events/subscription.json",
+  "title": "Event Subscription",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "../core/types/identifier.json"
+    },
+    "subscriber": {
+      "$ref": "../entities/user.json"
+    },
+    "eventTypes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "handler": {
+      "$ref": "handler.json"
+    },
+    "bus": {
+      "$ref": "bus.json"
+    }
+  },
+  "required": ["id", "eventTypes"]
+}

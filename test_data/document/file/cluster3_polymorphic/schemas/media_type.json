@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schemas/media_type.json",
+  "title": "Media Type",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "$ref": "schema_definition.json"
+    },
+    "example": {},
+    "examples": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "example.json"
+      }
+    },
+    "encoding": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "contentType": { "type": "string" },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "../endpoints/parameter.json"
+            }
+          },
+          "style": { "type": "string" },
+          "explode": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

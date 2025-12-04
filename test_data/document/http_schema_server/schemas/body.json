@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/body.json",
+  "title": "Request/Response Body",
+  "type": "object",
+  "properties": {
+    "contentType": {
+      "type": "string",
+      "examples": ["application/json", "text/html", "application/xml"]
+    },
+    "data": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object" },
+        { "type": "array" }
+      ]
+    },
+    "encoding": {
+      "type": "string",
+      "enum": ["utf-8", "base64", "binary"]
+    },
+    "size": {
+      "$ref": "./common/types.json#/definitions/byteSize"
+    }
+  }
+}

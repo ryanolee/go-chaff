@@ -6,6 +6,7 @@ import (
 	"regexp/syntax"
 
 	"github.com/ryanolee/go-chaff/internal/regen"
+	"github.com/ryanolee/go-chaff/internal/util"
 )
 
 type (
@@ -16,14 +17,59 @@ type (
 
 		// Options for the regex generator used for pattern properties
 		RegexPatternPropertyOptions *regen.GeneratorArgs
+
+		// Parser fetch configurations for external document fetching
+		DocumentFetchOptions DocumentFetchOptions
+
+		// Base path to resolve relative document references against for $ref resolution when fetching external documents
+		RelativeTo string
+	}
+
+	// Options for fetching external documents during parsing.
+	// Should be used with cautions Especially if schemas passed to the schema faker can be from untrusted sources.
+	DocumentFetchOptions struct {
+		// HTTP Fetch Options
+		HTTPFetchOptions HTTPFetchOptions
+
+		// File System Fetch Options
+		FileSystemFetchOptions FileSystemFetchOptions
+	}
+
+	// Options for fetching external documents over HTTP
+	HTTPFetchOptions struct {
+		// If go-chaff is allowed to make HTTP requests to resolve schema references
+		Enabled bool
+
+		// Allowed hosts to fetch from (If empty, all hosts are allowed)
+		AllowedHosts []string
+
+		// Allow insecure connections (http)
+		AllowInsecure bool
+	}
+
+	// Options for fetching external documents from the file system
+	FileSystemFetchOptions struct {
+		// If go-chaff is allowed to access the file system to resolve schema references
+		//    THIS SHOULD BE DISABLED UNLESS YOU REALLY REALLY NEED IT
+		//    Please if doing so, limit the AllowedPaths field as much as possible )
+		Enabled bool
+
+		// Overrides allowOutsideCwd to specifically allow for access to a list of paths schemas might reference
+		// relative paths will be resolved against the current working directory at the time the parser is initialized
+		// Symlinks that resolve to outside of the allowed paths will still be blocked
+		AllowedPaths []string
+
+		// Failsafe to prevent directory traversal attacks
+		AllowOutsideCwd bool
 	}
 
 	// Struct containing metadata for parse operations within the JSON Schema
 	parserMetadata struct {
+
 		// Used to keep track of every referenceable route
 		ReferenceHandler *referenceHandler
 		ParserOptions    ParserOptions
-		Errors           map[string]error
+		Errors           *errorCollection
 
 		// Generators that need to have their structures Re-Parsed once all references have been resolved
 		ReferenceResolver referenceResolver
@@ -31,74 +77,89 @@ type (
 
 		// Global merge depth for the schema
 		MergeDepth int
+
+		// Schema management for compiling schemas for internal value validation (Required for where subschemas need to be matched for random value generation)
+		SchemaManager *schemaManager
+
+		// Document resolver for resolving external document references during parsing
+		DocumentResolver *documentResolver
 	}
 
 	schemaNode struct {
 		// Shared Properties
-		Type   multipleType `json:"type"`
-		Length int          `json:"length"` // Shared by String and Array
+		Type   *multipleType `json:"type,omitempty"`
+		Length *int          `json:"length,omitempty"` // Shared by String and Array
 
 		// Object Properties
-		Properties           map[string]schemaNode `json:"properties"`
-		AdditionalProperties additionalData        `json:"additionalProperties"`
-		PatternProperties    map[string]schemaNode `json:"patternProperties"`
-		MinProperties        int                   `json:"minProperties"`
-		MaxProperties        int                   `json:"maxProperties"`
-		Required             []string              `json:"required"`
+		Properties           *map[string]schemaNode `json:"properties,omitempty"`
+		AdditionalProperties *schemaNodeOrFalse     `json:"additionalProperties,omitempty"`
+		PatternProperties    *map[string]schemaNode `json:"patternProperties,omitempty"`
+		MinProperties        *int                   `json:"minProperties,omitempty"`
+		MaxProperties        *int                   `json:"maxProperties,omitempty"`
+		Required             *[]string              `json:"required,omitempty"`
 
 		// String Properties
-		Pattern   string `json:"pattern"`
-		Format    string `json:"format"`
-		MinLength int    `json:"minLength"`
-		MaxLength int    `json:"maxLength"`
+		Pattern   *string `json:"pattern,omitempty"`
+		Format    *string `json:"format,omitempty"`
+		MinLength *int    `json:"minLength,omitempty"`
+		MaxLength *int    `json:"maxLength,omitempty"`
 
 		// Number Properties
 		Minimum          *float64 `json:"minimum,omitempty"`
 		Maximum          *float64 `json:"maximum,omitempty"`
 		ExclusiveMinimum *float64 `json:"exclusiveMinimum,omitempty"`
 		ExclusiveMaximum *float64 `json:"exclusiveMaximum,omitempty"`
-		MultipleOf       float64  `json:"multipleOf"`
+		MultipleOf       *float64 `json:"multipleOf,omitempty"`
 
 		// Array Properties
-		Items    itemsData `json:"items"`
-		MinItems int       `json:"minItems"`
-		MaxItems int       `json:"maxItems"`
+		Items    *itemsData `json:"items,omitempty"`
+		MinItems *int       `json:"minItems,omitempty"` // N Done
+		MaxItems *int       `json:"maxItems,omitempty"` // N Done
 
-		Contains    *schemaNode `json:"contains"`
-		MinContains int         `json:"minContains"`
-		MaxContains int         `json:"maxContains"`
+		Contains    *schemaNode `json:"contains,omitempty"`
+		MinContains *int        `json:"minContains,omitempty"` // N Done
+		MaxContains *int        `json:"maxContains,omitempty"` // N Done
 
-		PrefixItems      []schemaNode       `json:"prefixItems"`
-		AdditionalItems  *schemaNodeOrFalse `json:"additionalItems"`
-		UnevaluatedItems *schemaNodeOrFalse `json:"unevaluatedItems"`
-		UniqueItems      bool               `json:"uniqueItems"`
+		PrefixItems      *[]schemaNode      `json:"prefixItems,omitempty"`
+		AdditionalItems  *schemaNodeOrFalse `json:"additionalItems,omitempty"`
+		UnevaluatedItems *schemaNodeOrFalse `json:"unevaluatedItems,omitempty"`
+		UniqueItems      *bool              `json:"uniqueItems,omitempty"`
 
 		// Enum Properties
-		Enum []interface{} `json:"enum"`
+		Enum *[]interface{} `json:"enum,omitempty"`
 
 		// Constant Properties
-		Const interface{} `json:"const"`
+		Const *interface{} `json:"const,omitempty"`
 
 		// Combination Properties
-		// TODO: Implement these
-		//Not *SchemaNode `json:"not"`
-		AllOf []schemaNode `json:"allOf"`
-		AnyOf []schemaNode `json:"anyOf"`
-		OneOf []schemaNode `json:"oneOf"`
+		Not   *schemaNode   `json:"not,omitempty"`
+		AllOf *[]schemaNode `json:"allOf,omitempty"`
+		AnyOf *[]schemaNode `json:"anyOf,omitempty"`
+		OneOf *[]schemaNode `json:"oneOf,omitempty"`
 
 		// Reference Operator
-		Ref         string                `json:"$ref"`
-		Id          string                `json:"$id"`
-		Defs        map[string]schemaNode `json:"$defs"`
-		Definitions map[string]schemaNode `json:"definitions"`
+		Ref         *string                `json:"$ref,omitempty"`
+		Id          *string                `json:"$id,omitempty"`
+		Defs        *map[string]schemaNode `json:"$defs,omitempty"`
+		Definitions *map[string]schemaNode `json:"definitions,omitempty"`
 
-		// Unsupported Properties
-		Not               *schemaNode           `json:"not"`
-		If                *schemaNode           `json:"if"`
-		Then              *schemaNode           `json:"then"`
-		Else              *schemaNode           `json:"else"`
-		DependentRequired map[string][]string   `json:"dependentRequired"`
-		DependentSchemas  map[string]schemaNode `json:"dependentSchemas"`
+		// Conditional logic
+		If   *schemaNode `json:"if,omitempty"`
+		Then *schemaNode `json:"then,omitempty"`
+		Else *schemaNode `json:"else,omitempty"`
+
+		// Unsupported
+		DependentRequired map[string][]string `json:"dependentRequired,omitempty"`
+
+		// Unsupported
+		DependentSchemas map[string]schemaNode `json:"dependentSchemas,omitempty"`
+
+		// Internal functionality
+		// Used to keep track of ifs from allOf statements that have been merged into this node (or factored into said node)
+		mergedIf []ifStatement
+
+		// Internal map used to keep track of constraints that need to be applied to this node during parsing
+		constraints *constraintCollection
 	}
 )
 
@@ -111,16 +172,35 @@ const (
 	typeString  = "string"
 	typeBoolean = "boolean"
 	typeNull    = "null"
+	typeUnknown = "unknown"
+)
+
+var (
+	typeAll = []string{
+		typeObject, typeArray, typeNumber, typeInteger, typeString, typeBoolean, typeNull,
+	}
 )
 
 // Parses a Json Schema file at the given path. If there is an error reading the file or
 // parsing the schema, an error will be returned
 func ParseSchemaFile(path string, opts *ParserOptions) (RootGenerator, error) {
+	path, err := getRealPath(path)
+	if err != nil {
+		return RootGenerator{
+			Generator: nullGenerator{},
+		}, err
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return RootGenerator{
 			Generator: nullGenerator{},
 		}, err
+	}
+
+	// Resolve relative path base for fetching external documents unless already set
+	if opts.RelativeTo == "" {
+		opts.RelativeTo = "file://" + path
 	}
 
 	return ParseSchema(data, opts)
@@ -145,21 +225,45 @@ func ParseSchemaStringWithDefaults(schema string) (RootGenerator, error) {
 func ParseSchema(schema []byte, opts *ParserOptions) (RootGenerator, error) {
 	var node schemaNode
 	err := json.Unmarshal(schema, &node)
+	defaultGenerator := RootGenerator{
+		Generator: nullGenerator{},
+	}
 	if err != nil {
-		return RootGenerator{
-			Generator: nullGenerator{},
-		}, err
+		return defaultGenerator, err
 	}
 
-	refHandler := newReferenceHandler()
+	optsWithDefault := withDefaultParseOptions(*opts)
+	documentResolver, err := newDocumentResolver(optsWithDefault, &node)
+	if err != nil {
+		return defaultGenerator, err
+	}
+
+	refHandler := newReferenceHandler(documentResolver)
+	errorCollection := newErrorCollection(refHandler, documentResolver)
+
+	schemaManager, err := newSchemaManager(documentResolver, schema)
+	if err != nil {
+		return defaultGenerator, err
+	}
+
 	metadata := &parserMetadata{
-		ReferenceHandler: &refHandler,
-		Errors:           make(map[string]error),
-		ParserOptions:    withDefaultParseOptions(*opts),
+		ReferenceHandler: refHandler,
+		SchemaManager:    schemaManager,
+		Errors:           errorCollection,
+		ParserOptions:    optsWithDefault,
 		RootNode:         node,
 		MergeDepth:       0,
+		DocumentResolver: documentResolver,
 	}
+
 	generator, err := parseRoot(node, metadata)
+
+	for metadata.DocumentResolver.HasMoreDocumentsToParse() {
+		_, err := metadata.DocumentResolver.ParseNextDocument(metadata)
+		if err != nil {
+			metadata.Errors.AddErrorWithSubpath("document_parse_error", err)
+		}
+	}
 
 	return generator, err
 }
@@ -171,17 +275,40 @@ func ParseSchemaWithDefaults(schema []byte) (RootGenerator, error) {
 
 func parseNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	refHandler := metadata.ReferenceHandler
+
+	// Handle simplification of not node where there are multiple inversions so that they can be merged properly
+	node, err := handleNotSimplification(node, metadata)
+	if err != nil {
+		metadata.Errors.AddError(err)
+	}
+
 	gen, err := parseSchemaNode(node, metadata)
 
 	if err != nil {
-		metadata.Errors[refHandler.CurrentPath] = err
+		metadata.Errors.AddError(err)
 	}
 
-	if node.Id != "" {
-		refHandler.AddIdReference(node.Id, node, gen)
+	if gen == nil {
+		gen = nullGenerator{}
+	}
+
+	if node.Id != nil {
+		refHandler.AddIdReference(*node.Id, node, gen)
 	}
 
 	refHandler.AddReference(node, gen)
+
+	// Wrap in a constrained generator if there are constraints to apply
+	// to a given node
+	if node.constraints != nil {
+		return constrainedGenerator{
+			internalGenerator: gen,
+			constraints: []constraint{
+				node.constraints.Compile(),
+			},
+		}, nil
+	}
+
 	return gen, err
 
 }
@@ -192,7 +319,7 @@ func parseSchemaNode(node schemaNode, metadata *parserMetadata) (Generator, erro
 	}
 
 	// Handle reference nodes
-	if node.Ref != "" {
+	if node.Ref != nil {
 		return parseReference(node, metadata)
 	}
 
@@ -205,29 +332,46 @@ func parseSchemaNode(node schemaNode, metadata *parserMetadata) (Generator, erro
 		return parseCombination(node, metadata)
 	}
 
+	// Handle not nodes
+	if node.Not != nil {
+		return parseNot(node, metadata)
+	}
+
+	// Handle conditional nodes
+	if node.If != nil || len(node.mergedIf) != 0 {
+		return parseIf(node, metadata)
+	}
+
 	// Handle enum nodes
-	if len(node.Enum) != 0 {
-		return parseEnum(node)
+	if node.Enum != nil && len(*node.Enum) != 0 {
+		return parseEnum(node, metadata)
 	}
 
 	// Handle constant nodes
 	if node.Const != nil {
-		return parseConst(node)
+		return parseConst(node, metadata)
 	}
 
 	// Handle multiple type nodes
-	if node.Type.MultipleTypes != nil {
+	if node.Type != nil && node.Type.MultipleTypes != nil {
 		return parseMultipleType(node, metadata)
 	}
 
-	// In the case no explicit type is given
-	// attempt to infer the type from the node properties
-	if node.Type.SingleType == "" {
-		inferredNodeType := inferType(node)
-		return parseType(inferredNodeType, node, metadata)
+	// In the case an explicit type is given use that type directly
+	if node.Type != nil && node.Type.SingleType != "" {
+		return parseType(node.Type.SingleType, node, metadata)
 	}
 
-	return parseType(node.Type.SingleType, node, metadata)
+	// Attempt to infer the type of node given the passed properties
+	inferredNodeType := inferType(node)
+
+	// In no property type is given assume "any" type is valid in the passed case
+	if inferredNodeType == typeUnknown {
+		node.Type.MultipleTypes = typeAll
+		return parseMultipleType(node, metadata)
+	}
+
+	return parseType(inferredNodeType, node, metadata)
 }
 
 func parseType(nodeType string, node schemaNode, metadata *parserMetadata) (Generator, error) {
@@ -256,6 +400,8 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 	parseOpts := ParserOptions{
 		RegexStringOptions:          opts.RegexStringOptions,
 		RegexPatternPropertyOptions: opts.RegexPatternPropertyOptions,
+		DocumentFetchOptions:        opts.DocumentFetchOptions,
+		RelativeTo:                  opts.RelativeTo,
 	}
 
 	defaultRegexOpts := &regen.GeneratorArgs{
@@ -264,13 +410,8 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 		Flags:                   syntax.PerlX,
 	}
 
-	if opts.RegexStringOptions == nil {
-		parseOpts.RegexStringOptions = defaultRegexOpts
-	}
-
-	if opts.RegexPatternPropertyOptions == nil {
-		parseOpts.RegexPatternPropertyOptions = defaultRegexOpts
-	}
+	parseOpts.RegexStringOptions = util.GetPtr(parseOpts.RegexStringOptions, defaultRegexOpts)
+	parseOpts.RegexPatternPropertyOptions = util.GetPtr(parseOpts.RegexStringOptions, defaultRegexOpts)
 
 	return parseOpts
 }
@@ -278,45 +419,26 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 // Infers the type of a schema node based on its properties
 func inferType(node schemaNode) string {
 	// Object Properties
-	if node.Properties != nil ||
-		node.AdditionalProperties.Schema != nil ||
-		node.PatternProperties != nil ||
-		node.MinProperties != 0 ||
-		node.MaxProperties != 0 ||
-		node.Required != nil {
+	if util.AnyNotNil(node.Properties, node.PatternProperties, node.MinProperties, node.MaxProperties, node.Required) ||
+		(node.AdditionalProperties != nil && node.AdditionalProperties.Schema != nil) {
 		return typeObject
 	}
 
 	// String Properties
-	if node.Pattern != "" ||
-		node.Format != "" ||
-		node.MinLength != 0 ||
-		node.MaxLength != 0 {
+	if util.AnyNotNil(node.Pattern, node.Format, node.MinLength, node.MaxLength) {
 		return typeString
 	}
 
 	// Number Properties
-	if node.Minimum != nil ||
-		node.Maximum != nil ||
-		node.ExclusiveMinimum != nil ||
-		node.ExclusiveMaximum != nil ||
-		node.MultipleOf != 0 {
+	if util.AnyNotNil(node.Minimum, node.Maximum, node.ExclusiveMinimum, node.ExclusiveMaximum, node.MultipleOf) {
 		return typeNumber
 	}
 
 	// Array Properties
-	if node.Items.Node != nil ||
-		node.MinItems != 0 ||
-		node.MaxItems != 0 ||
-		node.Contains != nil ||
-		node.MinContains != 0 ||
-		node.MaxContains != 0 ||
-		node.PrefixItems != nil ||
-		node.AdditionalItems != nil ||
-		node.UnevaluatedItems != nil {
+	if util.AnyNotNil(node.Items.Node, node.MinItems, node.MaxItems, node.Contains, node.MinContains, node.MaxContains, node.PrefixItems, node.AdditionalItems, node.UnevaluatedItems) {
 		return typeArray
 	}
 
 	// If we can't infer the type, default to null
-	return typeNull
+	return typeUnknown
 }

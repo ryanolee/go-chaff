@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "main.json",
+  "title": "Application System",
+  "description": "Main entry point for a complex modular application with deep nesting and cyclic references",
+  "type": "object",
+  "properties": {
+    "config": {
+      "$ref": "core/config.json"
+    },
+    "users": {
+      "type": "array",
+      "items": {
+        "$ref": "entities/user.json"
+      }
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "$ref": "modules/module.json"
+      }
+    },
+    "eventBus": {
+      "$ref": "events/bus.json"
+    }
+  },
+  "required": ["config", "users"]
+}

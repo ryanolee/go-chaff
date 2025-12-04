@@ -1,0 +1,110 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "not_empty_array": {
+            "type": "array",
+            "not": {
+                "maxItems": 0
+            }
+        },
+        "not_large_array": {
+            "type": "array",
+            "minItems": 1,
+            "not": {
+                "minItems": 10
+            }
+        },
+        "array_not_containing_null": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "not": {
+                    "type": "null"
+                }
+            }
+        },
+        "array_not_containing_specific_string": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "string",
+                "not": {
+                    "const": "secret"
+                }
+            }
+        },
+        "array_with_not_unique_items": {
+            "type": "array",
+            "minItems": 2,
+            "not": {
+                "uniqueItems": true
+            }
+        },
+        "array_not_containing_negative_numbers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "number",
+                "not": {
+                    "exclusiveMaximum": 0
+                }
+            }
+        },
+        "not_tuple_array": {
+            "type": "array",
+            "minItems": 2,
+            "not": {
+                "prefixItems": [
+                    { "type": "string" },
+                    { "type": "number" }
+                ],
+                "items": false
+            }
+        },
+        "not_specific_item_count": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "not": {
+                "minItems": 5,
+                "maxItems": 5
+            }
+        },
+        "prefix_items_with_not": {
+            "type": "array",
+            "minItems": 3,
+            "prefixItems": [
+                { "type": "string", "minLength": 1 },
+                { "type": "number", "minimum": 0 },
+                { 
+                    "type": "string",
+                    "not": {
+                        "enum": ["forbidden", "blocked"]
+                    }
+                }
+            ]
+        },
+        "not_all_same_type": {
+            "type": "array",
+            "minItems": 2,
+            "not": {
+                "items": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "required": [
+        "not_empty_array",
+        "not_large_array",
+        "array_not_containing_null",
+        "array_not_containing_specific_string",
+        "array_with_not_unique_items",
+        "array_not_containing_negative_numbers",
+        "not_tuple_array",
+        "not_specific_item_count",
+        "prefix_items_with_not",
+        "not_all_same_type"
+    ]
+}

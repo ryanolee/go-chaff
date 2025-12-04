@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/response.json",
+  "title": "HTTP Response",
+  "type": "object",
+  "properties": {
+    "statusCode": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 599
+    },
+    "statusText": {
+      "type": "string"
+    },
+    "headers": {
+      "$ref": "./common/headers.json"
+    },
+    "body": {
+      "$ref": "./body.json"
+    },
+    "timing": {
+      "$ref": "./common/timing.json"
+    }
+  },
+  "required": ["statusCode"]
+}

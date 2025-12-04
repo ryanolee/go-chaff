@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/common/timing.json",
+  "title": "Response Timing",
+  "type": "object",
+  "properties": {
+    "dnsLookup": {
+      "$ref": "#/definitions/duration"
+    },
+    "tcpConnection": {
+      "$ref": "#/definitions/duration"
+    },
+    "tlsHandshake": {
+      "$ref": "#/definitions/duration"
+    },
+    "firstByte": {
+      "$ref": "#/definitions/duration"
+    },
+    "contentDownload": {
+      "$ref": "#/definitions/duration"
+    },
+    "total": {
+      "$ref": "#/definitions/duration"
+    }
+  },
+  "definitions": {
+    "duration": {
+      "type": "number",
+      "description": "Duration in milliseconds",
+      "minimum": 0
+    }
+  }
+}

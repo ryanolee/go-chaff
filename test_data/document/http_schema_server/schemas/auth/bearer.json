@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/auth/bearer.json",
+  "title": "Bearer Token Authentication",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "bearer"
+    },
+    "token": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expiresAt": {
+      "$ref": "./../common/types.json#/definitions/timestamp"
+    }
+  },
+  "required": ["type", "token"]
+}

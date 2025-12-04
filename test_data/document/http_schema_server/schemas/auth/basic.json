@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/auth/basic.json",
+  "title": "Basic Authentication",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "basic"
+    },
+    "username": {
+      "type": "string",
+      "minLength": 1
+    },
+    "password": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": ["type", "username", "password"]
+}

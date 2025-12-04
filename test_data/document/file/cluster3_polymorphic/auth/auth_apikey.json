@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "auth/auth_apikey.json",
+  "title": "API Key Authentication",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "apiKey"
+    },
+    "description": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "in": {
+      "type": "string",
+      "enum": ["query", "header", "cookie"]
+    }
+  },
+  "required": ["type", "name", "in"]
+}

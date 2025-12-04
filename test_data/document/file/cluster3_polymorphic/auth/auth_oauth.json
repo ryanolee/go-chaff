@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "auth/auth_oauth.json",
+  "title": "OAuth2 Authentication",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "oauth2"
+    },
+    "description": {
+      "type": "string"
+    },
+    "flows": {
+      "type": "object",
+      "properties": {
+        "authorizationCode": {
+          "$ref": "oauth_flow.json"
+        },
+        "implicit": {
+          "$ref": "oauth_flow.json"
+        },
+        "password": {
+          "$ref": "oauth_flow.json"
+        },
+        "clientCredentials": {
+          "$ref": "oauth_flow.json"
+        }
+      }
+    }
+  },
+  "required": ["type", "flows"]
+}

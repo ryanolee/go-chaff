@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "user.json",
+  "title": "User",
+  "description": "User who can own nodes - creates cycle through metadata",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "username": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 30
+    },
+    "ownedNodes": {
+      "type": "array",
+      "items": {
+        "$ref": "node.json"
+      }
+    },
+    "profile": {
+      "$ref": "metadata.json"
+    }
+  },
+  "required": ["userId", "username"]
+}

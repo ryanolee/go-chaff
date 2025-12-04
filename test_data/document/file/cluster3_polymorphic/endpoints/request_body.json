@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "endpoints/request_body.json",
+  "title": "Request Body",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "required": {
+      "type": "boolean"
+    },
+    "content": {
+      "type": "object",
+      "properties": {
+        "application/json": {
+          "$ref": "../schemas/media_type.json"
+        },
+        "application/xml": {
+          "$ref": "../schemas/media_type.json"
+        },
+        "multipart/form-data": {
+          "$ref": "../schemas/media_type.json"
+        },
+        "application/x-www-form-urlencoded": {
+          "$ref": "../schemas/media_type.json"
+        }
+      }
+    }
+  }
+}

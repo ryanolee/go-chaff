@@ -7,12 +7,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kaptinlin/jsonschema"
 	"github.com/ryanolee/go-chaff"
-	"github.com/ryanolee/go-chaff/rand"
-	"github.com/santhosh-tekuri/jsonschema"
 )
 
 func TestJsonSchemaDir(test *testing.T, dirPath string, cycles int) {
+	TestJsonSchemaDirWithConfig(test, dirPath, cycles, nil, nil)
+}
+
+func TestJsonSchemaDirWithConfig(test *testing.T, dirPath string, cycles int, options *chaff.ParserOptions, getGeneratorOptions func() *chaff.GeneratorOptions) {
 	files, err := ioutil.ReadDir(dirPath)
 	if err != nil {
 		test.Fatalf("Failed to read directory: %s", err)
@@ -27,42 +30,71 @@ func TestJsonSchemaDir(test *testing.T, dirPath string, cycles int) {
 			continue
 		}
 
-		TestJsonSchema(test, fmt.Sprintf("%s/%s", dirPath, file.Name()), cycles)
+		TestJsonSchema(test, fmt.Sprintf("%s/%s", dirPath, file.Name()), cycles, options, getGeneratorOptions)
 	}
 }
 
-func TestJsonSchema(test *testing.T, schemaPath string, cycles int) {
+func TestJsonSchema(test *testing.T, schemaPath string, cycles int, options *chaff.ParserOptions, getGeneratorOptions func() *chaff.GeneratorOptions) {
+	if getGeneratorOptions == nil {
+		getGeneratorOptions = func() *chaff.GeneratorOptions {
+			return &chaff.GeneratorOptions{
+				BypassCyclicReferenceCheck: false,
+			}
+		}
+	}
 	test.Run(fmt.Sprintf("GenerativeTest[%s,cycles:%d]", schemaPath, cycles), func(test *testing.T) {
 		if cycles < 1 {
 			cycles = 100
 		}
 
-		schema, err := jsonschema.Compile(schemaPath)
+		// Read and compile schema
+		fileData, err := ioutil.ReadFile(schemaPath)
+		if err != nil {
+			test.Fatalf("Failed to read schema file: %s", err)
+		}
+
+		compiler := jsonschema.NewCompiler()
+		if options != nil && options.RelativeTo != "" {
+			compiler.SetDefaultBaseURI(options.RelativeTo)
+		}
+
+		schema, err := compiler.Compile(fileData, schemaPath)
+
 		if err != nil {
 			test.Fatalf("Failed to compile schema: %s", err)
 		}
 
-		generator, err := chaff.ParseSchemaFileWithDefaults(schemaPath)
+		if options == nil {
+			options = &chaff.ParserOptions{}
+		}
+
+		generator, err := chaff.ParseSchemaFile(schemaPath, options)
 		if err != nil {
 			test.Fatalf("Failed to compile generator: %s", err)
 		}
 
-		if len(generator.Metadata.Errors) > 0 {
-			test.Fatalf("Failed to compile generator: %s", generator.Metadata.Errors)
+		if generator.Metadata.Errors.HasErrors() {
+			for path, genErr := range generator.Metadata.Errors.CollectErrors() {
+				test.Logf("\n===============ERROR [%s]============\n%s\n=======================END ERROR=================\n\n\n", path, genErr.Error())
+			}
+			test.Fatalf("Failed to compile generator due to above errors")
 		}
 
 		for i := 0; i < cycles; i++ {
-			data, err := json.MarshalIndent(generator.Generate(&chaff.GeneratorOptions{
-				Rand:                       rand.NewRandUtilFromTime(),
-				BypassCyclicReferenceCheck: true,
-			}), "", "    ")
+			data, err := json.MarshalIndent(generator.Generate(
+				getGeneratorOptions(),
+			), "", "    ")
 
 			if err != nil {
 				test.Fatalf("Failed to serialize JSON: %s", err)
 			}
 
-			if err := schema.Validate(strings.NewReader(string(data))); err != nil {
-				test.Fatalf("Failed to validate instance: %s. Data: %s", err, data)
+			if res := schema.Validate(data); len(res.Errors) > 0 {
+				for field, err := range res.Errors {
+					test.Logf("- %s: %s\n", field, err.Error())
+				}
+				test.Fatalf("Generated data did not validate against schema on cycle %d:\n%s", i, string(data))
+
 			}
 		}
 	})

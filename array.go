@@ -40,38 +40,43 @@ type (
 //	}
 func parseArray(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	// Handle case where contains is set with no minContains (at least 1 must match subschema)
-	minContains := node.MinContains
+	minContains := util.GetZeroIfNil(node.MinContains, 0)
+	maxContains := util.GetZeroIfNil(node.MaxContains, 0)
+	minItems := util.GetZeroIfNil(node.MinItems, 0)
+	maxItems := util.GetZeroIfNil(node.MaxItems, 0)
+	prefixItems := util.GetZeroIfNil(node.PrefixItems, []schemaNode{})
+
 	if minContains == 0 && node.Contains != nil {
 		minContains = 1
 	}
 
 	// Validate Bounds
-	if err := assertLowerUpperBound(node.MinItems, node.MaxItems, "minItems", "maxItems"); err != nil {
+	if err := assertLowerUpperBound(minItems, maxItems, "minItems", "maxItems"); err != nil {
 		return nullGenerator{}, err
 	}
 
-	if err := assertLowerUpperBound(node.MinContains, node.MaxContains, "minContains", "maxContains"); err != nil {
+	if err := assertLowerUpperBound(minContains, maxContains, "minContains", "maxContains"); err != nil {
 		return nullGenerator{}, err
 	}
 
-	if err := assertLowerUpperBound(node.MinContains, node.MaxItems, "minContains", "minItems"); err != nil {
+	if err := assertLowerUpperBound(minContains, minItems, "minContains", "minItems"); err != nil {
 		return nullGenerator{}, err
 	}
 
-	if err := assertLowerUpperBound(len(node.PrefixItems)+node.MinContains, node.MaxItems, "Tuple items Plus Prefix items. (Note contains does not assume tuple items count towards the total account)", "minItems"); err != nil {
+	if err := assertLowerUpperBound(len(prefixItems)+minContains, maxItems, "Tuple items Plus Prefix items. (Note contains does not assume tuple items count towards the total account)", "minItems"); err != nil {
 		return nullGenerator{}, err
 	}
 
 	// Validate if tuple makes sense in this context
-	tupleLength := len(node.PrefixItems)
-	if tupleLength > node.MaxItems && node.MaxItems != 0 {
+	tupleLength := len(prefixItems)
+	if tupleLength > maxItems && node.MaxItems != nil {
 		return nullGenerator{}, fmt.Errorf("tuple length must be less than or equal to maxItems (tupleLength: %d, maxItems: %d)", tupleLength, node.MaxItems)
 	}
 
-	min := util.GetInt(node.MinItems, node.MinContains)
-	max := util.GetInt(node.MaxItems, node.MaxContains)
+	min := util.GetInt(minItems, minContains)
+	max := util.GetInt(maxItems, min+defaultOffset)
 
-	disallowedAdditionalItems := node.Items.DisallowAdditionalItems || (node.AdditionalItems != nil && node.AdditionalItems.IsFalse)
+	disallowedAdditionalItems := (node.Items != nil && node.Items.DisallowAdditionalItems) || (node.AdditionalItems != nil && node.AdditionalItems.IsFalse)
 
 	// Force the generator to use only the tuple in the event that additional items
 	// are not allowed
@@ -116,7 +121,7 @@ func parseArray(node schemaNode, metadata *parserMetadata) (Generator, error) {
 		UnevaluatedItemsGenerator: unevaluatedItemsGenerator,
 		DisallowUnevaluatedItems:  disallowUnevaluatedItems,
 
-		DisallowAdditional:       node.Items.DisallowAdditionalItems,
+		DisallowAdditional:       node.Items != nil && node.Items.DisallowAdditionalItems,
 		AdditionalItemsGenerator: additionalItemGenerator,
 
 		MinContains:       minContains,
@@ -125,19 +130,20 @@ func parseArray(node schemaNode, metadata *parserMetadata) (Generator, error) {
 		MinItems: min,
 		MaxItems: max,
 
-		UniqueItems: node.UniqueItems,
+		UniqueItems: util.GetZeroIfNil(node.UniqueItems, false),
 
 		schemaNode: node,
 	}, nil
 }
 
 func parseTupleGeneratorFromSchemaNode(node schemaNode, metadata *parserMetadata) ([]Generator, error) {
-	if len(node.PrefixItems) != 0 {
-		return parseTupleGenerator(node.PrefixItems, metadata)
+
+	if node.PrefixItems != nil && len(*node.PrefixItems) != 0 {
+		return parseTupleGenerator(*node.PrefixItems, metadata)
 		// Legacy support given "items" when passed as an array
 		// has the same meaning as "prefixItems"
-	} else if len(node.Items.Nodes) != 0 {
-		return parseTupleGenerator(node.Items.Nodes, metadata)
+	} else if node.Items != nil && node.Items.Nodes != nil && len(*node.Items.Nodes) != 0 {
+		return parseTupleGenerator(*node.Items.Nodes, metadata)
 	}
 	return nil, nil
 }
@@ -171,7 +177,11 @@ func parseAdditionalItems(node schemaNode, metadata *parserMetadata) (Generator,
 
 }
 
-func parseItemGenerator(additionalData itemsData, metadata *parserMetadata) (Generator, error) {
+func parseItemGenerator(additionalData *itemsData, metadata *parserMetadata) (Generator, error) {
+	if additionalData == nil {
+		return nil, nil
+	}
+
 	if additionalData.DisallowAdditionalItems || additionalData.Node == nil {
 		return nil, nil
 	}
@@ -189,6 +199,10 @@ func parseItemGeneratorInScope(node schemaNode, metadata *parserMetadata, scope 
 
 func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
 	opts.overallComplexity++
+	if opts.ShouldCutoff() {
+		return nil
+	}
+
 	tupleLength := len(g.TupleGenerators)
 	arrayData := make([]interface{}, 0)
 
@@ -227,7 +241,14 @@ func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
 
 	// Generate any required "contains" items
 	for i := 0; i < minContains; i++ {
-		arrayData = append(arrayData, g.generateConsideringUnique(opts, g.ContainsGenerator, arrayData))
+		item, ok := g.generateConsideringUnique(opts, g.ContainsGenerator, arrayData)
+		if !ok && i > minContains {
+			// If we are unable to generate a unique item, and we have already satisfied the minimum contains
+			// bail out early
+			break
+		}
+
+		arrayData = append(arrayData, item)
 	}
 
 	if maxItems < minItems {
@@ -240,14 +261,22 @@ func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
 	itemsToGenerate := opts.Rand.RandomInt(0, remainingItemsToGenerate)
 
 	// Cull the remaining items if the complexity is too high or unevaluated items are not allowed
-	if g.DisallowUnevaluatedItems || opts.MaximumGenerationSteps > 0 && opts.overallComplexity > opts.MaximumGenerationSteps {
+	if g.DisallowUnevaluatedItems || opts.ShouldMinimize() {
 		itemsToGenerate = 0
 	}
 
 	// Generate the remaining items up to a random number
 	// (This might skew the distribution of the length of the array)
 	for i := 0; i < itemsToGenerate || minItems > len(arrayData); i++ {
-		arrayData = append(arrayData, g.generateConsideringUnique(opts, itemGen, arrayData))
+		item, ok := g.generateConsideringUnique(opts, itemGen, arrayData)
+
+		if !ok && i > minItems {
+			// If we are unable to generate a unique item, and we have already satisfied the minimum
+			// bail out early
+			break
+		}
+
+		arrayData = append(arrayData, item)
 	}
 
 	return arrayData
@@ -263,18 +292,20 @@ func (g arrayGenerator) String() string {
 }
 
 // Will attempt to generate a unique item if the uniqueItems flag is set
-func (g arrayGenerator) generateConsideringUnique(opts *GeneratorOptions, itemGenerator Generator, arrayData []interface{}) interface{} {
+func (g arrayGenerator) generateConsideringUnique(opts *GeneratorOptions, itemGenerator Generator, arrayData []interface{}) (interface{}, bool) {
 	if !g.UniqueItems {
-		return itemGenerator.Generate(opts)
+		return itemGenerator.Generate(opts), true
 	}
+
+	currentItems := funk.Map(arrayData, util.MarshalJsonToString).([]string)
 
 	// Generate until we have a unique item
 	for i := 0; i < opts.MaximumUniqueGeneratorAttempts; i++ {
 		item := itemGenerator.Generate(opts)
-		if !funk.Contains(arrayData, item) {
-			return item
+		if !funk.Contains(currentItems, util.MarshalJsonToString(item)) {
+			return item, true
 		}
 	}
 
-	return fmt.Sprintf("Warning: Unable to generate unique item after %d attempts. Recheck passed schema.", opts.MaximumUniqueGeneratorAttempts)
+	return fmt.Sprintf("Warning: Unable to generate unique item after %d attempts. Recheck passed schema.", opts.MaximumUniqueGeneratorAttempts), false
 }

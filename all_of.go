@@ -27,25 +27,31 @@ type allOfGenerator struct {
 //	  ]
 //	}
 func parseAllOf(node schemaNode, metadata *parserMetadata) (Generator, error) {
-	if node.OneOf != nil || node.AnyOf != nil {
-		return &nullGenerator{}, fmt.Errorf("only one of [allOf / oneOf / anyOf] can be specified")
+
+	if node.AllOf == nil {
+		return &nullGenerator{}, fmt.Errorf("allOf must be defined")
 	}
 
-	mergedNode, err := mergeSchemaNodes(metadata, node.AllOf...)
+	// Combine the base node with all of its allOf sub-schemas
+	// then nullify the allOf to avoid infinite recursion during merge
+	nodesToCombine := []schemaNode{}
+	nodesToCombine = append(nodesToCombine, *node.AllOf...)
+	node.AllOf = nil
+	nodesToCombine = append(nodesToCombine, node)
+
+	mergedNode, err := mergeSchemaNodes(metadata, nodesToCombine...)
 	if err != nil {
 		return &nullGenerator{}, err
 	}
 
-	generator, err := metadata.ReferenceHandler.ParseNodeInScope("/allOf", mergedNode, metadata)
+	generator, err := parseSchemaNode(mergedNode, metadata)
 
 	if err != nil {
 		return &nullGenerator{}, err
 	}
 
 	return &allOfGenerator{
-		SchemaNodes: node.AllOf,
-		MergedNode:  mergedNode,
-		Generator:   generator,
+		Generator: generator,
 	}, nil
 }
 

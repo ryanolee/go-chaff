@@ -1,0 +1,158 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "not_empty_object": {
+            "type": "object",
+            "not": {
+                "maxProperties": 0
+            },
+            "properties": {
+                "name": { "type": "string" }
+            },
+            "required": ["name"]
+        },
+        "not_large_object": {
+            "type": "object",
+            "minProperties": 1,
+            "not": {
+                "minProperties": 10
+            },
+            "properties": {
+                "field1": { "type": "string" },
+                "field2": { "type": "number" }
+            }
+        },
+        "object_with_not_required_property": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer", "minimum": 1 },
+                "status": { 
+                    "type": "string",
+                    "not": {
+                        "const": "deleted"
+                    }
+                }
+            },
+            "required": ["id", "status"]
+        },
+        "object_not_containing_specific_key": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "age": { "type": "integer" }
+            },
+            "not": {
+                "required": ["password"]
+            }
+        },
+        "not_specific_property_count": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 10,
+            "not": {
+                "minProperties": 5,
+                "maxProperties": 5
+            },
+            "properties": {
+                "a": { "type": "string" },
+                "b": { "type": "string" },
+                "c": { "type": "string" }
+            }
+        },
+        "object_property_not_negative": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "number",
+                    "not": {
+                        "exclusiveMaximum": 0
+                    }
+                }
+            },
+            "required": ["value"]
+        },
+        "object_with_not_pattern_property": {
+            "type": "object",
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "not": {
+                        "pattern": "^admin"
+                    }
+                }
+            },
+            "required": ["username"]
+        },
+        "object_with_multiple_not_properties": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "not": {
+                        "maxLength": 0
+                    }
+                },
+                "score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "not": {
+                        "const": 0
+                    }
+                },
+                "status": {
+                    "type": "string",
+                    "enum": ["active", "inactive", "pending"],
+                    "not": {
+                        "const": "inactive"
+                    }
+                }
+            },
+            "required": ["name", "score", "status"]
+        },
+        "object_not_matching_pattern_properties": {
+            "type": "object",
+            "properties": {
+                "regularField": { "type": "string" }
+            },
+            "patternProperties": {
+                "^x-": {
+                    "type": "string",
+                    "not": {
+                        "enum": ["forbidden", "blocked"]
+                    }
+                }
+            },
+            "required": ["regularField"]
+        },
+        "object_with_not_additional_properties": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer" },
+                "name": { "type": "string" }
+            },
+            "additionalProperties": {
+                "type": "string",
+                "not": {
+                    "maxLength": 0
+                }
+            },
+            "required": ["id", "name"]
+        }
+    },
+    "required": [
+        "not_empty_object",
+        "not_large_object",
+        "object_with_not_required_property",
+        "object_not_containing_specific_key",
+        "not_specific_property_count",
+        "object_property_not_negative",
+        "object_with_not_pattern_property",
+        "object_with_multiple_not_properties",
+        "object_not_matching_pattern_properties",
+        "object_with_not_additional_properties"
+    ]
+}

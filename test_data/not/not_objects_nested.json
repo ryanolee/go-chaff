@@ -1,0 +1,332 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "deeply_nested_not_string": {
+            "type": "object",
+            "properties": {
+                "level1": {
+                    "type": "object",
+                    "properties": {
+                        "level2": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "not": {
+                                        "const": "forbidden"
+                                    }
+                                }
+                            },
+                            "required": ["value"]
+                        }
+                    },
+                    "required": ["level2"]
+                }
+            },
+            "required": ["level1"]
+        },
+        "nested_double_negation": {
+            "type": "object",
+            "properties": {
+                "outer": {
+                    "type": "object",
+                    "properties": {
+                        "inner": {
+                            "type": "string",
+                            "not": {
+                                "not": {
+                                    "minLength": 5
+                                }
+                            }
+                        }
+                    },
+                    "required": ["inner"]
+                }
+            },
+            "required": ["outer"]
+        },
+        "nested_object_with_not_array": {
+            "type": "object",
+            "properties": {
+                "container": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "not": {
+                                            "enum": ["deleted", "archived"]
+                                        }
+                                    }
+                                },
+                                "required": ["status"]
+                            }
+                        }
+                    },
+                    "required": ["items"]
+                }
+            },
+            "required": ["container"]
+        },
+        "triple_nested_not_number": {
+            "type": "object",
+            "properties": {
+                "level1": {
+                    "type": "object",
+                    "properties": {
+                        "level2": {
+                            "type": "object",
+                            "properties": {
+                                "level3": {
+                                    "type": "object",
+                                    "properties": {
+                                        "score": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 100,
+                                            "not": {
+                                                "multipleOf": 10
+                                            }
+                                        }
+                                    },
+                                    "required": ["score"]
+                                }
+                            },
+                            "required": ["level3"]
+                        }
+                    },
+                    "required": ["level2"]
+                }
+            },
+            "required": ["level1"]
+        },
+        "nested_object_triple_negation": {
+            "type": "object",
+            "properties": {
+                "wrapper": {
+                    "type": "object",
+                    "properties": {
+                        "data": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "string",
+                                    "not": {
+                                        "not": {
+                                            "not": {
+                                                "type": "null"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "required": ["value"]
+                        }
+                    },
+                    "required": ["data"]
+                }
+            },
+            "required": ["wrapper"]
+        },
+        "nested_array_of_objects_with_not": {
+            "type": "object",
+            "properties": {
+                "groups": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "members": {
+                                "type": "array",
+                                "minItems": 1,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "role": {
+                                            "type": "string",
+                                            "not": {
+                                                "const": "banned"
+                                            }
+                                        }
+                                    },
+                                    "required": ["role"]
+                                }
+                            }
+                        },
+                        "required": ["members"]
+                    }
+                }
+            },
+            "required": ["groups"]
+        },
+        "deeply_nested_not_with_enum": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "settings": {
+                            "type": "object",
+                            "properties": {
+                                "permissions": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_level": {
+                                            "type": "string",
+                                            "enum": ["read", "write", "admin", "superadmin"],
+                                            "not": {
+                                                "enum": ["superadmin"]
+                                            }
+                                        }
+                                    },
+                                    "required": ["access_level"]
+                                }
+                            },
+                            "required": ["permissions"]
+                        }
+                    },
+                    "required": ["settings"]
+                }
+            },
+            "required": ["config"]
+        },
+        "nested_not_with_pattern": {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "type": "object",
+                    "properties": {
+                        "profile": {
+                            "type": "object",
+                            "properties": {
+                                "email": {
+                                    "type": "string",
+                                    "minLength": 5,
+                                    "not": {
+                                        "pattern": "^test@"
+                                    }
+                                }
+                            },
+                            "required": ["email"]
+                        }
+                    },
+                    "required": ["profile"]
+                }
+            },
+            "required": ["user"]
+        },
+        "complex_nested_with_multiple_nots": {
+            "type": "object",
+            "properties": {
+                "entity": {
+                    "type": "object",
+                    "properties": {
+                        "metadata": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "not": {
+                                        "const": 0
+                                    }
+                                },
+                                "tags": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "string",
+                                        "not": {
+                                            "enum": ["deprecated", "obsolete"]
+                                        }
+                                    }
+                                }
+                            },
+                            "required": ["id", "tags"]
+                        },
+                        "content": {
+                            "type": "object",
+                            "properties": {
+                                "title": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "not": {
+                                        "maxLength": 0
+                                    }
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "enum": ["draft", "published", "archived"],
+                                    "not": {
+                                        "const": "archived"
+                                    }
+                                }
+                            },
+                            "required": ["title", "status"]
+                        }
+                    },
+                    "required": ["metadata", "content"]
+                }
+            },
+            "required": ["entity"]
+        },
+        "quadruple_nested_not": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "object",
+                    "properties": {
+                        "b": {
+                            "type": "object",
+                            "properties": {
+                                "c": {
+                                    "type": "object",
+                                    "properties": {
+                                        "d": {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 100,
+                                                    "not": {
+                                                        "minimum": 50
+                                                    }
+                                                }
+                                            },
+                                            "required": ["value"]
+                                        }
+                                    },
+                                    "required": ["d"]
+                                }
+                            },
+                            "required": ["c"]
+                        }
+                    },
+                    "required": ["b"]
+                }
+            },
+            "required": ["a"]
+        }
+    },
+    "required": [
+        "deeply_nested_not_string",
+        "nested_double_negation",
+        "nested_object_with_not_array",
+        "triple_nested_not_number",
+        "nested_object_triple_negation",
+        "nested_array_of_objects_with_not",
+        "deeply_nested_not_with_enum",
+        "nested_not_with_pattern",
+        "complex_nested_with_multiple_nots",
+        "quadruple_nested_not"
+    ]
+}
