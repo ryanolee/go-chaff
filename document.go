@@ -4,13 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/ryanolee/go-chaff/internal/util"
 	"github.com/thoas/go-funk"
@@ -35,42 +32,37 @@ type (
 		resolveDocumentId(relativeTo string, ref string) (string, error)
 	}
 
-	httpDocumentFetcher struct {
-		// Allowed hosts to fetch from (If empty, all hosts are allowed)
-		allowedHosts []string
-
-		// Allow insecure connections (http)
-		allowInsecure bool
-	}
-
-	fileSystemDocumentFetcher struct {
-		// Overrides allowOutsideCwd to specifically allow for access to a list of paths schemas might reference
-		allowedPaths []string
-
-		// Failsafe to prevent directory traversal attacks
-		allowOutsideCwd bool
-	}
+	// Used for rewriting references simply
+	genericNode map[string]interface{}
 )
 
 var documentRegex = regexp.MustCompile("^(?P<document>(?:[a-zA-Z][a-zA-Z0-9+.-]*:)?[^#]*)?(?P<path>#.*)?$")
 
 // Random UUID generated for the root document ID to prevent clashes with external document IDs
-const rootDocumentId = "file://8dabc98a-527b-4f08-baba-315beb368097.json"
+const rootDocumentId = "8dabc98a-527b-4f08-baba-315beb368097.json"
 
-func newDocumentResolver(opts ParserOptions, rootDocument *schemaNode) *documentResolver {
+func newDocumentResolver(opts ParserOptions, rootDocument *schemaNode) (*documentResolver, error) {
 	documentFetchers := make(map[string]*documentFetcherInterface)
 	if opts.DocumentFetchOptions.HTTPFetchOptions.Enabled {
-		httpFetcher, _ := NewHttpDocumentFetcher(opts.DocumentFetchOptions.HTTPFetchOptions)
+		httpFetcher, err := NewHttpDocumentFetcher(opts.DocumentFetchOptions.HTTPFetchOptions)
+		if err != nil {
+			return nil, err
+		}
 		documentFetchers["http"] = &httpFetcher
 		documentFetchers["https"] = &httpFetcher
 	}
 
 	if opts.DocumentFetchOptions.FileSystemFetchOptions.Enabled {
-		fsFetcher, _ := NewFileSystemDocumentFetcher(opts.DocumentFetchOptions.FileSystemFetchOptions)
+		fsFetcher, err := NewFileSystemDocumentFetcher(opts.DocumentFetchOptions.FileSystemFetchOptions)
+		if err != nil {
+			return nil, err
+		}
 		documentFetchers["file"] = &fsFetcher
 	}
 
 	// Set relative to to current working directory if not set
+	resolvedRootDocumentId := rootDocumentId
+
 	if opts.RelativeTo == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -78,18 +70,23 @@ func newDocumentResolver(opts ParserOptions, rootDocument *schemaNode) *document
 		} else {
 			opts.RelativeTo = "file://" + cwd + "/"
 		}
+
+		resolvedRootDocumentId = filepath.Join(opts.RelativeTo, rootDocumentId)
+	} else {
+		resolvedRootDocumentId = opts.RelativeTo
 	}
+
 	return &documentResolver{
 		// Setup the root document
 		documentCurrentlyBeingParsedId: opts.RelativeTo,
 		parsedExternalDocuments: map[string]bool{
-			rootDocumentId: true,
+			resolvedRootDocumentId: true,
 		},
 		documents: map[string]*schemaNode{
-			rootDocumentId: rootDocument,
+			resolvedRootDocumentId: rootDocument,
 		},
 		documentFetchers: documentFetchers,
-	}
+	}, nil
 }
 
 func (r *documentResolver) GetDocumentIdCurrentlyBeingParsed() string {
@@ -97,19 +94,120 @@ func (r *documentResolver) GetDocumentIdCurrentlyBeingParsed() string {
 }
 
 // Compile time function to get the document ID currently being resolved
-func (r *documentResolver) GetDocumentForResolvedPath(ref string) string {
-	matches := util.RegexMatchNamedCaptureGroups(documentRegex, ref)
-	documentID, hasDocument := matches["document"]
-
-	if hasDocument {
-		return documentID
-	}
-
+func (r *documentResolver) GetCurrentScope() string {
 	if r.documentCurrentlyBeingResolvedId != "" {
 		return r.documentCurrentlyBeingResolvedId
 	}
 
 	return r.documentCurrentlyBeingParsedId
+}
+
+func (r *documentResolver) HasNoFetchers() bool {
+	return len(r.documentFetchers) == 0
+}
+
+func (r *documentResolver) ResolveDocumentIdAndPath(ref string) (string, string, error) {
+	matches := util.RegexMatchNamedCaptureGroups(documentRegex, ref)
+	documentID, hasDocument := matches["document"]
+	path, hasPath := matches["path"]
+	if !hasPath || path == "" {
+		path = "#"
+	}
+
+	// If we have no document, it is a local or relative reference and can be handled as such
+	if !hasDocument || documentID == "" || r.HasNoFetchers() {
+		return r.GetCurrentScope(), path, nil
+	}
+
+	fetcher, err := r.getFetcherForRef(ref)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to get document fetcher for document '%s': %w", ref, err)
+	}
+
+	resolvedDocumentId, err := fetcher.resolveDocumentId(r.GetCurrentScope(), documentID)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to resolve document ID for reference '%s': %w", ref, err)
+	}
+
+	return resolvedDocumentId, path, nil
+}
+
+// Traverses a schema node and rewrites any $ref fields to be relative to the given document ID
+// useful for when $ref tags need to be later merged during normal document parsing and not the "fast path" resolution
+// required when merging documents
+func (r *documentResolver) RewriteReferencesRelativeToDocument(node schemaNode) (schemaNode, error) {
+	jsonData, err := json.Marshal(node)
+	if err != nil {
+		return schemaNode{}, fmt.Errorf("failed to marshal schema node to JSON for reference rewriting: %w", err)
+	}
+
+	var genericNode genericNode
+	if err = json.Unmarshal(jsonData, &genericNode); err != nil {
+		return schemaNode{}, fmt.Errorf("failed to unmarshal schema node to generic node for reference rewriting: %w", err)
+	}
+
+	genericNode, err = r.rewriteReferencesRelativeToDocumentInGenericNode(genericNode)
+	if err != nil {
+		return schemaNode{}, fmt.Errorf("failed to rewrite references relative to document '%s': %w", r.GetCurrentScope(), err)
+	}
+
+	rewrittenJsonData, err := json.Marshal(genericNode)
+	if err != nil {
+		return schemaNode{}, fmt.Errorf("failed to marshal rewritten generic node to JSON: %w", err)
+	}
+
+	newNode := schemaNode{}
+	if err = json.Unmarshal(rewrittenJsonData, &newNode); err != nil {
+		return schemaNode{}, fmt.Errorf("failed to unmarshal rewritten JSON back to schema node: %w", err)
+	}
+
+	return newNode, nil
+}
+
+func (r *documentResolver) rewriteReferencesRelativeToDocumentInGenericNode(genericNode genericNode) (genericNode, error) {
+	for key, value := range genericNode {
+		if key == "$ref" {
+			refStr, ok := value.(string)
+
+			// If the value under $ref is not a string, skip it
+			// for polymorphic schemas that may have non-string $ref values
+			// { "properties": {"$ref": {...}}
+			if !ok {
+				return genericNode, nil
+			}
+
+			documentId, path, err := r.ResolveDocumentIdAndPath(refStr)
+			if err != nil {
+				return genericNode, fmt.Errorf("failed to resolve document ID and path for ref '%s': %w", refStr, err)
+			}
+
+			// Rewrite the reference to be relative to the given document ID
+			genericNode["$ref"] = fmt.Sprintf("%s%s", documentId, path)
+		}
+
+		// Recursively traverse nested objects
+		switch v := value.(type) {
+		case map[string]interface{}:
+			rewrittenNode, err := r.rewriteReferencesRelativeToDocumentInGenericNode(v)
+			if err != nil {
+				return genericNode, err
+			}
+			genericNode[key] = rewrittenNode
+		case []interface{}:
+			for i, item := range v {
+				if itemMap, ok := item.(map[string]interface{}); ok {
+					rewrittenItem, err := r.rewriteReferencesRelativeToDocumentInGenericNode(itemMap)
+					if err != nil {
+						return genericNode, err
+					}
+					v[i] = rewrittenItem
+				}
+			}
+			genericNode[key] = v
+		}
+	}
+
+	return genericNode, nil
 }
 
 func (r *documentResolver) SetDocumentBeingResolved(documentId string) {
@@ -125,26 +223,22 @@ func (r *documentResolver) HandleDeferredReferenceResolution(ref string, metadat
 	}
 
 	// If we have no document, it is a local or relative reference and can be handled as such
-	if !hasDocument || documentID == "" {
-		return r.documentCurrentlyBeingParsedId, ref, nil
+	if !hasDocument || documentID == "" || r.HasNoFetchers() {
+		return r.GetCurrentScope(), ref, nil
 	}
-
-	fmt.Printf("Handling deferred reference resolution for document: %s relative to %s\n", documentID, r.documentCurrentlyBeingParsedId)
 
 	fetcher, err := r.getFetcherForRef(documentID)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to get document fetcher for document '%s': %w", ref, err)
 	}
 
-	resolvedDocumentId, err := fetcher.resolveDocumentId(r.documentCurrentlyBeingParsedId, documentID)
+	resolvedDocumentId, err := fetcher.resolveDocumentId(r.GetCurrentScope(), documentID)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to resolve document ID for reference '%s': %w", ref, err)
 	}
-	fmt.Printf("Resolved document ID: %s \n", resolvedDocumentId)
 
 	// Queue document for parsing if it hasn't already been parsed
 	if !funk.ContainsString(r.externalDocumentsThatNeedParsing, resolvedDocumentId) && r.pathWouldRequireNewDocumentParsed(resolvedDocumentId) {
-		fmt.Println("Queuing document for parsing:", resolvedDocumentId)
 		r.externalDocumentsThatNeedParsing = append(r.externalDocumentsThatNeedParsing, resolvedDocumentId)
 	}
 
@@ -161,24 +255,56 @@ func (r *documentResolver) pathWouldRequireNewDocumentParsed(documentId string) 
 	return !ok || !hasBeenParsed
 }
 
-func (r *documentResolver) ResolvePath(metadata *parserMetadata, ref string) (*schemaNode, error) {
+func (r *documentResolver) ResolvePath(metadata *parserMetadata, ref string) (*schemaNode, string, error) {
 	matches := util.RegexMatchNamedCaptureGroups(documentRegex, ref)
-
 	documentID, hasDocument := matches["document"]
 	path, hasPath := matches["path"]
 
 	if !hasDocument && !hasPath {
-		return nil, errors.New("invalid $ref format, must contain document or path")
+		return nil, "", errors.New("invalid $ref format, must contain document or path")
 	}
 
-	if !hasDocument {
-		_, err := r.resolveDocument(documentID)
+	if !hasPath || path == "" {
+		path = "#"
+	}
+
+	// If we have no document, it is a local or relative reference and can be handled as such
+	if !hasDocument || documentID == "" || r.HasNoFetchers() {
+		subNode, err := resolveSubReferencePath(r.documents[r.GetCurrentScope()], path, "")
 		if err != nil {
-			return nil, fmt.Errorf("failed to resolve document '%s': %w", documentID, err)
+			return nil, "", fmt.Errorf("failed to resolve sub-reference path '%s' in document '%s': %w", path, r.GetCurrentScope(), err)
+		}
+		return subNode, fmt.Sprintf("%s%s", r.GetCurrentScope(), path), nil
+	}
+
+	fetcher, err := r.getFetcherForRef(documentID)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to get document fetcher for document '%s': %w", ref, err)
+	}
+
+	resolvedDocumentId, err := fetcher.resolveDocumentId(r.GetCurrentScope(), documentID)
+	if resolvedDocumentId == "" {
+		return nil, "", fmt.Errorf("failed to resolve document ID for reference '%s': %w", ref, err)
+	}
+
+	document, documentLoaded := r.documents[resolvedDocumentId]
+
+	if !documentLoaded {
+		document, err = r.resolveDocument(resolvedDocumentId)
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to resolve document '%s': %w", documentID, err)
 		}
 	}
 
-	return resolveSubReferencePath(r.documents[documentID], path, "")
+	subNode, err := resolveSubReferencePath(document, path, "")
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to resolve sub-reference path '%s' in document '%s': %w", path, documentID, err)
+	}
+
+	// Shift the document scope so base url resolution works correctly
+	r.SetDocumentBeingResolved(resolvedDocumentId)
+
+	return subNode, fmt.Sprintf("%s%s", resolvedDocumentId, path), nil
 }
 
 func (r *documentResolver) addDocument(id string, node *schemaNode) {
@@ -207,6 +333,7 @@ func (r *documentResolver) ParseNextDocument(metadata *parserMetadata) (string, 
 
 	// Resolve the document
 	r.documentCurrentlyBeingParsedId = nextDocumentId
+	r.documentCurrentlyBeingResolvedId = nextDocumentId
 	documentNode, err := r.resolveDocument(nextDocumentId)
 	if err != nil {
 		return nextDocumentId, fmt.Errorf("failed to resolve document '%s': %w", nextDocumentId, err)
@@ -228,16 +355,18 @@ func (r *documentResolver) resolveDocument(ref string) (*schemaNode, error) {
 	matches := util.RegexMatchNamedCaptureGroups(documentRegex, ref)
 	documentID, hasDocument := matches["document"]
 
-	if !hasDocument {
-		return nil, errors.New("invalid $ref format, must contain document")
+	if !hasDocument || documentID == "" || r.HasNoFetchers() {
+		return nil, fmt.Errorf("invalid $ref format, must contain document, ref given '%s'", ref)
 	}
 
 	fetcher, err := r.getFetcherForRef(documentID)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get document fetcher for document '%s': %w", ref, err)
 	}
 
 	document, err := fetcher.fetchDocument(documentID)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch document '%s': %w", ref, err)
 	}
@@ -270,202 +399,4 @@ func (r *documentResolver) getFetcherForRef(documentId string) (documentFetcherI
 	}
 
 	return *fetcher, nil
-}
-
-func NewHttpDocumentFetcher(parserConfig HTTPFetchOptions) (documentFetcherInterface, error) {
-	allowedHosts := []string{}
-	for _, host := range parserConfig.AllowedHosts {
-		parsedUrl, err := url.ParseRequestURI(host)
-		if err != nil {
-			return nil, fmt.Errorf("invalid allowed host '%s': %w", host, err)
-		}
-
-		if parsedUrl.Hostname() == "" {
-			return nil, fmt.Errorf("invalid allowed host '%s': missing hostname", host)
-		}
-
-		allowedHosts = append(allowedHosts, parsedUrl.Hostname())
-	}
-
-	return &httpDocumentFetcher{
-		allowedHosts:  allowedHosts,
-		allowInsecure: parserConfig.AllowInsecure,
-	}, nil
-}
-
-func (f *httpDocumentFetcher) resolveDocumentId(relativeTo string, ref string) (string, error) {
-	parsedUrl, err := url.Parse(ref)
-
-	if err != nil {
-		return "", fmt.Errorf("invalid URL '%s': %w", ref, err)
-	}
-
-	baseUrl, err := url.Parse(relativeTo)
-	if err != nil {
-		return "", fmt.Errorf("invalid base URL '%s': %w", relativeTo, err)
-	}
-
-	// If our base url is http or https, we resolve relative references against it
-	// otherwise we leave it as is
-	resolvedUrl := parsedUrl
-	if baseUrl.Scheme == "http" || baseUrl.Scheme == "https" {
-		resolvedUrl = baseUrl.ResolveReference(parsedUrl)
-	}
-
-	if !f.allowInsecure && resolvedUrl.Scheme != "https" {
-		return "", fmt.Errorf("insecure URL scheme '%s' not allowed for URL '%s'", parsedUrl.Scheme, ref)
-	}
-
-	if len(f.allowedHosts) > 0 {
-		if !funk.Contains(f.allowedHosts, resolvedUrl.Hostname()) {
-			return "", fmt.Errorf("host '%s' not allowed to be fetched from allowed hosts %s", parsedUrl.Hostname(), strings.Join(f.allowedHosts, ", "))
-		}
-	}
-
-	return resolvedUrl.String(), nil
-}
-
-func (f *httpDocumentFetcher) fetchDocument(resolvedPath string) (*schemaNode, error) {
-	resp, err := http.Get(resolvedPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch URL '%s': %w", resolvedPath, err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to fetch URL '%s': received status code %d", resolvedPath, resp.StatusCode)
-	}
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body from URL '%s': %w", resolvedPath, err)
-	}
-
-	schemaNode := &schemaNode{}
-	if err = json.Unmarshal(data, schemaNode); err != nil {
-		return nil, fmt.Errorf("failed to parse Schema json from URL '%s': %w", resolvedPath, err)
-	}
-
-	return schemaNode, nil
-
-}
-
-func NewFileSystemDocumentFetcher(config FileSystemFetchOptions) (documentFetcherInterface, error) {
-	allowedRealPaths := []string{}
-	for _, path := range config.AllowedPaths {
-		realPath, err := getRealPath(path)
-		if err != nil {
-			return nil, fmt.Errorf("failed to resolve allowed path '%s': %w", path, err)
-		}
-
-		allowedRealPaths = append(allowedRealPaths, realPath)
-	}
-
-	return &fileSystemDocumentFetcher{
-		allowedPaths:    allowedRealPaths,
-		allowOutsideCwd: config.AllowOutsideCwd,
-	}, nil
-}
-
-func (f *fileSystemDocumentFetcher) resolveDocumentId(relativeTo string, ref string) (string, error) {
-	// Read based on file:// scheme
-	parsedUrl, err := url.Parse(ref)
-	if err != nil {
-		return "", fmt.Errorf("invalid file URL '%s': %w", ref, err)
-	}
-
-	if parsedUrl.Scheme != "file" && parsedUrl.Scheme != "" {
-		return "", fmt.Errorf("invalid file URL scheme '%s' for URL '%s'", parsedUrl.Scheme, ref)
-	}
-
-	filePath := strings.TrimPrefix(ref, "file://")
-
-	// Resolve against the file path we are relative to
-	relativeToDir := filepath.Dir(strings.TrimPrefix(relativeTo, "file://"))
-	if !filepath.IsAbs(filePath) {
-		filePath = filepath.Join(relativeToDir, filePath)
-	}
-
-	resolvedPath, err := getRealPath(filePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to resolve file path for URL '%s': %w", ref, err)
-	}
-
-	if !f.allowOutsideCwd {
-		outsideCwd, err := f.isOutsideOfCwd(resolvedPath)
-		if err != nil {
-			return "", fmt.Errorf("failed to check if path '%s' is outside of current working directory: %w", resolvedPath, err)
-		}
-
-		cwd, _ := os.Getwd()
-
-		if outsideCwd {
-			return "", fmt.Errorf("access to path '%s' outside of current working directory '%s' is not allowed", resolvedPath, cwd)
-		}
-	}
-
-	outsideAllowedPaths, err := isOutsideOfAllowedPaths(resolvedPath, f.allowedPaths)
-	if err != nil {
-		return "", fmt.Errorf("failed to check if path '%s' is outside of allowed paths: %w", resolvedPath, err)
-	}
-
-	if outsideAllowedPaths {
-		return "", fmt.Errorf("access to path '%s' is not allowed. Only paths files in the following paths are allowed: %s", resolvedPath, strings.Join(f.allowedPaths, ", "))
-	}
-
-	return "file://" + resolvedPath, nil
-}
-
-func (f *fileSystemDocumentFetcher) fetchDocument(resolvedPath string) (*schemaNode, error) {
-	resolvedPath = strings.TrimPrefix(resolvedPath, "file://")
-	fileData, err := os.ReadFile(resolvedPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file at path '%s': %w", resolvedPath, err)
-	}
-
-	schemaNode := &schemaNode{}
-	if err = json.Unmarshal(fileData, schemaNode); err != nil {
-		return nil, fmt.Errorf("failed to parse Schema json from file at path '%s': %w", resolvedPath, err)
-	}
-
-	return schemaNode, nil
-}
-
-func (f *fileSystemDocumentFetcher) isOutsideOfCwd(path string) (bool, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return false, fmt.Errorf("failed to get current working directory: %w", err)
-	}
-
-	diff, err := filepath.Rel(cwd, path)
-	return strings.Contains(diff, ".."), err
-}
-
-func isOutsideOfAllowedPaths(path string, allowedPaths []string) (bool, error) {
-	for _, allowedPath := range allowedPaths {
-		matched, err := filepath.Match(filepath.Join(allowedPath, "*"), path)
-		if err != nil {
-			return false, fmt.Errorf("failed to match path '%s' against allowed path '%s': %w", path, allowedPath, err)
-		}
-
-		if !matched {
-			return false, nil
-		}
-	}
-
-	return true, nil
-}
-
-func getRealPath(path string) (string, error) {
-	realPath, err := filepath.Abs(path)
-	if err != nil {
-		return "", fmt.Errorf("failed to resolve file path '%s': %w", path, err)
-	}
-
-	resolvedPath, err := filepath.EvalSymlinks(realPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to evaluate symlinks for path '%s': %w", realPath, err)
-	}
-
-	return resolvedPath, nil
 }

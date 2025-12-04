@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "address.json",
+  "title": "Address Schema",
+  "type": "object",
+  "properties": {
+    "street": {
+      "type": "string",
+      "minLength": 1
+    },
+    "city": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 2
+    },
+    "zipCode": {
+      "type": "string",
+      "pattern": "^[0-9]{5}(-[0-9]{4})?$"
+    },
+    "country": {
+      "type": "string",
+      "enum": ["US", "CA", "UK", "DE", "FR"]
+    }
+  },
+  "required": ["street", "city", "country"]
+}

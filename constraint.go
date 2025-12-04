@@ -3,6 +3,7 @@ package chaff
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/ryanolee/go-chaff/internal/jsonschema"
 	"github.com/ryanolee/go-chaff/internal/util"
@@ -11,6 +12,8 @@ import (
 
 // Constraints applied to post generation of a schema node
 type (
+
+	// Constraint function that returns true if the constraint is passed and false otherwise
 	constraintFunction func(value interface{}) bool
 	multiConstraint    struct {
 		functions map[string]constraintFunction
@@ -38,6 +41,9 @@ type (
 
 		// Set of JSON stringified values that the generated value must not be equal to
 		notValueConstraints map[string]struct{}
+
+		// Property based constraints
+		mustNotHaveProperties []string
 	}
 
 	constraint interface {
@@ -92,11 +98,16 @@ func (cc *constraintCollection) AddNotMatchingFormatConstraint(format string) er
 	return nil
 }
 
+func (cc *constraintCollection) AddMustNotHaveProperties(properties []string) {
+	cc.mustNotHaveProperties = append(cc.mustNotHaveProperties, properties...)
+}
+
 func (cc *constraintCollection) String() string {
-	return fmt.Sprintf("ConstraintCollection[Formats: %s Regexes: %s Values: %s]",
+	return fmt.Sprintf("ConstraintCollection[Formats: %s Regexes: %s Values: %s, Properties: %s]",
 		util.ImplodeMapStrings(cc.notMatchingFormatConstraints),
 		util.ImplodeMapStrings(cc.notMatchingRegexConstraints),
 		util.ImplodeMapStrings(cc.notValueConstraints),
+		strings.Join(cc.mustNotHaveProperties, ","),
 	)
 }
 
@@ -124,6 +135,23 @@ func (mc *constraintCollection) Compile() *multiConstraint {
 			strValue := util.MarshalJsonToString(value)
 			_, exists := mc.notValueConstraints[strValue]
 			return !exists
+		}
+	}
+
+	if len(mc.mustNotHaveProperties) > 0 {
+		constraintFunctions[fmt.Sprintf("MustNotHaveProperties: %s", strings.Join(mc.mustNotHaveProperties, ","))] = func(value interface{}) bool {
+			objValue, ok := value.(map[string]interface{})
+			if !ok {
+				return true
+			}
+
+			for _, prop := range mc.mustNotHaveProperties {
+				if _, exists := objValue[prop]; exists {
+					return false
+				}
+			}
+
+			return true
 		}
 	}
 

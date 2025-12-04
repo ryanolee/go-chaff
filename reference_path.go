@@ -40,7 +40,7 @@ func resolveSubReferencePath(node *schemaNode, refPath string, resolvedPath stri
 	case "patternProperties":
 		return resolveReferenceProperty(node.PatternProperties, path, resolvedPath)
 	case "additionalProperties":
-		if node.AdditionalProperties.DisallowAdditional {
+		if node.AdditionalProperties.IsFalse {
 			return nil, fmt.Errorf("[%s] No schema node for additional properties", resolvedPath)
 		}
 

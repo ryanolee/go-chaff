@@ -1,0 +1,34 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "not_null_type": {
+            "type": ["string", "number", "null"],
+            "not": {
+                "type": "null"
+            }
+        },
+        "not_string_type": {
+            "type": ["string", "number", "boolean"],
+            "not": {
+                "type": "string"
+            }
+        },
+        "not_multiple_types": {
+            "type": ["string", "number", "boolean", "array"],
+            "not": {
+                "type": ["string", "boolean"]
+            }
+        },
+        "string_or_number_not_negative": {
+            "type": ["string", "number"],
+            "not": {
+                "type": "number",
+                "exclusiveMaximum": 0
+            }
+        },
+        "string_or_array_not_empty": {
+            "type": ["string", "array"]
+        }
+    }
+}

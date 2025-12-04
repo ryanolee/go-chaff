@@ -64,8 +64,8 @@ func parseObject(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	}
 
 	// Validate additionalProperties
-	additionalProperties := util.GetZeroIfNil(node.AdditionalProperties, additionalData{})
-	if additionalProperties.DisallowAdditional && node.PatternProperties == nil && minProperties > len(properties) {
+	additionalProperties := util.GetZeroIfNil(node.AdditionalProperties, schemaNodeOrFalse{})
+	if additionalProperties.IsFalse && node.PatternProperties == nil && minProperties > len(properties) {
 		return nullGenerator{}, fmt.Errorf("given additional properties are not allowed and there are no pattern properties the minProperties must be less than or equal to the number of"+
 			"available properties. (minProperties: %d, propertiesDefined: %d)", node.MinProperties, len(properties))
 	}
@@ -81,7 +81,7 @@ func parseObject(node schemaNode, metadata *parserMetadata) (Generator, error) {
 		PatternProperties:      patternProperties,
 		PatternPropertiesRegex: patternPropertiesRegex,
 
-		DisallowAdditionalProperties: additionalProperties.DisallowAdditional,
+		DisallowAdditionalProperties: additionalProperties.IsFalse,
 		AdditionalProperties:         parseAdditionalProperties(node, metadata),
 		FallbackGenerator:            nullGenerator{},
 	}
@@ -110,7 +110,7 @@ func parseProperties(node schemaNode, metadata *parserMetadata) map[string]Gener
 }
 
 func parseAdditionalProperties(node schemaNode, metadata *parserMetadata) Generator {
-	if node.AdditionalProperties == nil || node.AdditionalProperties.DisallowAdditional || node.AdditionalProperties.Schema == nil {
+	if node.AdditionalProperties == nil || node.AdditionalProperties.IsFalse || node.AdditionalProperties.Schema == nil {
 		return nil
 	}
 	ref := metadata.ReferenceHandler

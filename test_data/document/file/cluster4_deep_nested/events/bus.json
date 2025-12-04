@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "events/bus.json",
+  "title": "Event Bus",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "../core/types/identifier.json"
+    },
+    "handlers": {
+      "type": "array",
+      "items": {
+        "$ref": "handler.json"
+      }
+    },
+    "subscriptions": {
+      "type": "array",
+      "items": {
+        "$ref": "subscription.json"
+      }
+    },
+    "pendingEvents": {
+      "type": "array",
+      "items": {
+        "$ref": "event.json"
+      }
+    }
+  }
+}

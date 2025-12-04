@@ -5,13 +5,6 @@ import (
 )
 
 type (
-	// Additional properties can be a schema node or a boolean value.
-	// This handles both cases.
-	additionalData struct {
-		Schema             *schemaNode
-		DisallowAdditional bool
-	}
-
 	// Used to handle the fact that "type" can be a string or an array of strings
 	multipleType struct {
 		SingleType    string
@@ -31,43 +24,6 @@ type (
 		IsFalse bool
 	}
 )
-
-func (a *additionalData) UnmarshalJSON(data []byte) error {
-	if len(data) == 0 {
-		return nil
-	}
-
-	if string(data) == "false" {
-		a.DisallowAdditional = true
-		return nil
-	}
-
-	if string(data) == "true" {
-		a.DisallowAdditional = false
-		return nil
-	}
-
-	var schema schemaNode
-	err := json.Unmarshal(data, &schema)
-	if err != nil {
-		return err
-	}
-
-	a.Schema = &schema
-	return nil
-}
-
-func (a *additionalData) MarshalJSON() ([]byte, error) {
-	if a.DisallowAdditional {
-		return []byte("false"), nil
-	}
-
-	if a.Schema != nil {
-		return json.Marshal(a.Schema)
-	}
-
-	return []byte("true"), nil
-}
 
 func newMultipleTypeFromSlice(types []string) multipleType {
 	multipleType := multipleType{}
@@ -156,6 +112,11 @@ func (s *schemaNodeOrFalse) UnmarshalJSON(data []byte) error {
 
 	if string(data) == "false" {
 		s.IsFalse = true
+		return nil
+	}
+
+	if string(data) == "true" {
+		s.IsFalse = false
 		return nil
 	}
 

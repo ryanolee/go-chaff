@@ -1,0 +1,54 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "double_negation_type": {
+            "type": "string",
+            "not": {
+                "not": {
+                    "minLength": 5
+                }
+            }
+        },
+        "triple_negation_type": {
+            "type": "string",
+            "not": {
+                "not": {
+                    "not": {
+                        "type": "null"
+                    }
+                }
+            }
+        },
+        "double_negation_number": {
+            "type": "number",
+            "not": {
+                "not": {
+                    "minimum": 0,
+                    "maximum": 100
+                }
+            }
+        },
+        "nested_not_with_enum": {
+            "type": "string",
+            "not": {
+                "not": {
+                    "enum": ["allowed", "valid", "permitted"]
+                }
+            }
+        },
+        "quadruple_negation": {
+            "type": "integer",
+            "not": {
+                "not": {
+                    "not": {
+                        "not": {
+                            "minimum": 10,
+                            "maximum": 50
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

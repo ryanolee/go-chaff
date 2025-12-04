@@ -1,2 +1,2 @@
-text-complex:
+test-complex:
 	go test ./... -run=TestComplex -v

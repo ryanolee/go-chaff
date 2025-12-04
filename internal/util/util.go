@@ -135,6 +135,33 @@ func MinInt(a ...int) int {
 	return min
 }
 
+// MinFloatPtr returns the lowest value float pointer
+func MinFloatPtr(a ...*float64) *float64 {
+	var min *float64
+	for _, v := range a {
+		if v != nil {
+			if min == nil || *v < *min {
+				min = v
+			}
+		}
+	}
+
+	return min
+}
+
+func MaxFloatPtr(a ...*float64) *float64 {
+	var max *float64
+	for _, v := range a {
+		if v != nil {
+			if max == nil || *v > *max {
+				max = v
+			}
+		}
+	}
+
+	return max
+}
+
 func GetZeroIfNil[T any](f *T, zeroValue T) T {
 	if f == nil {
 		return zeroValue
@@ -153,6 +180,28 @@ func ImplodeMapStrings[V any](mapKeys map[string]V) string {
 
 }
 
+func GetIndexOrDefault[T any](nodes []T, index int, defaultItem T) T {
+	if index < 0 || index >= len(nodes) {
+		return defaultItem
+	}
+
+	return nodes[index]
+}
+
+// GetObjectKeyOrDefault returns the value for the given key in the map
+// or the defaultItem if the key does not exist or the map itself is nil
+func GetObjectKeyOrDefault[T any](obj *map[string]T, key string, defaultItem T) T {
+	if obj == nil {
+		return defaultItem
+	}
+
+	if val, ok := (*obj)[key]; ok {
+		return val
+	}
+
+	return defaultItem
+}
+
 // Marshal Data to a string
 // in error cases the string is empty and the error is blackholed
 func MarshalJsonToString(data interface{}) string {
@@ -162,6 +211,19 @@ func MarshalJsonToString(data interface{}) string {
 	}
 
 	return string(jsonData)
+}
+
+func SafeMarshalListToJsonList(data *[]interface{}) []string {
+	if data == nil {
+		return []string{}
+	}
+
+	result := []string{}
+	for _, item := range *data {
+		result = append(result, MarshalJsonToString(item))
+	}
+
+	return result
 }
 
 // Unmarshal a string to a map
@@ -186,4 +248,20 @@ func RegexMatchNamedCaptureGroups(r *regexp.Regexp, str string) map[string]strin
 	}
 
 	return results
+}
+
+// Extract the keys from a map[string]T as a []string
+func MapKeysToStringSlice[T any](maps ...*map[string]T) []string {
+	result := []string{}
+	for _, m := range maps {
+		if m == nil {
+			continue
+		}
+
+		for key, _ := range *m {
+			result = append(result, key)
+		}
+	}
+
+	return result
 }

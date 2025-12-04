@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "auth/oauth_flow.json",
+  "title": "OAuth Flow",
+  "type": "object",
+  "properties": {
+    "authorizationUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "tokenUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "refreshUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "scopes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": ["scopes"]
+}

@@ -2,7 +2,6 @@ package chaff
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"regexp/syntax"
 
@@ -93,7 +92,7 @@ type (
 
 		// Object Properties
 		Properties           *map[string]schemaNode `json:"properties,omitempty"`
-		AdditionalProperties *additionalData        `json:"additionalProperties,omitempty"`
+		AdditionalProperties *schemaNodeOrFalse     `json:"additionalProperties,omitempty"`
 		PatternProperties    *map[string]schemaNode `json:"patternProperties,omitempty"`
 		MinProperties        *int                   `json:"minProperties,omitempty"`
 		MaxProperties        *int                   `json:"maxProperties,omitempty"`
@@ -133,7 +132,6 @@ type (
 		Const *interface{} `json:"const,omitempty"`
 
 		// Combination Properties
-		// TODO: Implement these
 		Not   *schemaNode   `json:"not,omitempty"`
 		AllOf *[]schemaNode `json:"allOf,omitempty"`
 		AnyOf *[]schemaNode `json:"anyOf,omitempty"`
@@ -150,13 +148,18 @@ type (
 		Then *schemaNode `json:"then,omitempty"`
 		Else *schemaNode `json:"else,omitempty"`
 
-		// Unsupported Properties
-		DependentRequired map[string][]string   `json:"dependentRequired,omitempty"`
-		DependentSchemas  map[string]schemaNode `json:"dependentSchemas,omitempty"`
+		// Unsupported
+		DependentRequired map[string][]string `json:"dependentRequired,omitempty"`
+
+		// Unsupported
+		DependentSchemas map[string]schemaNode `json:"dependentSchemas,omitempty"`
 
 		// Internal functionality
 		// Used to keep track of ifs from allOf statements that have been merged into this node (or factored into said node)
 		mergedIf []ifStatement
+
+		// Internal map used to keep track of constraints that need to be applied to this node during parsing
+		constraints *constraintCollection
 	}
 )
 
@@ -222,23 +225,27 @@ func ParseSchemaStringWithDefaults(schema string) (RootGenerator, error) {
 func ParseSchema(schema []byte, opts *ParserOptions) (RootGenerator, error) {
 	var node schemaNode
 	err := json.Unmarshal(schema, &node)
-	if err != nil {
-		return RootGenerator{
-			Generator: nullGenerator{},
-		}, err
+	defaultGenerator := RootGenerator{
+		Generator: nullGenerator{},
 	}
-
-	schemaManager, err := newSchemaManager(schema)
 	if err != nil {
-		return RootGenerator{
-			Generator: nullGenerator{},
-		}, err
+		return defaultGenerator, err
 	}
 
 	optsWithDefault := withDefaultParseOptions(*opts)
-	documentResolver := newDocumentResolver(optsWithDefault, &node)
+	documentResolver, err := newDocumentResolver(optsWithDefault, &node)
+	if err != nil {
+		return defaultGenerator, err
+	}
+
 	refHandler := newReferenceHandler(documentResolver)
 	errorCollection := newErrorCollection(refHandler, documentResolver)
+
+	schemaManager, err := newSchemaManager(documentResolver, schema)
+	if err != nil {
+		return defaultGenerator, err
+	}
+
 	metadata := &parserMetadata{
 		ReferenceHandler: refHandler,
 		SchemaManager:    schemaManager,
@@ -252,7 +259,6 @@ func ParseSchema(schema []byte, opts *ParserOptions) (RootGenerator, error) {
 	generator, err := parseRoot(node, metadata)
 
 	for metadata.DocumentResolver.HasMoreDocumentsToParse() {
-		fmt.Printf("Parsing next external document...\n")
 		_, err := metadata.DocumentResolver.ParseNextDocument(metadata)
 		if err != nil {
 			metadata.Errors.AddErrorWithSubpath("document_parse_error", err)
@@ -269,10 +275,21 @@ func ParseSchemaWithDefaults(schema []byte) (RootGenerator, error) {
 
 func parseNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	refHandler := metadata.ReferenceHandler
+
+	// Handle simplification of not node where there are multiple inversions so that they can be merged properly
+	node, err := handleNotSimplification(node, metadata)
+	if err != nil {
+		metadata.Errors.AddError(err)
+	}
+
 	gen, err := parseSchemaNode(node, metadata)
 
 	if err != nil {
 		metadata.Errors.AddError(err)
+	}
+
+	if gen == nil {
+		gen = nullGenerator{}
 	}
 
 	if node.Id != nil {
@@ -280,6 +297,18 @@ func parseNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	}
 
 	refHandler.AddReference(node, gen)
+
+	// Wrap in a constrained generator if there are constraints to apply
+	// to a given node
+	if node.constraints != nil {
+		return constrainedGenerator{
+			internalGenerator: gen,
+			constraints: []constraint{
+				node.constraints.Compile(),
+			},
+		}, nil
+	}
+
 	return gen, err
 
 }

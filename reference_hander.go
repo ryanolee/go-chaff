@@ -62,7 +62,6 @@ func (h *referenceHandler) AddReference(node schemaNode, generator Generator) {
 
 func (h *referenceHandler) AddIdReference(path string, node schemaNode, generator Generator) {
 	documentId := h.documentResolver.GetDocumentIdCurrentlyBeingParsed()
-	fmt.Printf("Adding reference: %s | %s\n", documentId, path)
 	if _, exists := h.References[documentId]; !exists {
 		h.References[documentId] = make(map[string]reference)
 	}
@@ -81,9 +80,7 @@ func (h *referenceHandler) HandleError(err error, metadata *parserMetadata) {
 }
 
 func (h *referenceHandler) Lookup(documentId string, path string) (reference, bool) {
-	fmt.Printf("Looking up reference: %s | %s \n", documentId, path)
 	ref, ok := h.References[documentId][path]
-	fmt.Printf("Found: %v \n", ok)
 	return ref, ok
 }
 

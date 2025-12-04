@@ -12,31 +12,32 @@ import (
 type (
 	schemaManager struct {
 		rootSchemaCompiler *jsonschemaV6.Compiler
+		documentResolver   *documentResolver
 	}
 
 	internalOnlyLoader struct {
 	}
 )
 
-const pathPrefix = "file://self.json"
-
 var pathSanitiseRegex = regexp.MustCompile(`[\/\#\-\.\,\s\.]`)
 
 // Create a new schema manager used to manage sub schema validators required for
 // conditional validators where generated values must be validated against the original schema
 // to ensure they conform to the original schema constraints
-func newSchemaManager(schemaJson []byte) (*schemaManager, error) {
+func newSchemaManager(resolver *documentResolver, schemaJson []byte) (*schemaManager, error) {
 	jsonSchemaCompiler := jsonschema.NewCompiler()
 
-	// To prevent external references from being inadvertently loaded or files from the local filesystem,
+	// To prevent external references from being inadvertently loaded or files from the local filesystem
+	// unless they are explicitly added to the schema manager by the upper level parser
 	jsonSchemaCompiler.UseLoader(internalOnlyLoader{})
 
-	if err := jsonSchemaCompiler.AddResource(pathPrefix, util.UnmarshalJsonStringToMap(string(schemaJson))); err != nil {
+	if err := jsonSchemaCompiler.AddResource(resolver.GetCurrentScope(), util.UnmarshalJsonStringToMap(string(schemaJson))); err != nil {
 		return nil, err
 	}
 
 	return &schemaManager{
 		rootSchemaCompiler: jsonSchemaCompiler,
+		documentResolver:   resolver,
 	}, nil
 }
 
@@ -47,7 +48,7 @@ func (sm *schemaManager) ParseSchemaNode(parserMetadata *parserMetadata, node sc
 	deepClonedNode := util.UnmarshalJsonStringToMap(util.MarshalJsonToString(node))
 	referenceUpdatedNode := sm.replaceRefs(deepClonedNode)
 
-	sm.rootSchemaCompiler.AddResource(pathPrefix+currentPath, referenceUpdatedNode)
+	sm.rootSchemaCompiler.AddResource(sm.documentResolver.GetCurrentScope()+currentPath, referenceUpdatedNode)
 	return sm.CompilePath(currentPath)
 }
 
@@ -63,7 +64,7 @@ func (sm *schemaManager) replaceRefs(data interface{}) interface{} {
 	case map[string]interface{}:
 		if ref, ok := v["$ref"]; ok {
 			if refStr, ok := ref.(string); ok {
-				v["$ref"] = pathPrefix + refStr
+				v["$ref"] = sm.documentResolver.GetCurrentScope() + refStr
 			}
 		}
 		for key, value := range v {
@@ -81,7 +82,7 @@ func (sm *schemaManager) replaceRefs(data interface{}) interface{} {
 }
 
 func (sm *schemaManager) CompilePath(path string) (*jsonschemaV6.Schema, error) {
-	return sm.rootSchemaCompiler.Compile(pathPrefix + path)
+	return sm.rootSchemaCompiler.Compile(sm.documentResolver.GetCurrentScope() + path)
 }
 
 func (l internalOnlyLoader) Load(url string) (any, error) {

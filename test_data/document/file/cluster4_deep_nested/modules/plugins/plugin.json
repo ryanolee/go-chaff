@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "modules/plugins/plugin.json",
+  "title": "Module Plugin",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "../../core/types/identifier.json"
+    },
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "parentModule": {
+      "$ref": "../module.json"
+    },
+    "hooks": {
+      "type": "array",
+      "items": {
+        "$ref": "hook.json"
+      }
+    },
+    "config": {
+      "$ref": "../../core/config.json"
+    }
+  },
+  "required": ["id", "name"]
+}

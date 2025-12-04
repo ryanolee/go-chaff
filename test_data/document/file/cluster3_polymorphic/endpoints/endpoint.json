@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "endpoints/endpoint.json",
+  "title": "API Endpoint",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "pattern": "^/.*$"
+    },
+    "method": {
+      "type": "string",
+      "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"]
+    },
+    "description": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "$ref": "parameter.json"
+      }
+    },
+    "requestBody": {
+      "$ref": "request_body.json"
+    },
+    "responses": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]{3}$": {
+          "$ref": "response.json"
+        }
+      }
+    },
+    "security": {
+      "$ref": "../auth/auth_basic.json"
+    }
+  },
+  "required": ["path", "method"]
+}

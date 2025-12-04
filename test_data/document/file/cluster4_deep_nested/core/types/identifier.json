@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "core/types/identifier.json",
+  "title": "Identifier",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "namespace": {
+      "type": "string"
+    }
+  },
+  "required": ["value"]
+}

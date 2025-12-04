@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schemas/link.json",
+  "title": "Response Link",
+  "description": "Link to another endpoint - creates references back to endpoint",
+  "type": "object",
+  "properties": {
+    "operationRef": {
+      "type": "string"
+    },
+    "operationId": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "requestBody": {
+      "$ref": "../endpoints/request_body.json"
+    },
+    "description": {
+      "type": "string"
+    },
+    "server": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "description": { "type": "string" }
+      }
+    }
+  }
+}

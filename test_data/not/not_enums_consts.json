@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "not_specific_enum_value": {
+            "type": "string",
+            "enum": ["apple", "banana", "cherry", "date"],
+            "not": {
+                "enum": ["banana"]
+            }
+        },
+        "not_multiple_enum_values": {
+            "type": "string",
+            "enum": ["red", "green", "blue", "yellow", "purple"],
+            "not": {
+                "enum": ["red", "yellow"]
+            }
+        },
+        "not_const_value": {
+            "type": "string",
+            "enum": ["active", "inactive", "pending"],
+            "not": {
+                "const": "pending"
+            }
+        },
+        "number_enum_with_not": {
+            "type": "integer",
+            "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            "not": {
+                "enum": [7, 8, 9, 10]
+            }
+        },
+        "boolean_not_false": {
+            "type": "boolean",
+            "not": {
+                "const": false
+            }
+        },
+        "object_enum_not": {
+            "enum": [
+                {"status": "ok"},
+                {"status": "error"},
+                {"status": "pending"}
+            ],
+            "not": {
+                "enum": [{"status": "error"}]
+            }
+        },
+        "array_enum_not": {
+            "enum": [
+                [1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9]
+            ],
+            "not": {
+                "const": [4, 5, 6]
+            }
+        },
+        "mixed_type_enum_not": {
+            "enum": ["string_value", 42, true, null, {"key": "value"}],
+            "not": {
+                "enum": [null, 42]
+            }
+        }
+    }
+}

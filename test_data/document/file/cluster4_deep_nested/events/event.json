@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "events/event.json",
+  "title": "Event",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "../core/types/identifier.json"
+    },
+    "type": {
+      "type": "string"
+    },
+    "timestamp": {
+      "$ref": "../core/types/timestamp.json"
+    },
+    "source": {
+      "$ref": "../modules/module.json"
+    },
+    "triggeredBy": {
+      "$ref": "../entities/user.json"
+    },
+    "relatedEvents": {
+      "type": "array",
+      "items": {
+        "$ref": "event.json"
+      }
+    }
+  },
+  "required": ["id", "type"]
+}

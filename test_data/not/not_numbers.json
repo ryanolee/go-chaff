@@ -1,0 +1,1093 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "not_negative": {
+            "type": "number",
+            "not": {
+                "exclusiveMaximum": 0
+            }
+        },
+        "not_multiple_no_valid_but_upper_bound": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4,
+            "not": {
+                "multipleOf": 5
+            }
+        },
+        "not_multiple_small_range": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2,
+            "not": {
+                "multipleOf": 3
+            }
+        },
+        "not_multiple_tight_bound": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6,
+            "not": {
+                "multipleOf": 7
+            }
+        },
+        "not_multiple_decimal_small_range": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 0.4,
+            "not": {
+                "multipleOf": 0.5
+            }
+        },
+        "not_positive": {
+            "type": "number",
+            "not": {
+                "exclusiveMinimum": 0
+            }
+        },
+        "not_zero": {
+            "type": "number",
+            "not": {
+                "const": 0
+            }
+        },
+        "not_in_range": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100,
+            "not": {
+                "minimum": 10,
+                "maximum": 20
+            }
+        },
+        "integer_not_even": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "not": {
+                "multipleOf": 2
+            }
+        },
+        "not_multiple_of_five": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "not": {
+                "multipleOf": 5
+            }
+        },
+        "not_large_number": {
+            "type": "number",
+            "not": {
+                "minimum": 1000000
+            }
+        },
+        "not_small_number": {
+            "type": "number",
+            "not": {
+                "maximum": -1000000
+            }
+        },
+        "integer_not_in_specific_range": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "minimum": 40,
+                "maximum": 60
+            }
+        },
+        "number_exclusive_bounds_not": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "exclusiveMinimum": 25,
+                "exclusiveMaximum": 75
+            }
+        },
+        "not_const_42": {
+            "type": "integer",
+            "not": {
+                "const": 42
+            }
+        },
+        "not_const_pi": {
+            "type": "number",
+            "not": {
+                "const": 3.14159
+            }
+        },
+        "not_enum_primes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "not": {
+                "enum": [2, 3, 5, 7, 11, 13, 17, 19]
+            }
+        },
+        "not_enum_fibonacci": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "enum": [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]
+            }
+        },
+        "not_enum_powers_of_two": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 128,
+            "not": {
+                "enum": [1, 2, 4, 8, 16, 32, 64, 128]
+            }
+        },
+        "not_multiple_of_three": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30,
+            "not": {
+                "multipleOf": 3
+            }
+        },
+        "not_multiple_of_seven": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "not": {
+                "multipleOf": 7
+            }
+        },
+        "not_multiple_of_ten": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99,
+            "not": {
+                "multipleOf": 10
+            }
+        },
+        "not_multiple_of_0_5": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5,
+            "not": {
+                "multipleOf": 0.5
+            }
+        },
+        "not_multiple_of_0_25": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2,
+            "not": {
+                "multipleOf": 0.25
+            }
+        },
+        "integer_not_one": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10,
+            "not": {
+                "const": 1
+            }
+        },
+        "not_negative_one": {
+            "type": "integer",
+            "minimum": -10,
+            "maximum": 10,
+            "not": {
+                "const": -1
+            }
+        },
+        "not_hundred": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200,
+            "not": {
+                "const": 100
+            }
+        },
+        "not_enum_single_digits": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20,
+            "not": {
+                "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+            }
+        },
+        "not_enum_negative_numbers": {
+            "type": "integer",
+            "minimum": -10,
+            "maximum": 10,
+            "not": {
+                "enum": [-10, -5, -3, -1]
+            }
+        },
+        "not_enum_mixed_signs": {
+            "type": "integer",
+            "minimum": -50,
+            "maximum": 50,
+            "not": {
+                "enum": [-25, -10, 0, 10, 25]
+            }
+        },
+        "not_enum_decimals": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5,
+            "not": {
+                "enum": [0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+            }
+        },
+        "not_enum_negative_decimals": {
+            "type": "number",
+            "minimum": -5,
+            "maximum": 0,
+            "not": {
+                "enum": [-4.5, -3.5, -2.5, -1.5, -0.5]
+            }
+        },
+        "not_range_0_to_10": {
+            "type": "integer",
+            "minimum": -20,
+            "maximum": 30,
+            "not": {
+                "minimum": 0,
+                "maximum": 10
+            }
+        },
+        "not_range_negative": {
+            "type": "integer",
+            "minimum": -100,
+            "maximum": 100,
+            "not": {
+                "minimum": -50,
+                "maximum": -25
+            }
+        },
+        "not_range_around_zero": {
+            "type": "number",
+            "minimum": -10,
+            "maximum": 10,
+            "not": {
+                "minimum": -1,
+                "maximum": 1
+            }
+        },
+        "not_exclusive_range_small": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "not": {
+                "exclusiveMinimum": 3,
+                "exclusiveMaximum": 7
+            }
+        },
+        "not_exclusive_minimum_only": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "exclusiveMinimum": 50
+            }
+        },
+        "not_exclusive_maximum_only": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "exclusiveMaximum": 50
+            }
+        },
+        "not_minimum_only": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "minimum": 75
+            }
+        },
+        "not_maximum_only": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "maximum": 25
+            }
+        },
+        "not_const_max_int": {
+            "type": "integer",
+            "not": {
+                "const": 2147483647
+            }
+        },
+        "not_const_min_int": {
+            "type": "integer",
+            "not": {
+                "const": -2147483648
+            }
+        },
+        "not_const_zero_decimal": {
+            "type": "number",
+            "not": {
+                "const": 0.0
+            }
+        },
+        "not_const_negative_decimal": {
+            "type": "number",
+            "not": {
+                "const": -123.456
+            }
+        },
+        "not_const_scientific": {
+            "type": "number",
+            "not": {
+                "const": 1e10
+            }
+        },
+        "not_const_small_scientific": {
+            "type": "number",
+            "not": {
+                "const": 1e-10
+            }
+        },
+        "not_enum_squares": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "not": {
+                "enum": [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+            }
+        },
+        "not_enum_cubes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 125,
+            "not": {
+                "enum": [1, 8, 27, 64, 125]
+            }
+        },
+        "not_enum_factorials": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "not": {
+                "enum": [1, 2, 6, 24, 120]
+            }
+        },
+        "not_enum_triangular": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "not": {
+                "enum": [1, 3, 6, 10, 15, 21, 28, 36, 45]
+            }
+        },
+        "not_multiple_of_11": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "not": {
+                "multipleOf": 11
+            }
+        },
+        "not_multiple_of_13": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "not": {
+                "multipleOf": 13
+            }
+        },
+        "not_multiple_of_0_1": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "not": {
+                "multipleOf": 0.1
+            }
+        },
+        "not_multiple_of_0_01": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 0.5,
+            "not": {
+                "multipleOf": 0.01
+            }
+        },
+        "integer_not_in_last_ten": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "not": {
+                "minimum": 41,
+                "maximum": 50
+            }
+        },
+        "not_range_thirds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99,
+            "not": {
+                "minimum": 33,
+                "maximum": 66
+            }
+        },
+        "not_tiny_range": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "minimum": 49,
+                "maximum": 51
+            }
+        },
+        "not_enum_common_ports": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "not": {
+                "enum": [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 3306, 5432, 6379, 8080]
+            }
+        },
+        "not_enum_http_codes": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 599,
+            "not": {
+                "enum": [200, 201, 204, 301, 302, 400, 401, 403, 404, 500, 502, 503]
+            }
+        },
+        "not_enum_ascii_digits": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 127,
+            "not": {
+                "enum": [48, 49, 50, 51, 52, 53, 54, 55, 56, 57]
+            }
+        },
+        "not_const_euler": {
+            "type": "number",
+            "not": {
+                "const": 2.71828
+            }
+        },
+        "not_const_golden_ratio": {
+            "type": "number",
+            "not": {
+                "const": 1.61803
+            }
+        },
+        "not_const_sqrt2": {
+            "type": "number",
+            "not": {
+                "const": 1.41421
+            }
+        },
+        "not_range_byte": {
+            "type": "integer",
+            "minimum": -128,
+            "maximum": 127,
+            "not": {
+                "minimum": 0,
+                "maximum": 127
+            }
+        },
+        "not_range_unsigned_byte": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 511,
+            "not": {
+                "minimum": 256,
+                "maximum": 511
+            }
+        },
+        "not_enum_percentages": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "enum": [0, 25, 50, 75, 100]
+            }
+        },
+        "not_enum_tens": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "not": {
+                "enum": [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+            }
+        },
+        "not_enum_halves": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "not": {
+                "enum": [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5]
+            }
+        },
+        "not_enum_quarters": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 3,
+            "not": {
+                "enum": [0.25, 0.75, 1.25, 1.75, 2.25, 2.75]
+            }
+        },
+        "not_multiple_of_100": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 999,
+            "not": {
+                "multipleOf": 100
+            }
+        },
+        "not_multiple_of_1000": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9999,
+            "not": {
+                "multipleOf": 1000
+            }
+        },
+        "not_multiple_of_12": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 144,
+            "not": {
+                "multipleOf": 12
+            }
+        },
+        "not_multiple_of_60": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 360,
+            "not": {
+                "multipleOf": 60
+            }
+        },
+        "not_range_century": {
+            "type": "integer",
+            "minimum": 1900,
+            "maximum": 2100,
+            "not": {
+                "minimum": 2000,
+                "maximum": 2099
+            }
+        },
+        "not_range_decade": {
+            "type": "integer",
+            "minimum": 1980,
+            "maximum": 2030,
+            "not": {
+                "minimum": 1990,
+                "maximum": 1999
+            }
+        },
+        "not_enum_leap_years": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2030,
+            "not": {
+                "enum": [2000, 2004, 2008, 2012, 2016, 2020, 2024, 2028]
+            }
+        },
+        "not_const_days_in_year": {
+            "type": "integer",
+            "minimum": 300,
+            "maximum": 400,
+            "not": {
+                "const": 365
+            }
+        },
+        "not_const_hours_in_day": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 48,
+            "not": {
+                "const": 24
+            }
+        },
+        "not_const_minutes_in_hour": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "not": {
+                "const": 60
+            }
+        },
+        "not_enum_months": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 15,
+            "not": {
+                "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+            }
+        },
+        "not_enum_weekdays": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10,
+            "not": {
+                "enum": [0, 1, 2, 3, 4, 5, 6]
+            }
+        },
+        "number_not_in_exclusive_narrow": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "exclusiveMinimum": 49.9,
+                "exclusiveMaximum": 50.1
+            }
+        },
+        "integer_not_boundary": {
+            "type": "integer",
+            "minimum": -10,
+            "maximum": 10,
+            "not": {
+                "enum": [-10, 10]
+            }
+        },
+        "not_enum_binary_powers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1024,
+            "not": {
+                "enum": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+            }
+        },
+        "not_enum_hex_values": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255,
+            "not": {
+                "enum": [0, 15, 16, 31, 32, 63, 64, 127, 128, 255]
+            }
+        },
+        "not_const_byte_max": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 300,
+            "not": {
+                "const": 255
+            }
+        },
+        "not_const_short_max": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 70000,
+            "not": {
+                "const": 65535
+            }
+        },
+        "not_multiple_of_4": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "not": {
+                "multipleOf": 4
+            }
+        },
+        "not_multiple_of_6": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60,
+            "not": {
+                "multipleOf": 6
+            }
+        },
+        "not_multiple_of_8": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 80,
+            "not": {
+                "multipleOf": 8
+            }
+        },
+        "not_multiple_of_9": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90,
+            "not": {
+                "multipleOf": 9
+            }
+        },
+        "not_enum_negative_primes": {
+            "type": "integer",
+            "minimum": -20,
+            "maximum": 0,
+            "not": {
+                "enum": [-2, -3, -5, -7, -11, -13, -17, -19]
+            }
+        },
+        "not_range_positive_small": {
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 1000,
+            "not": {
+                "minimum": 0.001,
+                "maximum": 1
+            }
+        },
+        "not_range_negative_small": {
+            "type": "number",
+            "minimum": -1000,
+            "maximum": -0.001,
+            "not": {
+                "minimum": -1,
+                "maximum": -0.001
+            }
+        },
+        "not_const_infinity_approx": {
+            "type": "number",
+            "not": {
+                "const": 1.7976931348623157e308
+            }
+        },
+        "not_enum_scientific_notation": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1e15,
+            "not": {
+                "enum": [1e3, 1e6, 1e9, 1e12]
+            }
+        },
+        "not_enum_negative_powers_of_ten": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "not": {
+                "enum": [0.1, 0.01, 0.001, 0.0001]
+            }
+        },
+        "integer_not_multiple_of_15": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "not": {
+                "multipleOf": 15
+            }
+        },
+        "integer_not_multiple_of_20": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "not": {
+                "multipleOf": 20
+            }
+        },
+        "integer_not_multiple_of_25": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "not": {
+                "multipleOf": 25
+            }
+        },
+        "not_enum_card_values": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 15,
+            "not": {
+                "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+            }
+        },
+        "not_enum_dice_values": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "not": {
+                "enum": [1, 2, 3, 4, 5, 6]
+            }
+        },
+        "not_enum_coin_flip": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5,
+            "not": {
+                "enum": [0, 1]
+            }
+        },
+        "not_range_middle_half": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "minimum": 25,
+                "maximum": 75
+            }
+        },
+        "not_range_first_quarter": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "minimum": 0,
+                "maximum": 25
+            }
+        },
+        "not_range_last_quarter": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "minimum": 75,
+                "maximum": 100
+            }
+        },
+        "number_not_whole": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "not": {
+                "multipleOf": 1
+            }
+        },
+        "not_enum_perfect_numbers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "not": {
+                "enum": [6, 28, 496]
+            }
+        },
+        "not_const_dozen": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 24,
+            "not": {
+                "const": 12
+            }
+        },
+        "not_const_gross": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "not": {
+                "const": 144
+            }
+        },
+        "not_const_score": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 40,
+            "not": {
+                "const": 20
+            }
+        },
+        "not_enum_roman_numeral_values": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1500,
+            "not": {
+                "enum": [1, 5, 10, 50, 100, 500, 1000]
+            }
+        },
+        "not_enum_metric_prefixes": {
+            "type": "number",
+            "minimum": 0.000001,
+            "maximum": 1000000,
+            "not": {
+                "enum": [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+            }
+        },
+        "not_range_temperature_freezing": {
+            "type": "number",
+            "minimum": -50,
+            "maximum": 50,
+            "not": {
+                "minimum": -10,
+                "maximum": 10
+            }
+        },
+        "not_const_boiling_point_c": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 200,
+            "not": {
+                "const": 100
+            }
+        },
+        "not_const_freezing_point_f": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "const": 32
+            }
+        },
+        "not_enum_compass_degrees": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 360,
+            "not": {
+                "enum": [0, 45, 90, 135, 180, 225, 270, 315, 360]
+            }
+        },
+        "not_multiple_of_30": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 360,
+            "not": {
+                "multipleOf": 30
+            }
+        },
+        "not_multiple_of_45": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 360,
+            "not": {
+                "multipleOf": 45
+            }
+        },
+        "not_multiple_of_90": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 360,
+            "not": {
+                "multipleOf": 90
+            }
+        },
+        "not_enum_percentage_steps": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "enum": [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+            }
+        },
+        "not_enum_grades_numeric": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "enum": [60, 70, 80, 90, 100]
+            }
+        }
+    },
+    "required": [
+        "not_negative",
+        "not_multiple_no_valid_but_upper_bound",
+        "not_multiple_small_range",
+        "not_multiple_tight_bound",
+        "not_multiple_decimal_small_range",
+        "not_positive",
+        "not_zero",
+        "not_in_range",
+        "integer_not_even",
+        "not_multiple_of_five",
+        "not_large_number",
+        "not_small_number",
+        "integer_not_in_specific_range",
+        "number_exclusive_bounds_not",
+        "not_const_42",
+        "not_const_pi",
+        "not_enum_primes",
+        "not_enum_fibonacci",
+        "not_enum_powers_of_two",
+        "not_multiple_of_three",
+        "not_multiple_of_seven",
+        "not_multiple_of_ten",
+        "not_multiple_of_0_5",
+        "not_multiple_of_0_25",
+        "integer_not_one",
+        "not_negative_one",
+        "not_hundred",
+        "not_enum_single_digits",
+        "not_enum_negative_numbers",
+        "not_enum_mixed_signs",
+        "not_enum_decimals",
+        "not_enum_negative_decimals",
+        "not_range_0_to_10",
+        "not_range_negative",
+        "not_range_around_zero",
+        "not_exclusive_range_small",
+        "not_exclusive_minimum_only",
+        "not_exclusive_maximum_only",
+        "not_minimum_only",
+        "not_maximum_only",
+        "not_const_max_int",
+        "not_const_min_int",
+        "not_const_zero_decimal",
+        "not_const_negative_decimal",
+        "not_const_scientific",
+        "not_const_small_scientific",
+        "not_enum_squares",
+        "not_enum_cubes",
+        "not_enum_factorials",
+        "not_enum_triangular",
+        "not_multiple_of_11",
+        "not_multiple_of_13",
+        "not_multiple_of_0_1",
+        "not_multiple_of_0_01",
+        "integer_not_in_last_ten",
+        "not_range_thirds",
+        "not_tiny_range",
+        "not_enum_common_ports",
+        "not_enum_http_codes",
+        "not_enum_ascii_digits",
+        "not_const_euler",
+        "not_const_golden_ratio",
+        "not_const_sqrt2",
+        "not_range_byte",
+        "not_range_unsigned_byte",
+        "not_enum_percentages",
+        "not_enum_tens",
+        "not_enum_halves",
+        "not_enum_quarters",
+        "not_multiple_of_100",
+        "not_multiple_of_1000",
+        "not_multiple_of_12",
+        "not_multiple_of_60",
+        "not_range_century",
+        "not_range_decade",
+        "not_enum_leap_years",
+        "not_const_days_in_year",
+        "not_const_hours_in_day",
+        "not_const_minutes_in_hour",
+        "not_enum_months",
+        "not_enum_weekdays",
+        "number_not_in_exclusive_narrow",
+        "integer_not_boundary",
+        "not_enum_binary_powers",
+        "not_enum_hex_values",
+        "not_const_byte_max",
+        "not_const_short_max",
+        "not_multiple_of_4",
+        "not_multiple_of_6",
+        "not_multiple_of_8",
+        "not_multiple_of_9",
+        "not_enum_negative_primes",
+        "not_range_positive_small",
+        "not_range_negative_small",
+        "not_const_infinity_approx",
+        "not_enum_scientific_notation",
+        "not_enum_negative_powers_of_ten",
+        "integer_not_multiple_of_15",
+        "integer_not_multiple_of_20",
+        "integer_not_multiple_of_25",
+        "not_enum_card_values",
+        "not_enum_dice_values",
+        "not_enum_coin_flip",
+        "not_range_middle_half",
+        "not_range_first_quarter",
+        "not_range_last_quarter",
+        "number_not_whole",
+        "not_enum_perfect_numbers",
+        "not_const_dozen",
+        "not_const_gross",
+        "not_const_score",
+        "not_enum_roman_numeral_values",
+        "not_enum_metric_prefixes",
+        "not_range_temperature_freezing",
+        "not_const_boiling_point_c",
+        "not_const_freezing_point_f",
+        "not_enum_compass_degrees",
+        "not_multiple_of_30",
+        "not_multiple_of_45",
+        "not_multiple_of_90",
+        "not_enum_percentage_steps",
+        "not_enum_grades_numeric"
+    ]
+}

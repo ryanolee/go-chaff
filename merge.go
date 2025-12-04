@@ -2,6 +2,7 @@ package chaff
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/ryanolee/go-chaff/internal/util"
 	"github.com/thoas/go-funk"
@@ -20,14 +21,21 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 		resolvedReference := false
 
 		for node.Ref != nil {
-			document := metadata.DocumentResolver.GetDocumentForResolvedPath(*node.Ref)
-
-			// Give up on the node if it is a circular reference
-			// We cannot easily resolve partial cases for this (especially for factoring or similar)
-			if metadata.ReferenceResolver.HasResolved(document, *node.Ref) {
+			documentId, path, err := metadata.DocumentResolver.ResolveDocumentIdAndPath(*node.Ref)
+			if err != nil {
+				warnConfigMergeError(metadata, "/$ref", fmt.Errorf("failed to resolve document for ref [%s]: %w", *node.Ref, err))
 				node.Ref = nil
 				break
 			}
+			// Give up on the node if it is a circular reference
+			// We cannot easily resolve partial cases for this (especially for factoring or similar)
+			if metadata.ReferenceResolver.HasResolved(documentId, path) {
+				node.Ref = nil
+				break
+			}
+
+			finalRefPath := fmt.Sprintf("%s%s", documentId, path)
+			node.Ref = &finalRefPath
 
 			refNode, err := mergeResolveReference(metadata, node)
 
@@ -36,7 +44,7 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 				break
 			}
 
-			metadata.ReferenceResolver.PushRefResolution(document, *node.Ref)
+			metadata.ReferenceResolver.PushRefResolution(documentId, *node.Ref)
 			resolvedReference = true
 			node = refNode
 		}
@@ -96,15 +104,20 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 		if node.PrefixItems != nil {
 			prefixItems := util.GetZeroIfNil(node.PrefixItems, []schemaNode{})
 			mergedPrefixItems := util.GetZeroIfNil(mergedNode.PrefixItems, []schemaNode{})
-			for i := 0; i < len(prefixItems); i++ {
-				node, err := mergeSchemaNodes(metadata, mergedPrefixItems[i], prefixItems[i])
+			length := int(math.Max(float64(len(prefixItems)), float64(len(mergedPrefixItems))))
+			newMergedPrefixItems := make([]schemaNode, length)
+			for i := 0; i < length; i++ {
+				node, err := mergeSchemaNodes(metadata,
+					util.GetIndexOrDefault(mergedPrefixItems, i, schemaNode{}),
+					util.GetIndexOrDefault(prefixItems, i, schemaNode{}),
+				)
 				if err != nil {
 					warnConfigMergeError(metadata, fmt.Sprintf("prefixItems/%d", i), err)
 				}
-				mergedPrefixItems[i] = node
+				newMergedPrefixItems[i] = node
 			}
 
-			mergedNode.PrefixItems = &mergedPrefixItems
+			mergedNode.PrefixItems = &newMergedPrefixItems
 		}
 
 		// Merge items data
@@ -168,36 +181,48 @@ func mergeResolveReference(metadata *parserMetadata, node schemaNode) (schemaNod
 	var err error
 	resolvedPaths := []string{}
 	refNode := &node
+
+	defer (func() {
+		metadata.DocumentResolver.SetDocumentBeingResolved(metadata.DocumentResolver.GetDocumentIdCurrentlyBeingParsed())
+	})()
+
 	for refNode.Ref != nil {
+		var subRefPath string
 		ref := util.GetZeroIfNil(refNode.Ref, "")
-		refNode, err = metadata.DocumentResolver.ResolvePath(metadata, ref)
+		refNode, subRefPath, err = metadata.DocumentResolver.ResolvePath(metadata, ref)
 
 		if err != nil {
-			errPath := fmt.Sprintf("/config_ref_merge_error[%s]", ref)
-			formattedErr := fmt.Errorf("failed to resolve ref [%s] Error given: %e", ref, err)
+			errPath := fmt.Sprintf("/config_ref_merge_error[%s]", subRefPath)
+			formattedErr := fmt.Errorf("failed to resolve ref [%s] Error given: %w", subRefPath, err)
 			metadata.Errors.AddErrorWithSubpath(errPath, formattedErr)
 			return schemaNode{}, formattedErr
 		}
 
 		if refNode == nil {
-			errPath := fmt.Sprintf("/config_ref_merge_error[%s]", ref)
-			formattedErr := fmt.Errorf("failed to resolve ref [%s] Error given: resolved to nil", ref)
+			errPath := fmt.Sprintf("/config_ref_merge_error[%s]", subRefPath)
+			formattedErr := fmt.Errorf("failed to resolve ref [%s] Error given: resolved to nil", subRefPath)
 			metadata.Errors.AddErrorWithSubpath(errPath, formattedErr)
 			return schemaNode{}, formattedErr
 		}
 
-		resolvedPaths = append(resolvedPaths, ref)
-
-		if funk.Contains(resolvedPaths, ref) {
-
-			err = fmt.Errorf("circular reference detected while building composition element reference path %s", ref)
+		if funk.Contains(resolvedPaths, subRefPath) {
+			err = fmt.Errorf("circular reference detected while building composition element reference path %s", subRefPath)
 			metadata.Errors.AddErrorWithSubpath("/$ref", err)
 			return schemaNode{}, err
 		}
+		resolvedPaths = append(resolvedPaths, subRefPath)
 	}
 
-	return *refNode, nil
+	// Rewrite references relative to the document we are currently parsing so they remain valid when the parent scope changes post-merge
+	newNode, err := metadata.DocumentResolver.RewriteReferencesRelativeToDocument(*refNode)
+	if err != nil {
+		errPath := "/config_ref_rewrite_error"
+		formattedErr := fmt.Errorf("failed to rewrite references for ref [%s]: %e", *node.Ref, err)
+		metadata.Errors.AddErrorWithSubpath(errPath, formattedErr)
+		return schemaNode{}, formattedErr
+	}
 
+	return newNode, nil
 }
 
 func mergeSchemaTypes(mergedSchemaType *multipleType, nodeType *multipleType) *multipleType {
