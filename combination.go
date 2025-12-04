@@ -52,6 +52,7 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 	}
 
 	generators := []Generator{}
+
 	for i, subSchema := range target {
 		baseNode, _ := mergeSchemaNodes(metadata, node)
 		baseNode.OneOf = nil
@@ -64,6 +65,7 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 		}
 
 		refPath := fmt.Sprintf("/%s/%d", nodeType, i)
+
 		generator, err := ref.ParseNodeInScope(refPath, mergedNode, metadata)
 		if err != nil {
 			generators = append(generators, nullGenerator{})
@@ -73,7 +75,20 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 	}
 
 	if len(oneOf) > 1 {
-		oneOfConstraint, err := NewOneOfConstraint(node, metadata)
+		stubNode := newEmptySchemaNode()
+		resolvedNodes := []schemaNode{}
+		for i, node := range oneOf {
+			resolvedNode, err := mergeSchemaNodes(metadata, node)
+			if err != nil {
+				metadata.Errors.AddErrorWithSubpath(fmt.Sprintf("oneOf/%d", i), fmt.Errorf("failed to resolve oneOf sub-schema: %w", err))
+				continue
+			}
+
+			resolvedNodes = append(resolvedNodes, resolvedNode)
+		}
+
+		stubNode.OneOf = &resolvedNodes
+		oneOfConstraint, err := NewOneOfConstraint(stubNode, metadata)
 		if err != nil {
 			return nullGenerator{}, err
 		}
@@ -137,7 +152,7 @@ func NewOneOfConstraint(node schemaNode, metadata *parserMetadata) (*oneOfConstr
 }
 
 func (oc *oneOfConstraint) Apply(generator Generator, generatorOptions *GeneratorOptions, generatedValue interface{}) interface{} {
-	for i := 0; i < generatorOptions.MaximumIfAttempts; i++ {
+	for i := 0; i < generatorOptions.MaximumOneOfAttempts; i++ {
 		generatorOptions.overallComplexity++
 		if oc.constraintPassed(generatedValue) {
 			return generatedValue
@@ -146,7 +161,7 @@ func (oc *oneOfConstraint) Apply(generator Generator, generatorOptions *Generato
 		generatedValue = generator.Generate(generatorOptions)
 	}
 
-	return fmt.Sprintf("Failed to generate a valid value for the following oneOf constraint after %d attempts", generatorOptions.MaximumUniqueGeneratorAttempts)
+	return fmt.Sprintf("Failed to generate a valid value for the following oneOf constraint after %d attempts", generatorOptions.MaximumOneOfAttempts)
 }
 
 func (oc *oneOfConstraint) constraintPassed(value interface{}) bool {

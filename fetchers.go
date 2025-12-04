@@ -33,11 +33,16 @@ type (
 
 func NewHttpDocumentFetcher(parserConfig HTTPFetchOptions) (documentFetcherInterface, error) {
 	allowedHosts := []string{}
+
+	if !parserConfig.Enabled {
+		return nil, nil
+	}
+
 	for _, host := range parserConfig.AllowedHosts {
 		parsedUrl, err := url.Parse(host)
 
 		if parsedUrl != nil && err != nil {
-			allowedHosts = append(allowedHosts, parsedUrl.Hostname())
+			allowedHosts = append(allowedHosts, parsedUrl.Host)
 		} else {
 			allowedHosts = append(allowedHosts, host)
 		}
@@ -74,8 +79,8 @@ func (f *httpDocumentFetcher) resolveDocumentId(relativeTo string, ref string) (
 	}
 
 	if len(f.allowedHosts) > 0 {
-		if !funk.Contains(f.allowedHosts, resolvedUrl.Hostname()) {
-			return "", fmt.Errorf("host '%s' not allowed to be fetched from allowed hosts %s", parsedUrl.Hostname(), strings.Join(f.allowedHosts, ", "))
+		if !funk.Contains(f.allowedHosts, resolvedUrl.Host) {
+			return "", fmt.Errorf("host '%s' not allowed to be fetched from allowed hosts %s", resolvedUrl.Host, strings.Join(f.allowedHosts, ", "))
 		}
 	}
 
@@ -83,7 +88,6 @@ func (f *httpDocumentFetcher) resolveDocumentId(relativeTo string, ref string) (
 }
 
 func (f *httpDocumentFetcher) fetchDocument(resolvedPath string) (*schemaNode, error) {
-	fmt.Println("GET: " + resolvedPath)
 	resp, err := http.Get(resolvedPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch URL '%s': %w", resolvedPath, err)
@@ -109,6 +113,9 @@ func (f *httpDocumentFetcher) fetchDocument(resolvedPath string) (*schemaNode, e
 }
 
 func NewFileSystemDocumentFetcher(config FileSystemFetchOptions) (documentFetcherInterface, error) {
+	if !config.Enabled {
+		return nil, nil
+	}
 	allowedRealPaths := []string{}
 	for _, path := range config.AllowedPaths {
 		realPath, err := getRealPath(path)
@@ -168,6 +175,7 @@ func (f *fileSystemDocumentFetcher) resolveDocumentId(relativeTo string, ref str
 	}
 
 	if outsideAllowedPaths {
+		panic("huh")
 		return "", fmt.Errorf("access to path '%s' is not allowed. Only paths files in the following paths are allowed: %s", resolvedPath, strings.Join(f.allowedPaths, ", "))
 	}
 

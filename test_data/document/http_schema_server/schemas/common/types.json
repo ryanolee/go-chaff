@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/common/types.json",
+  "title": "Common Types",
+  "definitions": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "byteSize": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Size in bytes"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
+    }
+  }
+}

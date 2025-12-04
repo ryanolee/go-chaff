@@ -11,7 +11,8 @@ func TestComplex(t *testing.T) {
 	// @todo This is expected to fail as it is a property based test against
 	//       all the schemas in schema store. It is a good indicator for current support / finding edge cases
 	//       but should be excluded from typical unit tests. This can also take a very long time to run.
-	test.TestJsonSchema(t, "test_data/complex/apple-app-site-association.json", 10, &chaff.ParserOptions{
+	t.Parallel()
+	test.TestJsonSchemaDirWithConfig(t, "test_data/complex/", 10, &chaff.ParserOptions{
 		DocumentFetchOptions: chaff.DocumentFetchOptions{
 			HTTPFetchOptions: chaff.HTTPFetchOptions{
 				Enabled: true,

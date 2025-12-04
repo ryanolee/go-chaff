@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://127.0.0.1:8080/common/client.json",
+  "title": "Client Information",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["web", "ios", "android", "desktop", "cli"]
+    },
+    "ipAddress": {
+      "type": "string",
+      "format": "ipv6" 
+    }
+  }
+}

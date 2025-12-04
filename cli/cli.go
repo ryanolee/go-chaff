@@ -25,7 +25,7 @@ func main() {
 	output := flag.String("output", "", "Specify file path to write generated output to.")
 
 	// Fetch flags
-	allowedHosts := flag.String("allowed-hosts", "", "Comma separated list of allowed hosts to fetch remote $ref documents from over HTTP(S). If empty, no hosts are allowed.")
+	allowedHosts := flag.String("allowed-hosts", "", "Comma separated list of allowed hosts to fetch remote $ref documents from over HTTP(S). If empty http and https resolution will fail.")
 	allowInsecure := flag.Bool("allow-insecure", false, "Allow fetching remote $ref documents over insecure HTTP connections.")
 	allowOutsideCwd := flag.Bool("allow-outside-cwd", false, "Allow fetching $ref documents from file system paths outside the current working directory.")
 	allowedPaths := flag.String("allowed-paths", "", "Comma separated list of allowed file system paths to fetch $ref documents from.")
@@ -48,7 +48,7 @@ func main() {
 	flag.Parse()
 
 	if *showHelp {
-		fmt.Println("CLI too for generating random JSON data matching given JSON schema\nUsage: go-chaff [flags]")
+		fmt.Println("CLI tool for generating random JSON data matching given JSON schema\nUsage: go-chaff [flags]")
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
@@ -122,7 +122,7 @@ func main() {
 }
 
 func getHttpDocumentFetcherOptionsFromFlags(allowedHosts *string, allowInsecure *bool) chaff.HTTPFetchOptions {
-	if allowedHosts == nil && allowInsecure == nil {
+	if (allowedHosts != nil && *allowedHosts == "") && (allowInsecure == nil || !*allowInsecure) {
 		return chaff.HTTPFetchOptions{}
 	}
 
@@ -134,7 +134,7 @@ func getHttpDocumentFetcherOptionsFromFlags(allowedHosts *string, allowInsecure 
 }
 
 func getFileSystemDocumentFetcherOptionsFromFlags(allowOutsideCwd *bool, allowedPaths *string) chaff.FileSystemFetchOptions {
-	if allowOutsideCwd == nil && allowedPaths == nil {
+	if (allowOutsideCwd == nil || !*allowOutsideCwd) && (allowedPaths == nil || *allowedPaths == "") {
 		return chaff.FileSystemFetchOptions{}
 	}
 

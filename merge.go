@@ -22,6 +22,7 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 
 		for node.Ref != nil {
 			documentId, path, err := metadata.DocumentResolver.ResolveDocumentIdAndPath(*node.Ref)
+
 			if err != nil {
 				warnConfigMergeError(metadata, "/$ref", fmt.Errorf("failed to resolve document for ref [%s]: %w", *node.Ref, err))
 				node.Ref = nil
@@ -38,8 +39,8 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 			node.Ref = &finalRefPath
 
 			refNode, err := mergeResolveReference(metadata, node)
-
 			if err != nil {
+				warnConfigMergeError(metadata, "/$ref", fmt.Errorf("failed to resolve ref [%s]: %w", *node.Ref, err))
 				node.Ref = nil
 				break
 			}
@@ -169,6 +170,9 @@ func mergeSchemaNodeSimpleProperties(baseNode schemaNode, otherNode schemaNode) 
 	// Merge simple string properties
 	baseNode.Pattern = util.GetPtr(otherNode.Pattern, baseNode.Pattern)
 	baseNode.Format = util.GetPtr(otherNode.Format, baseNode.Format)
+
+	// Simple slice properties
+	baseNode.Required = util.MergeSlicePtrs(baseNode.Required, otherNode.Required)
 
 	return baseNode
 }

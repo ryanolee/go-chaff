@@ -54,6 +54,10 @@ func TestJsonSchema(test *testing.T, schemaPath string, cycles int, options *cha
 		}
 
 		compiler := jsonschema.NewCompiler()
+		if options != nil && options.RelativeTo != "" {
+			compiler.SetDefaultBaseURI(options.RelativeTo)
+		}
+
 		schema, err := compiler.Compile(fileData, schemaPath)
 
 		if err != nil {
