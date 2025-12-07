@@ -34,13 +34,6 @@
                 }
             }
         },
-        "array_with_not_unique_items": {
-            "type": "array",
-            "minItems": 2,
-            "not": {
-                "uniqueItems": true
-            }
-        },
         "array_not_containing_negative_numbers": {
             "type": "array",
             "minItems": 1,

@@ -85,6 +85,7 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 
 			mergedNode.Properties = &mergedProperties
 		}
+		mergedNode.AdditionalProperties = mergeNodeOrFalse(metadata, mergedNode.AdditionalProperties, node.AdditionalProperties, "additionalProperties")
 
 		if node.PatternProperties != nil {
 			nodePatternProperties := util.GetZeroIfNil(node.PatternProperties, map[string]schemaNode{})
@@ -123,6 +124,9 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 
 		// Merge items data
 		mergedNode.Items = mergeItemsData(metadata, mergedNode.Items, node.Items)
+		mergedNode.AdditionalItems = mergeNodeOrFalse(metadata, mergedNode.AdditionalItems, node.AdditionalItems, "additionalItems")
+		mergedNode.UnevaluatedItems = mergeNodeOrFalse(metadata, mergedNode.UnevaluatedItems, node.UnevaluatedItems, "unevaluatedItems")
+		mergedNode.Contains = mergeSchemaPtrs(metadata, "contains", mergedNode.Contains, node.Contains)
 
 		mergedNode.OneOf = util.MergeSlicePtrs(mergedNode.OneOf, node.OneOf)
 		mergedNode.AnyOf = util.MergeSlicePtrs(mergedNode.AnyOf, node.AnyOf)
@@ -135,7 +139,7 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 		mergedNode = mergeIf(metadata, mergedNode, node)
 
 		// Merge simple properties
-		mergedNode = mergeSchemaNodeSimpleProperties(mergedNode, node)
+		mergedNode = mergeSchemaNodeSimpleProperties(metadata, mergedNode, node)
 
 		if resolvedReference {
 			// Pop the reference resolution and set the document being resolved back to the previous one
@@ -148,33 +152,49 @@ func mergeSchemaNodes(metadata *parserMetadata, nodes ...schemaNode) (schemaNode
 	return mergedNode, nil
 }
 
-func mergeSchemaNodeSimpleProperties(baseNode schemaNode, otherNode schemaNode) schemaNode {
-	// Merge simple int properties
+func mergeSchemaNodeSimpleProperties(metadata *parserMetadata, baseNode schemaNode, otherNode schemaNode) schemaNode {
+
+	warnIfBothSetAndAreDifferent(metadata, "length", otherNode.Length, baseNode.Length)
 	baseNode.Length = util.GetPtr(otherNode.Length, baseNode.Length)
-	baseNode.MinProperties = util.GetPtr(otherNode.MinProperties, baseNode.MinProperties)
-	baseNode.MaxProperties = util.GetPtr(otherNode.MaxProperties, baseNode.MaxProperties)
-	baseNode.MinItems = util.GetPtr(otherNode.MinItems, baseNode.MinItems)
-	baseNode.MaxItems = util.GetPtr(otherNode.MaxItems, baseNode.MaxItems)
-	baseNode.MinContains = util.GetPtr(otherNode.MinContains, baseNode.MinContains)
-	baseNode.MaxContains = util.GetPtr(otherNode.MaxContains, baseNode.MaxContains)
-	baseNode.MinLength = util.GetPtr(otherNode.MinLength, baseNode.MinLength)
-	baseNode.MaxLength = util.GetPtr(otherNode.MaxLength, baseNode.MaxLength)
+
+	// Merge simple int properties
+	baseNode.MinProperties = util.MaxFloatPtr(otherNode.MinProperties, baseNode.MinProperties)
+	baseNode.MaxProperties = util.MinFloatPtr(otherNode.MaxProperties, baseNode.MaxProperties)
+	baseNode.MinItems = util.MaxFloatPtr(otherNode.MinItems, baseNode.MinItems)
+	baseNode.MaxItems = util.MinFloatPtr(otherNode.MaxItems, baseNode.MaxItems)
+	baseNode.MinContains = util.MaxFloatPtr(otherNode.MinContains, baseNode.MinContains)
+	baseNode.MaxContains = util.MinFloatPtr(otherNode.MaxContains, baseNode.MaxContains)
+	baseNode.MinLength = util.MaxFloatPtr(otherNode.MinLength, baseNode.MinLength)
+	baseNode.MaxLength = util.MinFloatPtr(otherNode.MaxLength, baseNode.MaxLength)
 
 	// Merge simple float properties
-	baseNode.Minimum = util.GetPtr(otherNode.Minimum, baseNode.Minimum)
-	baseNode.Maximum = util.GetPtr(otherNode.Maximum, baseNode.Maximum)
-	baseNode.ExclusiveMinimum = util.GetPtr(otherNode.ExclusiveMinimum, baseNode.ExclusiveMinimum)
-	baseNode.ExclusiveMaximum = util.GetPtr(otherNode.ExclusiveMaximum, baseNode.ExclusiveMaximum)
-	baseNode.MultipleOf = util.GetPtr(otherNode.MultipleOf, baseNode.MultipleOf)
+	baseNode.Minimum = util.MaxFloatPtr(otherNode.Minimum, baseNode.Minimum)
+	baseNode.Maximum = util.MinFloatPtr(otherNode.Maximum, baseNode.Maximum)
+	baseNode.ExclusiveMinimum = util.MaxFloatPtr(otherNode.ExclusiveMinimum, baseNode.ExclusiveMinimum)
+	baseNode.ExclusiveMaximum = util.MinFloatPtr(otherNode.ExclusiveMaximum, baseNode.ExclusiveMaximum)
+	baseNode.MultipleOf = util.MultiplyIfPossibleAndNotMultipleOfFloat64(otherNode.MultipleOf, baseNode.MultipleOf)
 
 	// Merge simple string properties
+	warnIfBothSetAndAreDifferent(metadata, "pattern", baseNode.Pattern, otherNode.Pattern)
 	baseNode.Pattern = util.GetPtr(otherNode.Pattern, baseNode.Pattern)
+
+	warnIfBothSetAndAreDifferent(metadata, "format", baseNode.Format, otherNode.Format)
 	baseNode.Format = util.GetPtr(otherNode.Format, baseNode.Format)
 
 	// Simple slice properties
 	baseNode.Required = util.MergeSlicePtrs(baseNode.Required, otherNode.Required)
 
+	// Simple boolean properties
+	warnIfBothSetAndAreDifferent(metadata, "uniqueItems", baseNode.UniqueItems, otherNode.UniqueItems)
+	baseNode.UniqueItems = util.GetPtr(otherNode.UniqueItems, baseNode.UniqueItems)
+
 	return baseNode
+}
+
+func warnIfBothSetAndAreDifferent[T comparable](metadata *parserMetadata, field string, a *T, b *T) {
+	if a != nil && b != nil && *a != *b {
+		warnConfigMergeError(metadata, field, fmt.Errorf("both values set during merge (%v vs %v)", *a, *b))
+	}
 }
 
 func warnConfigMergeError(metadata *parserMetadata, field string, err error) {
@@ -247,24 +267,68 @@ func mergeSchemaTypes(mergedSchemaType *multipleType, nodeType *multipleType) *m
 	return &mergedType
 }
 
+// Merges items data (Legacy support for "items" merging not supported)
 func mergeItemsData(parserMetadata *parserMetadata, mergedData *itemsData, nodeData *itemsData) *itemsData {
 	if nodeData == nil || nodeData.Node == nil {
 		return mergedData
 	}
 
-	mergedNode := util.GetZeroIfNil(mergedData, itemsData{})
-	if mergedNode.Node != nil && nodeData.Node != nil {
-		node, err := mergeSchemaNodes(parserMetadata, *mergedNode.Node, *nodeData.Node)
+	mergedNodeData := util.GetZeroIfNil(mergedData, itemsData{})
+	if mergedNodeData.DisallowAdditionalItems || nodeData.DisallowAdditionalItems {
+		// If we are disallowing additional items disregard any other data
+		return &itemsData{
+			DisallowAdditionalItems: true,
+		}
+	}
+
+	if mergedNodeData.Node != nil && nodeData.Node != nil {
+		node, err := mergeSchemaNodes(parserMetadata, *mergedNodeData.Node, *nodeData.Node)
 		if err != nil {
 			warnConfigMergeError(parserMetadata, "items", err)
 		} else {
-			mergedNode.Node = &node
+			mergedNodeData.Node = &node
 		}
 	} else {
-		mergedNode.Node = nodeData.Node
+		mergedNodeData.Node = nodeData.Node
 	}
 
-	return &mergedNode
+	return &mergedNodeData
+}
+
+func mergeNodeOrFalse(metadata *parserMetadata, mergedNode *schemaNodeOrFalse, node *schemaNodeOrFalse, field string) *schemaNodeOrFalse {
+	if node == nil {
+		return mergedNode
+	}
+
+	if mergedNode == nil {
+		return node
+	}
+
+	if mergedNode.IsFalse {
+		return mergedNode
+	}
+
+	if node.IsFalse {
+		return node
+	}
+
+	if mergedNode.Schema == nil {
+		return node
+	}
+
+	if node.Schema == nil {
+		return mergedNode
+	}
+
+	mergedSchemaNode, err := mergeSchemaNodes(metadata, *mergedNode.Schema, *node.Schema)
+	if err != nil {
+		warnConfigMergeError(metadata, field, err)
+		return mergedNode
+	}
+
+	return &schemaNodeOrFalse{
+		Schema: &mergedSchemaNode,
+	}
 }
 
 func mergeIf(metadata *parserMetadata, mergedNode schemaNode, node schemaNode) schemaNode {

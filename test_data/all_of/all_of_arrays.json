@@ -1,0 +1,45 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "array_with_item_type_and_bounds": {
+            "allOf": [
+                {"type": "array"},
+                {"items": {"type": "string"}},
+                {"minItems": 2},
+                {"maxItems": 5}
+            ]
+        },
+        "array_with_unique_items": {
+            "allOf": [
+                {"type": "array"},
+                {"items": {"type": "integer"}},
+                {"uniqueItems": true},
+                {"minItems": 3},
+                {"maxItems": 10}
+            ]
+        },
+        "array_with_nested_object_items": {
+            "allOf": [
+                {"type": "array"},
+                {"items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "name": {"type": "string"}
+                    }
+                }},
+                {"minItems": 1},
+                {"maxItems": 3}
+            ]
+        },
+        "array_with_contains": {
+            "allOf": [
+                {"type": "array"},
+                {"items": {"type": "number"}},
+                {"contains": {"minimum": 10}},
+                {"minItems": 2}
+            ]
+        }
+    }
+}

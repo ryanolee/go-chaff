@@ -1,0 +1,45 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "with_default_string": {
+            "allOf": [
+                {"type": "string"},
+                {"default": "default_value"},
+                {"minLength": 1}
+            ]
+        },
+        "with_default_number": {
+            "allOf": [
+                {"type": "number"},
+                {"default": 42},
+                {"minimum": 0},
+                {"maximum": 100}
+            ]
+        },
+        "with_default_object": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "properties": {
+                        "enabled": {"type": "boolean", "default": true},
+                        "count": {"type": "integer", "default": 0}
+                    }
+                }
+            ]
+        },
+        "with_const_value": {
+            "allOf": [
+                {"type": "string"},
+                {"const": "fixed_value"}
+            ]
+        },
+        "with_enum_constraint": {
+            "allOf": [
+                {"type": "string"},
+                {"enum": ["option_a", "option_b", "option_c"]},
+                {"minLength": 1}
+            ]
+        }
+    }
+}

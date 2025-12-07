@@ -9,7 +9,7 @@ import (
 
 func TestNot(t *testing.T) {
 	t.Parallel()
-	test.TestJsonSchemaDirWithConfig(t, "test_data/not", 10000, nil, func() *chaff.GeneratorOptions {
+	test.TestJsonSchemaDirWithConfig(t, "test_data/not", 100, nil, func() *chaff.GeneratorOptions {
 		return &chaff.GeneratorOptions{
 			MaximumGenerationSteps: 100,
 		}

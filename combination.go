@@ -1,7 +1,6 @@
 package chaff
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -36,27 +35,26 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 	oneOf := util.GetZeroIfNil(node.OneOf, []schemaNode{})
 	anyOf := util.GetZeroIfNil(node.AnyOf, []schemaNode{})
 
-	if len(oneOf) == 0 && len(anyOf) == 0 {
-		return nullGenerator{}, errors.New("no items specified for oneOf / anyOf")
-	}
+	target := anyOf
+	nodeType := "anyOf"
+	if len(oneOf) > 0 {
+		target = oneOf
+		nodeType = "oneOf"
 
-	if len(oneOf) > 0 && len(anyOf) > 0 {
-		return nullGenerator{}, errors.New("only one of [oneOf / anyOf] can be specified")
-	}
-
-	target := oneOf
-	nodeType := "oneOf"
-	if len(anyOf) > 0 {
-		target = anyOf
-		nodeType = "anyOf"
 	}
 
 	generators := []Generator{}
 
 	for i, subSchema := range target {
 		baseNode, _ := mergeSchemaNodes(metadata, node)
-		baseNode.OneOf = nil
-		baseNode.AnyOf = nil
+		// Stop infinite recursion during merge
+		if nodeType == "oneOf" {
+			baseNode.OneOf = nil
+		}
+
+		if nodeType == "anyOf" {
+			baseNode.AnyOf = nil
+		}
 
 		mergedNode, err := mergeSchemaNodes(metadata, baseNode, subSchema)
 		if err != nil {
@@ -68,6 +66,7 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 
 		generator, err := ref.ParseNodeInScope(refPath, mergedNode, metadata)
 		if err != nil {
+			metadata.Errors.AddErrorWithSubpath(refPath, fmt.Errorf("failed to parse %s sub-schema: %w", nodeType, err))
 			generators = append(generators, nullGenerator{})
 		} else {
 			generators = append(generators, generator)

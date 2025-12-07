@@ -98,7 +98,7 @@ func parseArray(node schemaNode, metadata *parserMetadata) (Generator, error) {
 		return nullGenerator{}, fmt.Errorf("error parsing additional item generator: %w", err)
 	}
 
-	if containsGenerator, err = parseItemGeneratorInScope(node, metadata, "contains"); err != nil {
+	if containsGenerator, err = parseContainsGeneratorInScope(node, metadata); err != nil {
 		return nullGenerator{}, fmt.Errorf("error parsing contains generator: %w", err)
 	}
 
@@ -189,12 +189,23 @@ func parseItemGenerator(additionalData *itemsData, metadata *parserMetadata) (Ge
 	return metadata.ReferenceHandler.ParseNodeInScope("/items", *additionalData.Node, metadata)
 }
 
-func parseItemGeneratorInScope(node schemaNode, metadata *parserMetadata, scope string) (Generator, error) {
+func parseContainsGeneratorInScope(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	if node.Contains == nil {
 		return nil, nil
 	}
 
-	return metadata.ReferenceHandler.ParseNodeInScope(fmt.Sprintf("/%s", scope), *node.Contains, metadata)
+	var err error = nil
+	mergedContains := *node.Contains
+	// Merge with items if possible to constrain the contains generator further to aling with item constraints
+	if node.Items != nil && node.Items.Node != nil {
+		mergedContains, err = mergeSchemaNodes(metadata, *node.Items.Node, *node.Contains)
+		if err != nil {
+			return nil, fmt.Errorf("error merging 'contains' with 'items' schema: %w", err)
+		}
+		mergedContains.Contains = nil
+	}
+
+	return metadata.ReferenceHandler.ParseNodeInScope("/contains", mergedContains, metadata)
 }
 
 func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
@@ -226,7 +237,7 @@ func (g arrayGenerator) Generate(opts *GeneratorOptions) interface{} {
 		itemGen = stringGenerator{}
 	}
 
-	if itemGen == nil || g.DisallowAdditional {
+	if g.DisallowAdditional {
 		return arrayData
 	}
 

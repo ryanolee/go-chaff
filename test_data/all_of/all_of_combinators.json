@@ -1,0 +1,164 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "all_of_containing_one_of": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "properties": {
+                        "variant": {
+                            "oneOf": [
+                                {"type": "string", "minLength": 1},
+                                {"type": "integer", "minimum": 0},
+                                {"type": "boolean"}
+                            ]
+                        }
+                    }
+                },
+                {"required": ["variant"]}
+            ]
+        },
+        "all_of_containing_any_of": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "properties": {
+                        "flexible_field": {
+                            "anyOf": [
+                                {"type": "string", "format": "email"},
+                                {"type": "string", "format": "uri"},
+                                {"type": "null"}
+                            ]
+                        }
+                    }
+                },
+                {"required": ["flexible_field"]}
+            ]
+        },
+        "all_of_with_nested_one_of_and_any_of": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "choice_a": {
+                            "oneOf": [
+                                {"type": "string"},
+                                {"type": "number"}
+                            ]
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "choice_b": {
+                            "anyOf": [
+                                {"type": "boolean"},
+                                {"type": "integer"}
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "one_of_with_all_of_branches": {
+            "oneOf": [
+                {
+                    "allOf": [
+                        {"type": "object"},
+                        {"properties": {"type": {"const": "typeA"}}},
+                        {"properties": {"value_a": {"type": "string"}}}
+                    ]
+                },
+                {
+                    "allOf": [
+                        {"type": "object"},
+                        {"properties": {"type": {"const": "typeB"}}},
+                        {"properties": {"value_b": {"type": "integer"}}}
+                    ]
+                }
+            ]
+        },
+        "any_of_with_all_of_branches": {
+            "anyOf": [
+                {
+                    "allOf": [
+                        {"type": "string"},
+                        {"minLength": 5},
+                        {"maxLength": 10}
+                    ]
+                },
+                {
+                    "allOf": [
+                        {"type": "integer"},
+                        {"minimum": 100},
+                        {"maximum": 200}
+                    ]
+                }
+            ]
+        },
+        "deeply_combined_schemas": {
+            "allOf": [
+                {
+                    "oneOf": [
+                        {
+                            "anyOf": [
+                                {"type": "string", "minLength": 1},
+                                {"type": "integer", "minimum": 0}
+                            ]
+                        },
+                        {"type": "boolean"}
+                    ]
+                }
+            ]
+        },
+        "all_of_one_of_any_of_chain": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "properties": {
+                        "level1": {
+                            "oneOf": [
+                                {
+                                    "anyOf": [
+                                        {"type": "string"},
+                                        {"type": "number"}
+                                    ]
+                                },
+                                {
+                                    "allOf": [
+                                        {"type": "array"},
+                                        {"items": {"type": "string"}},
+                                        {"minItems": 1}
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "triple_all_of_merge": {
+            "allOf": [
+                {
+                    "allOf": [
+                        {"type": "object"},
+                        {"properties": {"a": {"type": "string"}}}
+                    ]
+                },
+                {
+                    "allOf": [
+                        {"properties": {"b": {"type": "integer"}}},
+                        {"required": ["b"]}
+                    ]
+                },
+                {
+                    "allOf": [
+                        {"properties": {"c": {"type": "boolean"}}},
+                        {"properties": {"d": {"type": "array", "items": {"type": "number"}}}}
+                    ]
+                }
+            ]
+        }
+    }
+}

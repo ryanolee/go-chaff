@@ -1,0 +1,89 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "object_with_array_property": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "properties": {
+                        "tags": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "minItems": 1
+                        },
+                        "metadata": {
+                            "type": "object",
+                            "properties": {
+                                "created": {"type": "string", "format": "date-time"},
+                                "version": {"type": "integer"}
+                            }
+                        }
+                    }
+                },
+                {"required": ["tags"]}
+            ]
+        },
+        "complex_user_schema": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer", "minimum": 1}
+                    }
+                },
+                {
+                    "properties": {
+                        "username": {"type": "string", "minLength": 3, "maxLength": 30}
+                    }
+                },
+                {
+                    "properties": {
+                        "email": {"type": "string", "format": "email"}
+                    }
+                },
+                {
+                    "properties": {
+                        "roles": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "minItems": 1
+                        }
+                    }
+                },
+                {"required": ["id", "username", "email"]}
+            ]
+        },
+        "product_with_variants": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "sku": {"type": "string", "pattern": "^[A-Z]{3}-[0-9]{4}$"}
+                    }
+                },
+                {
+                    "properties": {
+                        "price": {"type": "number", "minimum": 0}
+                    }
+                },
+                {
+                    "properties": {
+                        "variants": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "color": {"type": "string"},
+                                    "size": {"type": "string"}
+                                }
+                            },
+                            "minItems": 1
+                        }
+                    }
+                },
+                {"required": ["sku", "price"]}
+            ]
+        }
+    }
+}

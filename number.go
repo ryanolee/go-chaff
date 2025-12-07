@@ -68,27 +68,15 @@ func resolveMinMaxForNode(node schemaNode, mustBeAnInteger bool) (float64, float
 	var max float64 = math.Inf(1)
 
 	// Initial Validation
-	if node.Minimum != nil && node.ExclusiveMinimum != nil {
-		return 0, 0, errors.New("cannot have both minimum and exclusive minimum")
-	}
+	min = util.GetZeroIfNil(
+		util.MaxFloatPtr(node.Minimum, addIfNotNilFloat64(node.ExclusiveMinimum, infinitesimal)),
+		math.Inf(-1),
+	)
 
-	if node.Maximum != nil && node.ExclusiveMaximum != nil {
-		return 0, 0, errors.New("cannot have both maximum and exclusive maximum")
-	}
-
-	// Set min and max
-	if node.Minimum != nil {
-		min = float64(*node.Minimum)
-	} else if node.ExclusiveMinimum != nil {
-		min = float64(*node.ExclusiveMinimum) + infinitesimal
-	}
-
-	// Set maximum
-	if node.Maximum != nil {
-		max = float64(*node.Maximum)
-	} else if node.ExclusiveMaximum != nil {
-		max = float64(*node.ExclusiveMaximum) - infinitesimal
-	}
+	max = util.GetZeroIfNil(
+		util.MinFloatPtr(node.Maximum, addIfNotNilFloat64(node.ExclusiveMaximum, -infinitesimal)),
+		math.Inf(1),
+	)
 
 	// Set default min and max if they are still infinite
 	// Or clamp them to be within a reasonable range of each other
