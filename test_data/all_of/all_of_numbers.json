@@ -1,0 +1,91 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "integer_with_range": {
+            "allOf": [
+                {"type": "integer"},
+                {"minimum": 10},
+                {"maximum": 100}
+            ]
+        },
+        "number_with_multiple_of": {
+            "allOf": [
+                {"type": "number"},
+                {"minimum": 0},
+                {"maximum": 1000},
+                {"multipleOf": 5}
+            ]
+        },
+        "exclusive_bounds": {
+            "allOf": [
+                {"type": "number"},
+                {"exclusiveMinimum": 0},
+                {"exclusiveMaximum": 10}
+            ]
+        },
+        "combined_integer_constraints": {
+            "allOf": [
+                {"type": "integer"},
+                {"minimum": 100},
+                {"maximum": 500},
+                {"multipleOf": 10}
+            ]
+        },
+        "tight_multiple_of_intersection": {
+            "allOf": [
+                {"type": "integer"},
+                {"minimum": 1000},
+                {"maximum": 1050},
+                {"multipleOf": 7},
+                {"multipleOf": 3}
+            ]
+        },
+        "lcm_challenge": {
+            "allOf": [
+                {"type": "integer"},
+                {"minimum": 500},
+                {"maximum": 600},
+                {"multipleOf": 11},
+                {"multipleOf": 13}
+            ]
+        },
+        "narrow_exclusive_window": {
+            "allOf": [
+                {"type": "integer"},
+                {"exclusiveMinimum": 99},
+                {"exclusiveMaximum": 121},
+                {"multipleOf": 17}
+            ]
+        },
+        "triple_coprime_multiples": {
+            "allOf": [
+                {"type": "integer"},
+                {"minimum": 0},
+                {"maximum": 250},
+                {"multipleOf": 7},
+                {"multipleOf": 11},
+                {"multipleOf": 3}
+            ]
+        },
+        "near_miss_bounds": {
+            "allOf": [
+                {"type": "integer"},
+                {"minimum": 1001},
+                {"maximum": 1100},
+                {"multipleOf": 37}
+            ]
+        },
+        "four_way_multiple": {
+            "allOf": [
+                {"type": "integer"},
+                {"minimum": 1},
+                {"maximum": 500},
+                {"multipleOf": 2},
+                {"multipleOf": 3},
+                {"multipleOf": 5},
+                {"multipleOf": 7}
+            ]
+        }
+    }
+}

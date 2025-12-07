@@ -1,0 +1,61 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "object_with_required_and_properties": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "properties": {
+                        "name": {"type": "string"},
+                        "age": {"type": "integer"}
+                    }
+                },
+                {"required": ["name", "age"]}
+            ]
+        },
+        "deeply_nested_objects": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "level1": {
+                            "type": "object",
+                            "properties": {
+                                "value": {"type": "string"}
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "level1": {
+                            "type": "object",
+                            "properties": {
+                                "nested": {
+                                    "type": "object",
+                                    "properties": {
+                                        "deep_value": {"type": "integer"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "object_with_pattern_properties": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "patternProperties": {
+                        "^S_": {"type": "string"},
+                        "^I_": {"type": "integer"}
+                    }
+                },
+                {"minProperties": 1}
+            ]
+        }
+    }
+}

@@ -1,0 +1,79 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "nested_all_of": {
+            "allOf": [
+                {
+                    "allOf": [
+                        {"type": "object"},
+                        {
+                            "properties": {
+                                "inner_string": {"type": "string"}
+                            }
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "properties": {
+                                "inner_number": {"type": "number"}
+                            }
+                        },
+                        {"required": ["inner_number"]}
+                    ]
+                }
+            ]
+        },
+        "triple_nested_all_of": {
+            "allOf": [
+                {
+                    "allOf": [
+                        {
+                            "allOf": [
+                                {"type": "object"},
+                                {
+                                    "properties": {
+                                        "deeply_nested": {"type": "boolean"}
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "all_of_with_one_of": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "properties": {
+                        "choice": {
+                            "oneOf": [
+                                {"type": "string"},
+                                {"type": "integer"}
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "all_of_with_any_of": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "properties": {
+                        "flexible": {
+                            "anyOf": [
+                                {"type": "string", "minLength": 1},
+                                {"type": "number", "minimum": 0}
+                            ]
+                        }
+                    }
+                },
+                {"required": ["flexible"]}
+            ]
+        }
+    }
+}

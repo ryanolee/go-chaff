@@ -7,7 +7,12 @@ import (
 	"strings"
 
 	"github.com/thoas/go-funk"
+	"golang.org/x/exp/constraints"
 )
+
+type Number interface {
+	constraints.Integer | constraints.Float
+}
 
 // Returns the first non-empty string
 func GetString(values ...string) string {
@@ -136,8 +141,8 @@ func MinInt(a ...int) int {
 }
 
 // MinFloatPtr returns the lowest value float pointer
-func MinFloatPtr(a ...*float64) *float64 {
-	var min *float64
+func MinFloatPtr[T Number](a ...*T) *T {
+	var min *T
 	for _, v := range a {
 		if v != nil {
 			if min == nil || *v < *min {
@@ -149,8 +154,8 @@ func MinFloatPtr(a ...*float64) *float64 {
 	return min
 }
 
-func MaxFloatPtr(a ...*float64) *float64 {
-	var max *float64
+func MaxFloatPtr[T Number](a ...*T) *T {
+	var max *T
 	for _, v := range a {
 		if v != nil {
 			if max == nil || *v > *max {
@@ -160,6 +165,31 @@ func MaxFloatPtr(a ...*float64) *float64 {
 	}
 
 	return max
+}
+
+func MultiplyIfPossibleAndNotMultipleOfFloat64(a *float64, b *float64) *float64 {
+	result := new(float64)
+	// Return one if the other is not set
+	if a == nil || *a == 0 {
+		return b
+	}
+
+	if b == nil || *b == 0 {
+		return a
+	}
+
+	// If one is a multiple of the other, return the larger one
+	if math.Mod(*a, *b) == 0 {
+		return a
+	}
+
+	if math.Mod(*b, *a) == 0 {
+		return b
+	}
+
+	// Otherwise multiply them
+	*result = (*a) * (*b)
+	return result
 }
 
 func GetZeroIfNil[T any](f *T, zeroValue T) T {

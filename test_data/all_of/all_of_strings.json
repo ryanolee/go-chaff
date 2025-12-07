@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "string_with_length_bounds": {
+            "allOf": [
+                {"type": "string"},
+                {"minLength": 5},
+                {"maxLength": 20}
+            ]
+        } 
+    }
+}

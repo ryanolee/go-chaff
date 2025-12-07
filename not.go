@@ -471,7 +471,13 @@ func notApplyArray(metadata *parserMetadata, newNode *schemaNode, constraintColl
 	}
 
 	newNode.Items = notMergeItemData(metadata, node.Items, notNode.Items)
+
+	if notNode.UniqueItems != nil && *notNode.UniqueItems {
+		warnField(metadata, "not/uniqueItems", fmt.Errorf("cannot have 'not/uniqueItems' set to true. It is very difficult to calculate items that match all clauses and are identical throughout the array"))
+	}
+
 	newNode.UniqueItems = resolveBool("not/uniqueItems", node.UniqueItems, notNode.UniqueItems)
+
 	newNode.PrefixItems = notMergePrefixNodes(metadata, node.PrefixItems, notNode.PrefixItems, util.GetZeroIfNil(newNode.Items, itemsData{}))
 	newNode.UnevaluatedItems = notMergeSchemaNodeOrFalse("/not/unevaluatedItems", metadata, node.UnevaluatedItems, notNode.UnevaluatedItems)
 	newNode.Contains = notMergeSubNodePtr("/not/contains", metadata, node.Contains, notNode.Contains)

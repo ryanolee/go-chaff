@@ -1,0 +1,144 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "all_of_and_one_of_sibling": {
+            "allOf": [
+                {"type": "string"},
+                {"minLength": 5}
+            ],
+            "oneOf": [
+                {"maxLength": 10},
+                {"maxLength": 20}
+            ]
+        },
+        "all_of_and_any_of_sibling": {
+            "allOf": [
+                {"type": "integer"},
+                {"minimum": 0}
+            ],
+            "anyOf": [
+                {"maximum": 100},
+                {"multipleOf": 5}
+            ]
+        },
+        "all_of_one_of_any_of_siblings": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "properties": {
+                        "id": {"type": "integer"}
+                    }
+                }
+            ],
+            "oneOf": [
+                {
+                    "properties": {
+                        "category": {"const": "A"}
+                    }
+                },
+                {
+                    "properties": {
+                        "category": {"const": "B"}
+                    }
+                }
+            ],
+            "anyOf": [
+                {
+                    "properties": {
+                        "enabled": {"type": "boolean"}
+                    }
+                },
+                {
+                    "properties": {
+                        "active": {"type": "boolean"}
+                    }
+                }
+            ]
+        },
+        "object_with_sibling_combinators": {
+            "type": "object",
+            "allOf": [
+                {
+                    "properties": {
+                        "base_field": {"type": "string"}
+                    }
+                },
+                {"required": ["base_field"]}
+            ],
+            "oneOf": [
+                {
+                    "properties": {
+                        "variant": {"const": "type1"},
+                        "type1_data": {"type": "string"}
+                    },
+                    "required": ["variant"]
+                },
+                {
+                    "properties": {
+                        "variant": {"const": "type2"},
+                        "type2_data": {"type": "integer"}
+                    },
+                    "required": ["variant"]
+                }
+            ]
+        },
+        "array_with_sibling_combinators": {
+            "type": "array",
+            "allOf": [
+                {"minItems": 1},
+                {"maxItems": 10}
+            ],
+            "anyOf": [
+                {"items": {"type": "string"}},
+                {"items": {"type": "number"}}
+            ]
+        },
+        "number_with_all_combinators": {
+            "type": "number",
+            "allOf": [
+                {"minimum": 0},
+                {"maximum": 1000}
+            ],
+            "oneOf": [
+                {"multipleOf": 2},
+                {"multipleOf": 5}
+            ],
+            "anyOf": [
+                {"exclusiveMinimum": 10},
+                {"exclusiveMaximum": 900}
+            ]
+        },
+        "nested_object_sibling_combinators": {
+            "allOf": [
+                {"type": "object"},
+                {
+                    "properties": {
+                        "name": {"type": "string"}
+                    }
+                }
+            ],
+            "oneOf": [
+                {
+                    "properties": {
+                        "role": {"const": "admin"},
+                        "permissions": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "role": {"const": "user"},
+                        "access_level": {"type": "integer", "minimum": 1, "maximum": 5}
+                    }
+                }
+            ],
+            "anyOf": [
+                {"required": ["name"]},
+                {"required": ["role"]}
+            ]
+        }
+    }
+}
