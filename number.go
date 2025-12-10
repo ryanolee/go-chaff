@@ -153,21 +153,33 @@ func generateMultipleOf(rand rand.RandUtil, min float64, max float64, multiple f
 	lowerBound := math.Floor(min/multiple) * multiple
 	randomMultiple := float64(rand.RandomInt(1, multiplesInRange)) * multiple
 	return lowerBound + randomMultiple
-
 }
+
+func roundToInfinitesimal(f float64) float64 {
+	return math.Round(f/infinitesimal) * infinitesimal
+}
+
 func (g *numberGenerator) Generate(opts *GeneratorOptions) interface{} {
 	opts.overallComplexity++
+	result := 0.0
 	if g.Type == generatorTypeInteger && g.MultipleOf != 0 {
-		return int(generateMultipleOf(*opts.Rand, g.Min, g.Max, g.MultipleOf))
+		result = float64(generateMultipleOf(*opts.Rand, g.Min, g.Max, g.MultipleOf))
 	} else if g.Type == generatorTypeInteger && g.MultipleOf == 0 {
-		return int(math.Round(opts.Rand.RandomFloat(g.Min, g.Max)))
+		result = float64(math.Round(opts.Rand.RandomFloat(g.Min, g.Max)))
 	} else if g.Type == generatorTypeNumber && g.MultipleOf != 0 {
-		return util.Round(generateMultipleOf(*opts.Rand, g.Min, g.Max, g.MultipleOf), g.MultipleOf)
+		result = util.Round(generateMultipleOf(*opts.Rand, g.Min, g.Max, g.MultipleOf), g.MultipleOf)
 	} else if g.Type == generatorTypeNumber && g.MultipleOf == 0 {
-		return opts.Rand.RandomFloat(g.Min, g.Max)
+		result = opts.Rand.RandomFloat(g.Min, g.Max)
 	}
 
-	return 0
+	// Edge case. Make sure 0's are always unsigned
+	if math.Abs(result) == 0 {
+		return 0
+	}
+
+	// The error in calculating multiples can sometimes lead to cases where tiny
+	// floating point errors push the result just outside of the min/max bounds.
+	return roundToInfinitesimal(result)
 }
 
 func (g *numberGenerator) String() string {
