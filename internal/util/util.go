@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"regexp"
 	"strings"
@@ -167,7 +168,17 @@ func MaxFloatPtr[T Number](a ...*T) *T {
 	return max
 }
 
-func MultiplyIfPossibleAndNotMultipleOfFloat64(a *float64, b *float64) *float64 {
+func countDecimalPlaces(f float64) float64 {
+	s := strings.Split(strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", f), "0"), "."), ".")
+	if len(s) < 2 {
+		return 0
+	}
+
+	return float64(len(s[1]))
+}
+
+// FindHcf finds the highest common factor between two float64 pointers
+func FindHcf(a *float64, b *float64) *float64 {
 	result := new(float64)
 	// Return one if the other is not set
 	if a == nil || *a == 0 {
@@ -187,8 +198,13 @@ func MultiplyIfPossibleAndNotMultipleOfFloat64(a *float64, b *float64) *float64 
 		return b
 	}
 
+	// Normalise both to integers
+	scale := math.Pow(10, float64(math.Max(countDecimalPlaces(*a), countDecimalPlaces(*b))))
+	intA := *a * scale
+	intB := *b * scale
+
 	// Otherwise multiply them
-	*result = (*a) * (*b)
+	*result = (intA * intB) / scale
 	return result
 }
 

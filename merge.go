@@ -172,7 +172,7 @@ func mergeSchemaNodeSimpleProperties(metadata *parserMetadata, baseNode schemaNo
 	baseNode.Maximum = util.MinFloatPtr(otherNode.Maximum, baseNode.Maximum)
 	baseNode.ExclusiveMinimum = util.MaxFloatPtr(otherNode.ExclusiveMinimum, baseNode.ExclusiveMinimum)
 	baseNode.ExclusiveMaximum = util.MinFloatPtr(otherNode.ExclusiveMaximum, baseNode.ExclusiveMaximum)
-	baseNode.MultipleOf = util.MultiplyIfPossibleAndNotMultipleOfFloat64(otherNode.MultipleOf, baseNode.MultipleOf)
+	baseNode.MultipleOf = util.FindHcf(otherNode.MultipleOf, baseNode.MultipleOf)
 
 	// Merge simple string properties
 	warnIfBothSetAndAreDifferent(metadata, "pattern", baseNode.Pattern, otherNode.Pattern)
