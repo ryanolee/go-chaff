@@ -17,7 +17,7 @@ type (
 		// The source of randomness to use for the given generation.
 		// Please note that some parts of the generators use different sources of randomness.
 		// ("regex" generation and "format" strings)
-		Rand *rand.RandUtil
+		Rand *rand.RandUtil `json:"-"`
 
 		// The default minimum number value
 		DefaultNumberMinimum int `json:"defaultNumberMinimum,omitempty"`
@@ -80,7 +80,7 @@ type (
 		// This is a hard cap on generation steps to prevent extremely long generation times
 		CutoffGenerationSteps int `json:"cutoffGenerationSteps,omitempty"`
 
-		overallComplexity int
+		overallComplexity int `json:"-"`
 	}
 )
 
