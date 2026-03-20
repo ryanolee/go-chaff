@@ -13,38 +13,38 @@ type (
 	// Options to take into account when parsing a json schema
 	ParserOptions struct {
 		// Options for the regex generator used for generating strings with the "pattern property"
-		RegexStringOptions *regen.GeneratorArgs
+		RegexStringOptions *regen.GeneratorArgs `json:"regexStringOptions,omitempty"`
 
 		// Options for the regex generator used for pattern properties
-		RegexPatternPropertyOptions *regen.GeneratorArgs
+		RegexPatternPropertyOptions *regen.GeneratorArgs `json:"regexPatternPropertyOptions,omitempty"`
 
 		// Parser fetch configurations for external document fetching
-		DocumentFetchOptions DocumentFetchOptions
+		DocumentFetchOptions DocumentFetchOptions `json:"documentFetchOptions,omitempty"`
 
 		// Base path to resolve relative document references against for $ref resolution when fetching external documents
-		RelativeTo string
+		RelativeTo string `json:"relativeTo,omitempty"`
 	}
 
 	// Options for fetching external documents during parsing.
 	// Should be used with cautions Especially if schemas passed to the schema faker can be from untrusted sources.
 	DocumentFetchOptions struct {
 		// HTTP Fetch Options
-		HTTPFetchOptions HTTPFetchOptions
+		HTTPFetchOptions HTTPFetchOptions `json:"httpFetchOptions,omitempty"`
 
 		// File System Fetch Options
-		FileSystemFetchOptions FileSystemFetchOptions
+		FileSystemFetchOptions FileSystemFetchOptions `json:"fileSystemFetchOptions,omitempty"`
 	}
 
 	// Options for fetching external documents over HTTP
 	HTTPFetchOptions struct {
 		// If go-chaff is allowed to make HTTP requests to resolve schema references
-		Enabled bool
+		Enabled bool `json:"enabled"`
 
 		// Allowed hosts to fetch from (If empty, all hosts are allowed)
-		AllowedHosts []string
+		AllowedHosts []string `json:"allowedHosts"`
 
 		// Allow insecure connections (http)
-		AllowInsecure bool
+		AllowInsecure bool `json:"allowInsecure"`
 	}
 
 	// Options for fetching external documents from the file system
@@ -52,15 +52,15 @@ type (
 		// If go-chaff is allowed to access the file system to resolve schema references
 		//    THIS SHOULD BE DISABLED UNLESS YOU REALLY REALLY NEED IT
 		//    Please if doing so, limit the AllowedPaths field as much as possible )
-		Enabled bool
+		Enabled bool `json:"enabled"`
 
 		// Overrides allowOutsideCwd to specifically allow for access to a list of paths schemas might reference
 		// relative paths will be resolved against the current working directory at the time the parser is initialized
 		// Symlinks that resolve to outside of the allowed paths will still be blocked
-		AllowedPaths []string
+		AllowedPaths []string `json:"allowedPaths"`
 
 		// Failsafe to prevent directory traversal attacks
-		AllowOutsideCwd bool
+		AllowOutsideCwd bool `json:"allowOutsideCwd"`
 	}
 
 	// Struct containing metadata for parse operations within the JSON Schema
