@@ -20,37 +20,37 @@ type (
 		Rand *rand.RandUtil
 
 		// The default minimum number value
-		DefaultNumberMinimum int
+		DefaultNumberMinimum int `json:"defaultNumberMinimum,omitempty"`
 
 		// The default maximum number value
-		DefaultNumberMaximum int
+		DefaultNumberMaximum int `json:"defaultNumberMaximum,omitempty"`
 
 		// The default minimum String length
-		DefaultStringMinLength int
+		DefaultStringMinLength int `json:"defaultStringMinLength,omitempty"`
 
 		// The default maximum String length
-		DefaultStringMaxLength int
+		DefaultStringMaxLength int `json:"defaultStringMaxLength,omitempty"`
 
 		// The default minimum array length
-		DefaultArrayMinItems int
+		DefaultArrayMinItems int `json:"defaultArrayMinItems,omitempty"`
 
 		// The default maximum array length
 		// This will be set min + this inf the event a minimum value is set
-		DefaultArrayMaxItems int
+		DefaultArrayMaxItems int `json:"defaultArrayMaxItems,omitempty"`
 
 		// The default minimum object properties (Will be ignored if there are fewer properties available)
-		DefaultObjectMinProperties int
+		DefaultObjectMinProperties int `json:"defaultObjectMinProperties,omitempty"`
 
 		// The default maximum object properties (Will be ignored if there are fewer properties available)
-		DefaultObjectMaxProperties int
+		DefaultObjectMaxProperties int `json:"defaultObjectMaxProperties,omitempty"`
 
 		// The maximum number of references to resolve at once (Default: 10)
-		MaximumReferenceDepth int
+		MaximumReferenceDepth int `json:"maximumReferenceDepth,omitempty"`
 
 		// In the event that schemas are recursive there is a good chance the generator
 		// can run forever. This option will bypass the check for cyclic references
 		// Please defer to the MaximumReferenceDepth option if possible when using this
-		BypassCyclicReferenceCheck bool
+		BypassCyclicReferenceCheck bool `json:"bypassCyclicReferenceCheck,omitempty"`
 
 		// Used to keep track of references during a resolution cycle (Used internally and can be ignored)
 		ReferenceResolver referenceResolver
@@ -58,27 +58,27 @@ type (
 		// Though technically in some cases a schema may allow for additional
 		// values it might not always be desireable. this option suppresses fallback_n values
 		// so that they will only appear to make up a "minimum value" forces them to
-		SuppressFallbackValues bool
+		SuppressFallbackValues bool `json:"suppressFallbackValues,omitempty"`
 
 		// The maximum number of times to attempt to generate a unique value
 		// when using unique* constraints in schemas
-		MaximumUniqueGeneratorAttempts int
+		MaximumUniqueGeneratorAttempts int `json:"maximumUniqueGeneratorAttempts,omitempty"`
 
 		// The maximum number of times to attempt to satisfy "if" statements
 		// before giving up
-		MaximumIfAttempts int
+		MaximumIfAttempts int `json:"maximumIfAttempts,omitempty"`
 
 		// The maximum number of times to attempt to satisfy "oneOf" statements
 		// before giving up
-		MaximumOneOfAttempts int
+		MaximumOneOfAttempts int `json:"maximumOneOfAttempts,omitempty"`
 
 		// The maximum number of steps to take when generating a value
 		// after which the the generator will begin to do the "bare minimum" to generate a value
-		MaximumGenerationSteps int
+		MaximumGenerationSteps int `json:"maximumGenerationSteps,omitempty"`
 
 		// The maximum number of steps to take before giving up entirely and aborting generation
 		// This is a hard cap on generation steps to prevent extremely long generation times
-		CutoffGenerationSteps int
+		CutoffGenerationSteps int `json:"cutoffGenerationSteps,omitempty"`
 
 		overallComplexity int
 	}
