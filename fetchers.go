@@ -175,7 +175,6 @@ func (f *fileSystemDocumentFetcher) resolveDocumentId(relativeTo string, ref str
 	}
 
 	if outsideAllowedPaths {
-		panic("huh")
 		return "", fmt.Errorf("access to path '%s' is not allowed. Only paths files in the following paths are allowed: %s", resolvedPath, strings.Join(f.allowedPaths, ", "))
 	}
 
