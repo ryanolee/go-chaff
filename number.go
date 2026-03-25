@@ -23,6 +23,7 @@ const (
 	// Anything smaller than this and Golangs math.Floor and math.Ceil functions
 	// begin to misbehave due to floating point precision issues
 	infinitesimal = 0.1e-13
+	maxRoundFloat = 1e290 // Bound to slightly less than the max float64 value to avoid unserializable inf values
 
 	// Bound to slightly less than the max float64 value to avoid unserializable inf values
 	upperBound = math.MaxFloat64 / 1000
@@ -164,6 +165,11 @@ func generateMultipleOf(rand rand.RandUtil, min float64, max float64, multiple f
 }
 
 func roundToInfinitesimal(f float64) float64 {
+	// Dividing by infinitesimal (1e-14) amplifies the value by 1e14.
+	// Skip rounding for values whose magnitude would overflow to ±Inf.
+	if math.IsInf(f, 0) || math.Abs(f) > maxRoundFloat {
+		return f
+	}
 	return math.Round(f/infinitesimal) * infinitesimal
 }
 
@@ -182,12 +188,25 @@ func (g *numberGenerator) Generate(opts *GeneratorOptions) interface{} {
 
 	// Edge case. Make sure 0's are always unsigned
 	if math.Abs(result) == 0 {
-		return 0
+		if g.Type == generatorTypeInteger {
+			return int(0)
+		}
+		return 0.0
 	}
 
-	// The error in calculating multiples can sometimes lead to cases where tiny
-	// floating point errors push the result just outside of the min/max bounds.
-	return roundToInfinitesimal(result)
+	if g.Type == generatorTypeInteger {
+		return int(result)
+	}
+
+	// MultipleOf arithmetic can accumulate tiny floating-point errors that
+	// push the result just outside the min/max bounds. Snap to the nearest
+	// infinitesimal to eliminate them. Plain floats (no multipleOf) don't
+	// need this — and applying it would destroy sub-infinitesimal values.
+	if g.MultipleOf != 0 {
+		return roundToInfinitesimal(result)
+	}
+
+	return result
 }
 
 func (g *numberGenerator) String() string {
