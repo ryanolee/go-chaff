@@ -1,0 +1,63 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "anyOf_mixed_types": {
+            "anyOf": [
+                { "type": "string", "minLength": 1, "maxLength": 10 },
+                { "type": "integer", "minimum": 0, "maximum": 50 },
+                { "type": "null" }
+            ]
+        },
+        "anyOf_objects_overlapping": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string", "minLength": 1 },
+                        "age": { "type": "integer", "minimum": 0 }
+                    },
+                    "required": ["name"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string" },
+                        "email": { "type": "string", "format": "email" }
+                    },
+                    "required": ["email"]
+                }
+            ]
+        },
+        "anyOf_string_constraints": {
+            "type": "string",
+            "anyOf": [
+                { "minLength": 1, "maxLength": 5 },
+                { "minLength": 10, "maxLength": 20 },
+                { "pattern": "^[A-Z]{3}$" }
+            ]
+        },
+        "anyOf_number_ranges": {
+            "type": "number",
+            "anyOf": [
+                { "minimum": 0, "maximum": 10 },
+                { "minimum": 90, "maximum": 100 }
+            ]
+        },
+        "anyOf_with_const": {
+            "anyOf": [
+                { "type": "string", "const": "yes" },
+                { "type": "string", "const": "no" },
+                { "type": "boolean" }
+            ]
+        }
+    },
+    "required": [
+        "anyOf_mixed_types",
+        "anyOf_objects_overlapping",
+        "anyOf_string_constraints",
+        "anyOf_number_ranges",
+        "anyOf_with_const"
+    ],
+    "additionalProperties": false
+}

@@ -1,0 +1,97 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Multi-layer cyclic definitions using allOf, not chains, if/then/else, and anyOf. Definitions form a cycle: alpha -> beta -> gamma -> alpha.",
+    "type": "object",
+    "$defs": {
+        "alpha": {
+            "type": "object",
+            "properties": {
+                "type": { "const": "alpha" },
+                "val": { "type": "string", "minLength": 1, "maxLength": 5 }
+            },
+            "required": ["type", "val"],
+            "allOf": [
+                {
+                    "not": {
+                        "properties": { "val": { "const": "xxx" } },
+                        "required": ["val"]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": { "val": { "const": "go" } },
+                        "required": ["val"]
+                    },
+                    "then": {
+                        "properties": {
+                            "next": { "$ref": "#/$defs/beta" }
+                        }
+                    }
+                }
+            ]
+        },
+        "beta": {
+            "type": "object",
+            "properties": {
+                "type": { "const": "beta" },
+                "count": { "type": "integer", "minimum": 1, "maximum": 10 }
+            },
+            "required": ["type", "count"],
+            "anyOf": [
+                {
+                    "properties": {
+                        "link": { "$ref": "#/$defs/gamma" }
+                    }
+                },
+                {
+                    "properties": {
+                        "extra": { "type": "string", "maxLength": 5 }
+                    }
+                }
+            ]
+        },
+        "gamma": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "gamma" },
+                        "flag": { "type": "boolean" }
+                    },
+                    "required": ["type", "flag"]
+                },
+                {
+                    "not": {
+                        "not": {
+                            "type": "object"
+                        }
+                    }
+                },
+                {
+                    "anyOf": [
+                        {
+                            "properties": {
+                                "back": { "$ref": "#/$defs/alpha" }
+                            }
+                        },
+                        {
+                            "properties": {
+                                "info": { "type": "string", "maxLength": 3 }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "properties": {
+        "root": {
+            "anyOf": [
+                { "$ref": "#/$defs/alpha" },
+                { "$ref": "#/$defs/beta" },
+                { "$ref": "#/$defs/gamma" }
+            ]
+        }
+    },
+    "required": ["root"]
+}

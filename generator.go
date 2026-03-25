@@ -134,3 +134,39 @@ func (g *GeneratorOptions) ShouldCutoff() bool {
 func (g *GeneratorOptions) ShouldMinimize() bool {
 	return g.MaximumGenerationSteps > 0 && g.overallComplexity > g.MaximumGenerationSteps
 }
+
+// ScaledRetryBudget returns a reduced number of retry attempts proportional to
+// how close the overall complexity is to the cutoff. When complexity is below
+// the "minimize" threshold the full budget is returned. As complexity grows
+// towards CutoffGenerationSteps the budget is linearly reduced down to 1.
+// This prevents premature reduction on moderately complex schemas while still
+// capping runaway retries on deeply cyclic ones.
+func (g *GeneratorOptions) ScaledRetryBudget(baseAttempts int) int {
+	if baseAttempts <= 0 {
+		return 1
+	}
+
+	// Below the minimize threshold: full budget
+	if !g.ShouldMinimize() {
+		return baseAttempts
+	}
+
+	// Past the cutoff: absolute minimum
+	if g.ShouldCutoff() {
+		return 1
+	}
+
+	// Linear scale between minimize threshold and cutoff
+	remaining := float64(g.CutoffGenerationSteps - g.overallComplexity)
+	window := float64(g.CutoffGenerationSteps - g.MaximumGenerationSteps)
+	if window <= 0 {
+		return 1
+	}
+
+	ratio := remaining / window // 1.0 at minimize threshold, 0.0 at cutoff
+	scaled := int(ratio * float64(baseAttempts))
+	if scaled < 1 {
+		scaled = 1
+	}
+	return scaled
+}

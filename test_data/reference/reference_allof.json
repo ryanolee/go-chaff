@@ -1,0 +1,83 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "base_entity": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer", "minimum": 1 },
+                "created_at": { "type": "string", "format": "date-time" }
+            },
+            "required": ["id"]
+        },
+        "named_entity": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string", "minLength": 1, "maxLength": 100 }
+            },
+            "required": ["name"]
+        },
+        "tagged_entity": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "maxItems": 10
+                }
+            }
+        },
+        "user": {
+            "allOf": [
+                { "$ref": "#/$defs/base_entity" },
+                { "$ref": "#/$defs/named_entity" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "email": { "type": "string", "format": "email" }
+                    },
+                    "required": ["email"]
+                }
+            ]
+        },
+        "project": {
+            "allOf": [
+                { "$ref": "#/$defs/base_entity" },
+                { "$ref": "#/$defs/named_entity" },
+                { "$ref": "#/$defs/tagged_entity" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "description": { "type": "string", "maxLength": 500 }
+                    }
+                }
+            ]
+        }
+    },
+    "properties": {
+        "user": { "$ref": "#/$defs/user" },
+        "project": { "$ref": "#/$defs/project" },
+        "inline_allof_with_refs": {
+            "allOf": [
+                { "$ref": "#/$defs/base_entity" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "status": { "type": "string", "enum": ["active", "inactive"] }
+                    },
+                    "required": ["status"]
+                }
+            ]
+        },
+        "ref_to_allof": {
+            "$ref": "#/$defs/user"
+        },
+        "allof_of_allofs": {
+            "allOf": [
+                { "$ref": "#/$defs/user" },
+                { "$ref": "#/$defs/tagged_entity" }
+            ]
+        }
+    },
+    "required": ["user", "project"]
+}

@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "string_value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+        },
+        "integer_value": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000
+        },
+        "bool_value": {
+            "type": "boolean"
+        },
+        "string_or_number": {
+            "anyOf": [
+                { "$ref": "#/$defs/string_value" },
+                { "$ref": "#/$defs/integer_value" }
+            ]
+        },
+        "flexible_value": {
+            "anyOf": [
+                { "$ref": "#/$defs/string_value" },
+                { "$ref": "#/$defs/integer_value" },
+                { "$ref": "#/$defs/bool_value" }
+            ]
+        }
+    },
+    "properties": {
+        "simple_anyof_ref": { "$ref": "#/$defs/string_or_number" },
+        "flexible": { "$ref": "#/$defs/flexible_value" },
+        "inline_anyof_with_refs": {
+            "anyOf": [
+                { "$ref": "#/$defs/string_value" },
+                {
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/integer_value" },
+                    "minItems": 1,
+                    "maxItems": 3
+                }
+            ]
+        },
+        "nested_anyof_with_leaf_refs": {
+            "anyOf": [
+                { "$ref": "#/$defs/string_value" },
+                { "$ref": "#/$defs/integer_value" },
+                { "$ref": "#/$defs/bool_value" }
+            ]
+        }
+    },
+    "required": ["simple_anyof_ref", "flexible"]
+}

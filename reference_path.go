@@ -25,10 +25,6 @@ func resolveSubReferencePath(node *schemaNode, refPath string, resolvedPath stri
 	pathPart, path := getReferencePathToken(refPath)
 	resolvedPath = resolvedPath + "/" + pathPart
 
-	if node.AnyOf != nil {
-		return nil, fmt.Errorf("[%s] anyOf nodes cannot be referenced", resolvedPath)
-	}
-
 	if path == "" {
 		return node, nil
 	}

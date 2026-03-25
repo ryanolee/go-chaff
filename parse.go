@@ -2,6 +2,7 @@ package chaff
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"regexp/syntax"
 
@@ -23,6 +24,10 @@ type (
 
 		// Base path to resolve relative document references against for $ref resolution when fetching external documents
 		RelativeTo string `json:"relativeTo,omitempty" jsonschema:"title=Relative To"`
+
+		// Maximum recursion depth during parsing to prevent stack overflow from circular schemas.
+		// If zero, defaults to 100.
+		MaxParseDepth int `json:"maxParseDepth,omitempty" jsonschema:"title=Max Parse Depth"`
 	}
 
 	// Options for fetching external documents during parsing.
@@ -50,7 +55,7 @@ type (
 	// Options for fetching external documents from the file system
 	FileSystemFetchOptions struct {
 		// If go-chaff is allowed to access the file system to resolve schema references
-		//    THIS SHOULD BE DISABLED UNLESS YOU REALLY REALLY NEED IT
+		//    THIS SHOULD BE DISABLED UNLESS YOU REALLY REALLY NEED IT (does not work in contexts without filesystems such as in browser)
 		//    Please if doing so, limit the AllowedPaths field as much as possible )
 		Enabled bool `json:"enabled,omitempty" jsonschema:"title=Fetch documents From File System Enabled"`
 
@@ -77,6 +82,9 @@ type (
 
 		// Global merge depth for the schema
 		MergeDepth int
+
+		// Current parse depth for detecting infinite recursion in circular schemas
+		ParseDepth int
 
 		// Schema management for compiling schemas for internal value validation (Required for where subschemas need to be matched for random value generation)
 		SchemaManager *schemaManager
@@ -157,6 +165,11 @@ type (
 		// Internal functionality
 		// Used to keep track of ifs from allOf statements that have been merged into this node (or factored into said node)
 		mergedIf []ifStatement
+
+		// Used to keep track of not nodes from allOf statements that have been merged into this node.
+		// Each allOf branch with a "not" contributes a separate entry so they can be processed independently
+		// (not(A) AND not(B) is NOT the same as not(merge(A, B))).
+		mergedNot []*schemaNode
 
 		// Internal map used to keep track of constraints that need to be applied to this node during parsing
 		constraints *constraintCollection
@@ -273,14 +286,20 @@ func ParseSchemaWithDefaults(schema []byte) (RootGenerator, error) {
 	return ParseSchema(schema, &ParserOptions{})
 }
 
-func parseNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
-	refHandler := metadata.ReferenceHandler
+// DefaultMaxParseDepth is the recursion depth limit during parsing when no
+// custom value is provided via ParserOptions.MaxParseDepth.
+const DefaultMaxParseDepth = 100
 
-	// Handle simplification of not node where there are multiple inversions so that they can be merged properly
-	node, err := handleNotSimplification(node, metadata)
-	if err != nil {
-		metadata.Errors.AddError(err)
+func parseNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
+	metadata.ParseDepth++
+	defer func() { metadata.ParseDepth-- }()
+
+	maxDepth := metadata.ParserOptions.MaxParseDepth
+	if metadata.ParseDepth > maxDepth {
+		return nullGenerator{}, fmt.Errorf("maximum parse depth (%d) exceeded, possible circular schema reference", maxDepth)
 	}
+
+	refHandler := metadata.ReferenceHandler
 
 	gen, err := parseSchemaNode(node, metadata)
 
@@ -333,7 +352,7 @@ func parseSchemaNode(node schemaNode, metadata *parserMetadata) (Generator, erro
 	}
 
 	// Handle not nodes
-	if node.Not != nil {
+	if node.Not != nil || len(node.mergedNot) > 0 {
 		return parseNot(node, metadata)
 	}
 
@@ -367,6 +386,9 @@ func parseSchemaNode(node schemaNode, metadata *parserMetadata) (Generator, erro
 
 	// In no property type is given assume "any" type is valid in the passed case
 	if inferredNodeType == typeUnknown {
+		if node.Type == nil {
+			node.Type = &multipleType{}
+		}
 		node.Type.MultipleTypes = typeAll
 		return parseMultipleType(node, metadata)
 	}
@@ -402,6 +424,7 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 		RegexPatternPropertyOptions: opts.RegexPatternPropertyOptions,
 		DocumentFetchOptions:        opts.DocumentFetchOptions,
 		RelativeTo:                  opts.RelativeTo,
+		MaxParseDepth:               util.GetInt(opts.MaxParseDepth, DefaultMaxParseDepth),
 	}
 
 	defaultRegexOpts := &regen.GeneratorArgs{
@@ -435,7 +458,8 @@ func inferType(node schemaNode) string {
 	}
 
 	// Array Properties
-	if util.AnyNotNil(node.Items.Node, node.MinItems, node.MaxItems, node.Contains, node.MinContains, node.MaxContains, node.PrefixItems, node.AdditionalItems, node.UnevaluatedItems) {
+	if (node.Items != nil && node.Items.Node != nil) ||
+		util.AnyNotNil(node.MinItems, node.MaxItems, node.Contains, node.MinContains, node.MaxContains, node.PrefixItems, node.AdditionalItems, node.UnevaluatedItems) {
 		return typeArray
 	}
 

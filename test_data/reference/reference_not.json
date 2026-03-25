@@ -1,0 +1,87 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "string_type": {
+            "type": "string"
+        },
+        "number_type": {
+            "type": "number"
+        },
+        "integer_type": {
+            "type": "integer"
+        },
+        "array_type": {
+            "type": "array"
+        },
+        "object_type": {
+            "type": "object"
+        },
+        "bool_type": {
+            "type": "boolean"
+        },
+        "null_type": {
+            "type": "null"
+        }
+    },
+    "properties": {
+        "not_string_via_ref": {
+            "not": { "$ref": "#/$defs/string_type" }
+        },
+        "not_number_via_ref": {
+            "not": { "$ref": "#/$defs/number_type" }
+        },
+        "not_integer_via_ref": {
+            "not": { "$ref": "#/$defs/integer_type" }
+        },
+        "not_array_via_ref": {
+            "not": { "$ref": "#/$defs/array_type" }
+        },
+        "not_object_via_ref": {
+            "not": { "$ref": "#/$defs/object_type" }
+        },
+        "not_bool_via_ref": {
+            "not": { "$ref": "#/$defs/bool_type" }
+        },
+        "not_null_via_ref": {
+            "not": { "$ref": "#/$defs/null_type" }
+        },
+        "string_not_number_ref": {
+            "type": "string",
+            "not": { "$ref": "#/$defs/number_type" },
+            "minLength": 1,
+            "maxLength": 10
+        },
+        "number_not_string_ref": {
+            "type": "integer",
+            "not": { "$ref": "#/$defs/string_type" },
+            "minimum": 1,
+            "maximum": 100
+        },
+        "string_not_null_ref": {
+            "type": "string",
+            "not": { "$ref": "#/$defs/null_type" },
+            "minLength": 1,
+            "maxLength": 20
+        },
+        "number_not_bool_ref": {
+            "type": "number",
+            "not": { "$ref": "#/$defs/bool_type" },
+            "minimum": 0,
+            "maximum": 50
+        }
+    },
+    "required": [
+        "not_string_via_ref",
+        "not_number_via_ref",
+        "not_integer_via_ref",
+        "not_array_via_ref",
+        "not_object_via_ref",
+        "not_bool_via_ref",
+        "not_null_via_ref",
+        "string_not_number_ref",
+        "number_not_string_ref",
+        "string_not_null_ref",
+        "number_not_bool_ref"
+    ]
+}

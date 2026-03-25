@@ -1,0 +1,97 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Tests allOf with $ref where number constraints must be correctly merged: min/max narrowing, multipleOf composition, and exclusive bounds.",
+    "type": "object",
+    "$defs": {
+        "positive_number": {
+            "type": "number",
+            "minimum": 0
+        },
+        "bounded_number": {
+            "type": "number",
+            "maximum": 1000
+        },
+        "small_positive_int": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+        },
+        "even_number": {
+            "type": "integer",
+            "multipleOf": 2
+        },
+        "wide_range_number": {
+            "type": "number",
+            "minimum": -500,
+            "maximum": 500
+        },
+        "narrow_range_number": {
+            "type": "number",
+            "minimum": 10,
+            "maximum": 50
+        },
+        "percentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+        }
+    },
+    "properties": {
+        "positive_bounded": {
+            "description": "allOf merge: positive (min 0) + bounded (max 1000). Result should be 0..1000.",
+            "allOf": [
+                { "$ref": "#/$defs/positive_number" },
+                { "$ref": "#/$defs/bounded_number" }
+            ]
+        },
+        "narrow_from_wide": {
+            "description": "allOf merge: wide range (-500..500) + narrow range (10..50). Result should be max(min) to min(max) = 10..50.",
+            "allOf": [
+                { "$ref": "#/$defs/wide_range_number" },
+                { "$ref": "#/$defs/narrow_range_number" }
+            ]
+        },
+        "small_even_int": {
+            "description": "allOf merge: small positive int (1..100) + even number (multipleOf 2). Result should be even integers 2..100.",
+            "allOf": [
+                { "$ref": "#/$defs/small_positive_int" },
+                { "$ref": "#/$defs/even_number" }
+            ]
+        },
+        "percentage_and_positive": {
+            "description": "allOf merge: percentage (0..100) + positive (min 0). Constraints overlap but should both be satisfied.",
+            "allOf": [
+                { "$ref": "#/$defs/percentage" },
+                { "$ref": "#/$defs/positive_number" }
+            ]
+        },
+        "triple_number_constraint": {
+            "description": "allOf merge of three: positive + bounded + narrow. Result should be 10..50 (narrowest intersection).",
+            "allOf": [
+                { "$ref": "#/$defs/positive_number" },
+                { "$ref": "#/$defs/bounded_number" },
+                { "$ref": "#/$defs/narrow_range_number" }
+            ]
+        },
+        "number_ref_with_inline_constraint": {
+            "description": "allOf merge of $ref with inline constraint tightening the range.",
+            "allOf": [
+                { "$ref": "#/$defs/wide_range_number" },
+                {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 20,
+                    "multipleOf": 5
+                }
+            ]
+        }
+    },
+    "required": [
+        "positive_bounded",
+        "narrow_from_wide",
+        "small_even_int",
+        "percentage_and_positive",
+        "triple_number_constraint",
+        "number_ref_with_inline_constraint"
+    ]
+}

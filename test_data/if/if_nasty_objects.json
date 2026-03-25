@@ -1,0 +1,142 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "string_label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 30
+        }
+    },
+    "properties": {
+        "if_on_object_property": {
+            "type": "object",
+            "properties": {
+                "kind": { "type": "string", "enum": ["person", "company"] },
+                "name": { "type": "string", "minLength": 1 }
+            },
+            "required": ["kind", "name"],
+            "if": {
+                "properties": { "kind": { "const": "person" } },
+                "required": ["kind"]
+            },
+            "then": {
+                "properties": {
+                    "age": { "type": "integer", "minimum": 0, "maximum": 150 }
+                },
+                "required": ["age"]
+            },
+            "else": {
+                "properties": {
+                    "employee_count": { "type": "integer", "minimum": 1 }
+                },
+                "required": ["employee_count"]
+            }
+        },
+        "multiple_allof_if_then_else": {
+            "type": "object",
+            "properties": {
+                "type": { "type": "string", "enum": ["a", "b", "c"] },
+                "value": { "type": ["string", "number", "boolean"] }
+            },
+            "required": ["type", "value"],
+            "allOf": [
+                {
+                    "if": {
+                        "properties": { "type": { "const": "a" } },
+                        "required": ["type"]
+                    },
+                    "then": {
+                        "properties": { "value": { "type": "string", "minLength": 1 } }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": { "type": { "const": "b" } },
+                        "required": ["type"]
+                    },
+                    "then": {
+                        "properties": { "value": { "type": "number", "minimum": 0 } }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": { "type": { "const": "c" } },
+                        "required": ["type"]
+                    },
+                    "then": {
+                        "properties": { "value": { "type": "boolean" } }
+                    }
+                }
+            ]
+        },
+        "if_with_ref_in_then": {
+            "type": "object",
+            "properties": {
+                "use_label": { "type": "boolean" },
+                "data": { "type": ["string", "null"] }
+            },
+            "required": ["use_label"],
+            "if": {
+                "properties": { "use_label": { "const": true } },
+                "required": ["use_label"]
+            },
+            "then": {
+                "properties": {
+                    "data": { "$ref": "#/$defs/string_label" }
+                },
+                "required": ["data"]
+            }
+        },
+        "if_then_object_with_nested_props": {
+            "type": "object",
+            "properties": {
+                "mode": { "type": "string", "enum": ["simple", "advanced"] },
+                "config": { "type": "object" }
+            },
+            "required": ["mode", "config"],
+            "if": {
+                "properties": { "mode": { "const": "simple" } },
+                "required": ["mode"]
+            },
+            "then": {
+                "properties": {
+                    "config": {
+                        "type": "object",
+                        "properties": {
+                            "enabled": { "type": "boolean" }
+                        },
+                        "required": ["enabled"],
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "else": {
+                "properties": {
+                    "config": {
+                        "type": "object",
+                        "properties": {
+                            "enabled": { "type": "boolean" },
+                            "level": { "type": "integer", "minimum": 1, "maximum": 10 },
+                            "tags": {
+                                "type": "array",
+                                "items": { "type": "string" },
+                                "minItems": 1,
+                                "maxItems": 3
+                            }
+                        },
+                        "required": ["enabled", "level"],
+                        "additionalProperties": false
+                    }
+                }
+            }
+        }
+    },
+    "required": [
+        "if_on_object_property",
+        "multiple_allof_if_then_else",
+        "if_with_ref_in_then",
+        "if_then_object_with_nested_props"
+    ],
+    "additionalProperties": false
+}

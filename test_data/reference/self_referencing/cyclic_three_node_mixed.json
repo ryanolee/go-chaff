@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Three-node mutual cycle: A -> B -> C -> A, each connected via $ref through different combinator types. A uses allOf to extend B, B uses oneOf branching to C, C uses anyOf branching back to A.",
+    "type": "object",
+    "$defs": {
+        "node_a": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "a_value": { "type": "string", "minLength": 1, "maxLength": 5 }
+                    },
+                    "required": ["a_value"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "to_b": { "$ref": "#/$defs/node_b" }
+                    }
+                }
+            ]
+        },
+        "node_b": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "b_leaf": { "type": "integer", "minimum": 0, "maximum": 50 }
+                    },
+                    "required": ["b_leaf"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "b_branch": { "type": "boolean" },
+                        "to_c": { "$ref": "#/$defs/node_c" }
+                    },
+                    "required": ["b_branch"]
+                }
+            ]
+        },
+        "node_c": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "c_leaf": { "type": "string", "enum": ["x", "y", "z"] }
+                    },
+                    "required": ["c_leaf"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "c_recurse": { "type": "boolean" },
+                        "back_to_a": { "$ref": "#/$defs/node_a" }
+                    },
+                    "required": ["c_recurse"]
+                }
+            ]
+        }
+    },
+    "properties": {
+        "start": { "$ref": "#/$defs/node_a" }
+    },
+    "required": ["start"]
+}

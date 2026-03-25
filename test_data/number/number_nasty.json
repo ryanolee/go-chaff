@@ -1,0 +1,116 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "tight_multipleOf_integer": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 20,
+            "multipleOf": 3
+        },
+        "multipleOf_exclusive_bounds": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "exclusiveMaximum": 1,
+            "multipleOf": 0.1
+        },
+        "multipleOf_matching_single_value": {
+            "type": "integer",
+            "minimum": 14,
+            "maximum": 16,
+            "multipleOf": 15
+        },
+        "integer_single_value_range": {
+            "type": "integer",
+            "minimum": 42,
+            "maximum": 43
+        },
+        "number_exclusive_hairline": {
+            "type": "number",
+            "exclusiveMinimum": 99.9,
+            "exclusiveMaximum": 100.1
+        },
+        "multipleOf_large_with_bounds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000,
+            "multipleOf": 997
+        },
+        "negative_exclusive_range": {
+            "type": "number",
+            "exclusiveMinimum": -10.5,
+            "exclusiveMaximum": -9.5
+        },
+        "mixed_bounds_tight": {
+            "type": "number",
+            "minimum": 5.0,
+            "exclusiveMaximum": 5.5
+        },
+        "integer_multipleOf_with_negative_range": {
+            "type": "integer",
+            "minimum": -100,
+            "maximum": -1,
+            "multipleOf": 7
+        },
+        "multipleOf_fraction_tight": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 0.5,
+            "multipleOf": 0.125
+        },
+        "integer_const_zero": {
+            "type": "integer",
+            "const": 0
+        },
+        "number_const_negative": {
+            "type": "number",
+            "const": -273.15
+        },
+        "enum_integers": {
+            "type": "integer",
+            "enum": [1, 1, 2, 3, 5, 8, 13, 21]
+        },
+        "enum_numbers_mixed": {
+            "type": "number",
+            "enum": [0.5, 1.0, 1.5, 2.0, 2.5]
+        },
+        "large_exclusive_bounds": {
+            "type": "integer",
+            "exclusiveMinimum": 999990,
+            "exclusiveMaximum": 1000010
+        },
+        "multipleOf_2_and_exclusive_min": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 10,
+            "multipleOf": 2
+        },
+        "number_or_null": {
+            "type": ["number", "null"]
+        },
+        "integer_or_null": {
+            "type": ["integer", "null"]
+        }
+    },
+    "required": [
+        "tight_multipleOf_integer",
+        "multipleOf_exclusive_bounds",
+        "multipleOf_matching_single_value",
+        "integer_single_value_range",
+        "number_exclusive_hairline",
+        "multipleOf_large_with_bounds",
+        "negative_exclusive_range",
+        "mixed_bounds_tight",
+        "integer_multipleOf_with_negative_range",
+        "multipleOf_fraction_tight",
+        "integer_const_zero",
+        "number_const_negative",
+        "enum_integers",
+        "enum_numbers_mixed",
+        "large_exclusive_bounds",
+        "multipleOf_2_and_exclusive_min",
+        "number_or_null",
+        "integer_or_null"
+    ],
+    "additionalProperties": false
+}

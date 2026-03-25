@@ -1,0 +1,173 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "email_type": {
+            "type": "string",
+            "format": "email"
+        },
+        "priority_level": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"]
+        },
+        "timestamp": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "non_empty_string": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+        },
+        "percentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+        },
+        "tag": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "metadata": {
+            "type": "object",
+            "properties": {
+                "created_at": { "$ref": "#/$defs/timestamp" },
+                "updated_at": { "$ref": "#/$defs/timestamp" },
+                "version": { "type": "integer", "minimum": 1 }
+            },
+            "required": ["version"]
+        }
+    },
+    "properties": {
+        "task": {
+            "type": "object",
+            "allOf": [
+                {
+                    "properties": {
+                        "title": { "$ref": "#/$defs/non_empty_string" },
+                        "description": { "type": ["string", "null"] },
+                        "priority": { "$ref": "#/$defs/priority_level" },
+                        "assignee": { "$ref": "#/$defs/email_type" },
+                        "tags": {
+                            "type": "array",
+                            "items": { "$ref": "#/$defs/tag" },
+                            "minItems": 0,
+                            "maxItems": 5,
+                            "uniqueItems": true
+                        },
+                        "progress": { "$ref": "#/$defs/percentage" },
+                        "meta": { "$ref": "#/$defs/metadata" }
+                    },
+                    "required": ["title", "priority", "meta"]
+                },
+                {
+                    "if": {
+                        "properties": { "priority": { "enum": ["high", "critical"] } },
+                        "required": ["priority"]
+                    },
+                    "then": {
+                        "required": ["assignee", "description"]
+                    }
+                }
+            ]
+        },
+        "config_entry": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "pattern": "^[A-Z][A-Z0-9_]*$"
+                },
+                "value": {
+                    "oneOf": [
+                        { "type": "string" },
+                        { "type": "number" },
+                        { "type": "boolean" },
+                        { "type": "null" },
+                        {
+                            "type": "array",
+                            "items": { "type": "string" },
+                            "maxItems": 10
+                        }
+                    ]
+                },
+                "overridable": { "type": "boolean" }
+            },
+            "required": ["key", "value"],
+            "additionalProperties": false
+        },
+        "status_report": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": ["healthy", "degraded", "down"]
+                },
+                "uptime_percent": {
+                    "allOf": [
+                        { "$ref": "#/$defs/percentage" },
+                        { "not": { "const": 0 } }
+                    ]
+                },
+                "checks": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string", "minLength": 1 },
+                            "passed": { "type": "boolean" },
+                            "latency_ms": { "type": "integer", "minimum": 0 }
+                        },
+                        "required": ["name", "passed"],
+                        "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 10
+                }
+            },
+            "required": ["status", "checks"],
+            "additionalProperties": false
+        },
+        "coordinates": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "number", "minimum": -180, "maximum": 180 },
+                { "type": "number", "minimum": -90, "maximum": 90 }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "versioned_record": {
+            "allOf": [
+                { "$ref": "#/$defs/metadata" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string", "pattern": "^[a-f0-9]{8}$" },
+                        "data": {
+                            "type": "object",
+                            "properties": {
+                                "label": { "$ref": "#/$defs/non_empty_string" },
+                                "weight": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 1000
+                                }
+                            },
+                            "required": ["label"]
+                        }
+                    },
+                    "required": ["id", "data"]
+                }
+            ]
+        }
+    },
+    "required": [
+        "task",
+        "config_entry",
+        "status_report",
+        "coordinates",
+        "versioned_record"
+    ],
+    "additionalProperties": false
+}

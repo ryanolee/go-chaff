@@ -1,0 +1,136 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "allOf merged with if/then/else: base type determined by allOf, then conditional refinement via if/then/else within and alongside allOf branches",
+    "type": "object",
+    "properties": {
+        "conditional_allof": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "type": "string", "enum": ["cat", "dog"] },
+                        "name": { "type": "string", "minLength": 1, "maxLength": 20 }
+                    },
+                    "required": ["kind", "name"]
+                },
+                {
+                    "if": {
+                        "properties": { "kind": { "const": "cat" } },
+                        "required": ["kind"]
+                    },
+                    "then": {
+                        "properties": {
+                            "purrs": { "type": "boolean" }
+                        },
+                        "required": ["purrs"]
+                    },
+                    "else": {
+                        "properties": {
+                            "barks": { "type": "boolean" }
+                        },
+                        "required": ["barks"]
+                    }
+                }
+            ]
+        },
+        "nested_if_in_allof": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "status": { "type": "string", "enum": ["active", "inactive"] }
+                    },
+                    "required": ["status"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "priority": { "type": "string", "enum": ["low", "high"] }
+                    },
+                    "required": ["priority"]
+                },
+                {
+                    "if": {
+                        "properties": { "status": { "const": "active" } },
+                        "required": ["status"]
+                    },
+                    "then": {
+                        "if": {
+                            "properties": { "priority": { "const": "high" } },
+                            "required": ["priority"]
+                        },
+                        "then": {
+                            "properties": {
+                                "escalated": { "const": true }
+                            },
+                            "required": ["escalated"]
+                        },
+                        "else": {
+                            "properties": {
+                                "escalated": { "const": false }
+                            },
+                            "required": ["escalated"]
+                        }
+                    },
+                    "else": {
+                        "properties": {
+                            "escalated": { "const": false }
+                        },
+                        "required": ["escalated"]
+                    }
+                }
+            ]
+        },
+        "if_with_allof_branches": {
+            "type": "object",
+            "properties": {
+                "mode": { "type": "string", "enum": ["simple", "advanced"] }
+            },
+            "required": ["mode"],
+            "if": {
+                "properties": { "mode": { "const": "advanced" } },
+                "required": ["mode"]
+            },
+            "then": {
+                "allOf": [
+                    {
+                        "properties": {
+                            "config": {
+                                "type": "object",
+                                "properties": {
+                                    "level": { "type": "integer", "minimum": 1, "maximum": 10 }
+                                },
+                                "required": ["level"]
+                            }
+                        },
+                        "required": ["config"]
+                    },
+                    {
+                        "properties": {
+                            "config": {
+                                "type": "object",
+                                "properties": {
+                                    "verbose": { "type": "boolean" }
+                                },
+                                "required": ["verbose"]
+                            }
+                        }
+                    }
+                ]
+            },
+            "else": {
+                "properties": {
+                    "config": {
+                        "type": "object",
+                        "properties": {
+                            "level": { "const": 1 }
+                        },
+                        "required": ["level"]
+                    }
+                },
+                "required": ["config"]
+            }
+        }
+    },
+    "required": ["conditional_allof", "nested_if_in_allof", "if_with_allof_branches"]
+}

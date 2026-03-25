@@ -1,0 +1,105 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Tests allOf where $ref targets themselves contain allOf. Validates that nested allOf merges are resolved transitively through references.",
+    "type": "object",
+    "$defs": {
+        "base_entity": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer", "minimum": 1, "maximum": 9999 }
+            },
+            "required": ["id"]
+        },
+        "timestamped": {
+            "type": "object",
+            "properties": {
+                "created_at": { "type": "string", "format": "date-time" }
+            }
+        },
+        "named_entity": {
+            "description": "A named entity that is also a base entity via allOf",
+            "allOf": [
+                { "$ref": "#/$defs/base_entity" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string", "minLength": 1, "maxLength": 100 }
+                    },
+                    "required": ["name"]
+                }
+            ]
+        },
+        "timestamped_entity": {
+            "description": "A timestamped entity that is also a base entity via allOf",
+            "allOf": [
+                { "$ref": "#/$defs/base_entity" },
+                { "$ref": "#/$defs/timestamped" }
+            ]
+        },
+        "full_entity": {
+            "description": "Combines named_entity (which itself has allOf) with timestamped",
+            "allOf": [
+                { "$ref": "#/$defs/named_entity" },
+                { "$ref": "#/$defs/timestamped" }
+            ]
+        },
+        "tagged_entity": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 30 },
+                    "maxItems": 5
+                }
+            }
+        }
+    },
+    "properties": {
+        "ref_to_allof_def": {
+            "description": "Simple $ref to a def that itself contains allOf. Should have 'id' and 'name'.",
+            "$ref": "#/$defs/named_entity"
+        },
+        "ref_to_double_allof_def": {
+            "description": "$ref to a def that allOf-merges two $refs (base_entity + timestamped). Should have 'id' and 'created_at'.",
+            "$ref": "#/$defs/timestamped_entity"
+        },
+        "ref_to_nested_allof_def": {
+            "description": "$ref to full_entity which itself refs named_entity (allOf with base_entity). Tests transitive allOf merging.",
+            "$ref": "#/$defs/full_entity"
+        },
+        "allof_of_allof_defs": {
+            "description": "allOf that merges two $refs where each is itself an allOf. Should merge named_entity and timestamped_entity.",
+            "allOf": [
+                { "$ref": "#/$defs/named_entity" },
+                { "$ref": "#/$defs/timestamped" }
+            ]
+        },
+        "allof_with_allof_ref_and_inline": {
+            "description": "allOf merging a $ref to an allOf-based def with an inline schema.",
+            "allOf": [
+                { "$ref": "#/$defs/named_entity" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "description": { "type": "string", "minLength": 0, "maxLength": 200 }
+                    }
+                }
+            ]
+        },
+        "allof_chain_three_deep": {
+            "description": "allOf chain: full_entity (refs named_entity which refs base_entity) + tagged_entity",
+            "allOf": [
+                { "$ref": "#/$defs/full_entity" },
+                { "$ref": "#/$defs/tagged_entity" }
+            ]
+        }
+    },
+    "required": [
+        "ref_to_allof_def",
+        "ref_to_double_allof_def",
+        "ref_to_nested_allof_def",
+        "allof_of_allof_defs",
+        "allof_with_allof_ref_and_inline",
+        "allof_chain_three_deep"
+    ]
+}

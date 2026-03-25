@@ -1,0 +1,170 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "deeply_nested_5_levels": {
+            "type": "object",
+            "properties": {
+                "l1": {
+                    "type": "object",
+                    "properties": {
+                        "l2": {
+                            "type": "object",
+                            "properties": {
+                                "l3": {
+                                    "type": "object",
+                                    "properties": {
+                                        "l4": {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": { "type": "string", "minLength": 1 }
+                                            },
+                                            "required": ["value"]
+                                        }
+                                    },
+                                    "required": ["l4"]
+                                }
+                            },
+                            "required": ["l3"]
+                        }
+                    },
+                    "required": ["l2"]
+                }
+            },
+            "required": ["l1"]
+        },
+        "pattern_and_regular_properties": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string", "minLength": 1, "maxLength": 50 },
+                "id": { "type": "integer", "minimum": 1 }
+            },
+            "patternProperties": {
+                "^x-": { "type": "string" },
+                "^meta_": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false,
+            "required": ["name", "id"]
+        },
+        "min_max_properties_with_required": {
+            "type": "object",
+            "properties": {
+                "a": { "type": "string" },
+                "b": { "type": "string" },
+                "c": { "type": "string" },
+                "d": { "type": "string" },
+                "e": { "type": "string" }
+            },
+            "required": ["a", "b"],
+            "minProperties": 2,
+            "maxProperties": 4,
+            "additionalProperties": false
+        },
+        "object_with_all_types": {
+            "type": "object",
+            "properties": {
+                "str_prop": { "type": "string", "minLength": 1 },
+                "int_prop": { "type": "integer", "minimum": 0 },
+                "num_prop": { "type": "number" },
+                "bool_prop": { "type": "boolean" },
+                "null_prop": { "type": "null" },
+                "arr_prop": { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 3 },
+                "obj_prop": {
+                    "type": "object",
+                    "properties": {
+                        "nested": { "type": "string" }
+                    },
+                    "required": ["nested"]
+                }
+            },
+            "required": ["str_prop", "int_prop", "num_prop", "bool_prop", "null_prop", "arr_prop", "obj_prop"],
+            "additionalProperties": false
+        },
+        "additional_properties_typed": {
+            "type": "object",
+            "properties": {
+                "known_field": { "type": "string", "const": "fixed" }
+            },
+            "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "required": ["known_field"],
+            "minProperties": 3,
+            "maxProperties": 5
+        },
+        "enum_valued_properties": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": ["active", "inactive", "pending"]
+                },
+                "priority": {
+                    "type": "integer",
+                    "enum": [1, 2, 3, 4, 5]
+                },
+                "flag": {
+                    "type": "boolean"
+                }
+            },
+            "required": ["status", "priority", "flag"],
+            "additionalProperties": false
+        },
+        "object_with_array_of_objects": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "key": { "type": "string", "pattern": "^[a-z_]+$" },
+                            "value": { "type": ["string", "number", "boolean"] }
+                        },
+                        "required": ["key", "value"],
+                        "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 5
+                },
+                "count": { "type": "integer", "minimum": 0 }
+            },
+            "required": ["items", "count"],
+            "additionalProperties": false
+        },
+        "object_const": {
+            "type": "object",
+            "const": { "fixed": true }
+        },
+        "object_with_number_constrained_props": {
+            "type": "object",
+            "properties": {
+                "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+                "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+                "alt": { "type": "number", "minimum": -500, "maximum": 50000 }
+            },
+            "required": ["lat", "lon"],
+            "additionalProperties": false
+        },
+        "multi_type_property": {
+            "type": "object",
+            "properties": {
+                "flexible": { "type": ["string", "integer", "null"] },
+                "stable": { "type": "string", "const": "always" }
+            },
+            "required": ["flexible", "stable"],
+            "additionalProperties": false
+        }
+    },
+    "required": [
+        "deeply_nested_5_levels",
+        "pattern_and_regular_properties",
+        "min_max_properties_with_required",
+        "object_with_all_types",
+        "additional_properties_typed",
+        "enum_valued_properties",
+        "object_with_array_of_objects",
+        "object_const",
+        "object_with_number_constrained_props",
+        "multi_type_property"
+    ],
+    "additionalProperties": false
+}

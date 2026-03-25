@@ -41,10 +41,36 @@ func newReferenceHandler(documentResolver *documentResolver) *referenceHandler {
 	}
 }
 
-func (h *referenceHandler) ParseNodeInScope(scope string, node schemaNode, metadata *parserMetadata) (Generator, error) {
+// ParseNodeInScope parses a schema node within the given reference-path scope.
+// If sourceSchemas are provided, any $ref values they carry are pushed onto the
+// reference resolver stack for the duration of the parse. This keeps cycle
+// detection (HasResolved) aware of the references that were already resolved
+// during the preceding merge, preventing infinite re-parsing of circular
+// definitions.
+func (h *referenceHandler) ParseNodeInScope(scope string, node schemaNode, metadata *parserMetadata, sourceSchemas ...schemaNode) (Generator, error) {
 	h.PushToPath(scope)
+	defer h.PopFromPath(scope)
+
+	// Push any $ref values from source schemas onto the resolution stack
+	// so nested merges/parses can detect cycles via HasResolved.
+	for _, src := range sourceSchemas {
+		if src.Ref == nil {
+			continue
+		}
+
+		documentId, path, err := metadata.DocumentResolver.ResolveDocumentIdAndPath(*src.Ref)
+		if err != nil {
+			metadata.Errors.AddErrorWithSubpath(fmt.Sprintf("%s/config_ref_resolution_error", scope), fmt.Errorf("failed to resolve document ID and path for ref '%s': %w", *src.Ref, err))
+			continue
+		}
+
+		metadata.ReferenceResolver.PushRefResolution(documentId, path)
+		defer metadata.ReferenceResolver.PopRefResolution()
+
+	}
+
 	generator, err := parseNode(node, metadata)
-	h.PopFromPath(scope)
+
 	return generator, err
 }
 

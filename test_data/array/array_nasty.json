@@ -1,0 +1,166 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "array_of_arrays": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "minItems": 1,
+                "maxItems": 5
+            },
+            "minItems": 2,
+            "maxItems": 4
+        },
+        "tuple_with_constrained_items": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string", "minLength": 3, "maxLength": 10 },
+                { "type": "integer", "minimum": 0, "maximum": 1000 },
+                { "type": "boolean" },
+                { "type": "string", "format": "ipv4" }
+            ],
+            "minItems": 4,
+            "maxItems": 4
+        },
+        "contains_with_min_max_and_items": {
+            "type": "array",
+            "items": { "type": ["string", "number"] },
+            "contains": { "type": "number", "minimum": 10 },
+            "minContains": 1,
+            "maxContains": 3,
+            "minItems": 3,
+            "maxItems": 8
+        },
+        "array_of_objects_with_required": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "integer", "minimum": 1 },
+                    "name": { "type": "string", "minLength": 1, "maxLength": 50 },
+                    "active": { "type": "boolean" }
+                },
+                "required": ["id", "name"],
+                "additionalProperties": false
+            },
+            "minItems": 2,
+            "maxItems": 5
+        },
+        "nested_tuple_of_tuples": {
+            "type": "array",
+            "prefixItems": [
+                {
+                    "type": "array",
+                    "prefixItems": [
+                        { "type": "string", "const": "header" },
+                        { "type": "integer" }
+                    ],
+                    "minItems": 2,
+                    "maxItems": 2
+                },
+                {
+                    "type": "array",
+                    "items": { "type": "number" },
+                    "minItems": 1,
+                    "maxItems": 3
+                }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "enum_arrays": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": ["red", "green", "blue", "yellow"]
+            },
+            "minItems": 2,
+            "maxItems": 4
+        },
+        "deeply_nested_array": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1, "maxLength": 5 },
+                    "minItems": 1,
+                    "maxItems": 2
+                },
+                "minItems": 1,
+                "maxItems": 2
+            },
+            "minItems": 1,
+            "maxItems": 3
+        },
+        "array_mixed_types_items": {
+            "type": "array",
+            "items": {
+                "type": ["string", "number", "boolean", "null"]
+            },
+            "minItems": 4,
+            "maxItems": 8
+        },
+        "prefixItems_with_additional_items_schema": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string", "minLength": 1 },
+                { "type": "integer", "minimum": 0 }
+            ],
+            "items": { "type": "boolean" },
+            "minItems": 4,
+            "maxItems": 6
+        },
+        "array_of_enums_unique": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot"]
+            },
+            "uniqueItems": true,
+            "minItems": 3,
+            "maxItems": 6
+        },
+        "tight_contains": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "contains": { "type": "integer", "minimum": 50, "maximum": 60 },
+            "minContains": 2,
+            "minItems": 3,
+            "maxItems": 6
+        },
+        "array_of_const": {
+            "type": "array",
+            "items": { "type": "string", "const": "fixed" },
+            "minItems": 3,
+            "maxItems": 3
+        },
+        "array_of_pattern_strings": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}-[0-9]{4}$"
+            },
+            "minItems": 2,
+            "maxItems": 5
+        }
+    },
+    "required": [
+        "array_of_arrays",
+        "tuple_with_constrained_items",
+        "contains_with_min_max_and_items",
+        "array_of_objects_with_required",
+        "nested_tuple_of_tuples",
+        "enum_arrays",
+        "deeply_nested_array",
+        "array_mixed_types_items",
+        "prefixItems_with_additional_items_schema",
+        "array_of_enums_unique",
+        "tight_contains",
+        "array_of_const",
+        "array_of_pattern_strings"
+    ],
+    "additionalProperties": false
+}

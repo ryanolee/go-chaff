@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "original_string": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 10
+        },
+        "original_number": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 99
+        },
+        "original_object": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string", "minLength": 1 },
+                "value": { "type": "number" }
+            },
+            "required": ["name"]
+        },
+        "original_array": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1,
+            "maxItems": 3
+        },
+        "ref_to_string": { "$ref": "#/properties/original_string" },
+        "ref_to_number": { "$ref": "#/properties/original_number" },
+        "ref_to_object": { "$ref": "#/properties/original_object" },
+        "ref_to_array": { "$ref": "#/properties/original_array" },
+        "ref_to_ref_string": { "$ref": "#/properties/ref_to_string" },
+        "ref_to_ref_number": { "$ref": "#/properties/ref_to_number" },
+        "ref_to_deep_prop": { "$ref": "#/properties/original_object/properties/name" },
+        "allof_mixing_refs_and_inline": {
+            "allOf": [
+                { "$ref": "#/properties/original_object" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "extra": { "$ref": "#/properties/original_string" }
+                    }
+                }
+            ]
+        },
+        "anyof_of_property_refs": {
+            "anyOf": [
+                { "$ref": "#/properties/original_string" },
+                { "$ref": "#/properties/original_number" }
+            ]
+        }
+    },
+    "required": ["original_string", "original_number", "original_object", "original_array"]
+}

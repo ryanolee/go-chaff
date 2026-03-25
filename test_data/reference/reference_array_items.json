@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "string_item": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10
+        },
+        "number_item": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+        },
+        "coord": {
+            "type": "object",
+            "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" }
+            },
+            "required": ["x", "y"]
+        }
+    },
+    "properties": {
+        "names": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/string_item" },
+            "minItems": 1,
+            "maxItems": 5
+        },
+        "scores": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/number_item" },
+            "minItems": 2,
+            "maxItems": 4,
+            "uniqueItems": true
+        },
+        "points": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/coord" },
+            "minItems": 1,
+            "maxItems": 3
+        },
+        "mixed_tuple": {
+            "type": "array",
+            "prefixItems": [
+                { "$ref": "#/$defs/string_item" },
+                { "$ref": "#/$defs/number_item" },
+                { "$ref": "#/$defs/coord" }
+            ],
+            "minItems": 3,
+            "maxItems": 3
+        },
+        "contains_ref": {
+            "type": "array",
+            "items": { "type": "number" },
+            "contains": { "$ref": "#/$defs/number_item" },
+            "minItems": 2,
+            "maxItems": 5
+        },
+        "ref_to_items_property": {
+            "$ref": "#/properties/names"
+        }
+    },
+    "required": ["names", "scores", "points", "mixed_tuple"]
+}

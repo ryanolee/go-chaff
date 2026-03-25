@@ -67,14 +67,22 @@ func resolveMinMaxForNode(node schemaNode, mustBeAnInteger bool) (float64, float
 	var min float64 = math.Inf(-1)
 	var max float64 = math.Inf(1)
 
+	// For integers, exclusive bounds need an offset of 1 so that
+	// math.Ceil / math.Floor produce a value strictly inside the bound.
+	// For floats the tiny infinitesimal offset is sufficient.
+	exclusiveOffset := infinitesimal
+	if mustBeAnInteger {
+		exclusiveOffset = 1.0
+	}
+
 	// Initial Validation
 	min = util.GetZeroIfNil(
-		util.MaxFloatPtr(node.Minimum, addIfNotNilFloat64(node.ExclusiveMinimum, infinitesimal)),
+		util.MaxFloatPtr(node.Minimum, addIfNotNilFloat64(node.ExclusiveMinimum, exclusiveOffset)),
 		math.Inf(-1),
 	)
 
 	max = util.GetZeroIfNil(
-		util.MinFloatPtr(node.Maximum, addIfNotNilFloat64(node.ExclusiveMaximum, -infinitesimal)),
+		util.MinFloatPtr(node.Maximum, addIfNotNilFloat64(node.ExclusiveMaximum, -exclusiveOffset)),
 		math.Inf(1),
 	)
 

@@ -1,0 +1,116 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "positive_integer": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+        },
+        "short_string": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5
+        },
+        "long_string": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 50
+        },
+        "small_object": {
+            "type": "object",
+            "properties": {
+                "key": { "type": "string", "minLength": 1 }
+            },
+            "required": ["key"]
+        },
+        "tagged_thing": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "maxItems": 3
+                }
+            }
+        }
+    },
+    "properties": {
+        "allof_with_anyof_refs": {
+            "allOf": [
+                { "$ref": "#/$defs/small_object" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "value": {
+                            "anyOf": [
+                                { "$ref": "#/$defs/short_string" },
+                                { "$ref": "#/$defs/positive_integer" }
+                            ]
+                        }
+                    },
+                    "required": ["value"]
+                }
+            ]
+        },
+        "anyof_containing_allof_refs": {
+            "anyOf": [
+                {
+                    "allOf": [
+                        { "$ref": "#/$defs/small_object" },
+                        { "$ref": "#/$defs/tagged_thing" }
+                    ]
+                },
+                { "$ref": "#/$defs/short_string" }
+            ]
+        },
+        "not_with_ref_inside_allof": {
+            "allOf": [
+                {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 50
+                },
+                {
+                    "not": { "$ref": "#/$defs/short_string" }
+                }
+            ]
+        },
+        "ref_in_oneof_with_allof_sibling": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": { "$ref": "#/$defs/positive_integer" }
+                    },
+                    "required": ["id"]
+                }
+            ],
+            "oneOf": [
+                { "$ref": "#/$defs/small_object" },
+                { "$ref": "#/$defs/tagged_thing" }
+            ]
+        },
+        "deeply_nested_refs": {
+            "type": "object",
+            "properties": {
+                "outer": {
+                    "type": "object",
+                    "properties": {
+                        "middle": {
+                            "type": "object",
+                            "properties": {
+                                "inner_value": { "$ref": "#/$defs/positive_integer" },
+                                "inner_label": { "$ref": "#/$defs/short_string" }
+                            },
+                            "required": ["inner_value"]
+                        }
+                    },
+                    "required": ["middle"]
+                }
+            },
+            "required": ["outer"]
+        }
+    },
+    "required": ["allof_with_anyof_refs", "deeply_nested_refs"]
+}

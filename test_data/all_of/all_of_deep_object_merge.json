@@ -1,0 +1,91 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "allOf merging deeply nested objects where each allOf branch adds deeper layers of properties, with not and if at leaf levels",
+    "type": "object",
+    "properties": {
+        "deep_merge": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "level1": {
+                            "type": "object",
+                            "properties": {
+                                "level2": {
+                                    "type": "object",
+                                    "properties": {
+                                        "a": { "type": "string", "minLength": 1, "maxLength": 5 }
+                                    },
+                                    "required": ["a"]
+                                }
+                            },
+                            "required": ["level2"]
+                        }
+                    },
+                    "required": ["level1"]
+                },
+                {
+                    "properties": {
+                        "level1": {
+                            "properties": {
+                                "level2": {
+                                    "properties": {
+                                        "b": { "type": "integer", "minimum": 1, "maximum": 10 }
+                                    },
+                                    "required": ["b"]
+                                },
+                                "level2_sibling": {
+                                    "type": "object",
+                                    "properties": {
+                                        "x": { "type": "boolean" }
+                                    },
+                                    "required": ["x"]
+                                }
+                            },
+                            "required": ["level2_sibling"]
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "level1": {
+                            "properties": {
+                                "level2": {
+                                    "properties": {
+                                        "c": {
+                                            "allOf": [
+                                                { "type": "string", "enum": ["red", "green", "blue", "banned"] },
+                                                { "not": { "const": "banned" } }
+                                            ]
+                                        }
+                                    },
+                                    "required": ["c"]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "level1": {
+                            "properties": {
+                                "level2": {
+                                    "if": {
+                                        "properties": { "a": { "const": "hello" } },
+                                        "required": ["a"]
+                                    },
+                                    "then": {
+                                        "properties": {
+                                            "b": { "const": 7 }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "required": ["deep_merge"]
+}

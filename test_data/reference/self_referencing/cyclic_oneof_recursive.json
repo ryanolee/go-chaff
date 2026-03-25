@@ -1,0 +1,31 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Cyclic oneOf: a tagged union where one variant recursively contains the union again.",
+    "type": "object",
+    "$defs": {
+        "expression": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "literal" },
+                        "value": { "type": "integer", "minimum": 0, "maximum": 100 }
+                    },
+                    "required": ["type", "value"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "negate" },
+                        "operand": { "$ref": "#/$defs/expression" }
+                    },
+                    "required": ["type", "operand"]
+                }
+            ]
+        }
+    },
+    "properties": {
+        "expr": { "$ref": "#/$defs/expression" }
+    },
+    "required": ["expr"]
+}
