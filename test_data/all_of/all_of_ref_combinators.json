@@ -1,0 +1,96 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Tests allOf where $ref targets contain oneOf or anyOf combinators. Validates that merging preserves combinator semantics through references.",
+    "type": "object",
+    "$defs": {
+        "base_object": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer", "minimum": 1, "maximum": 999 }
+            },
+            "required": ["id"]
+        },
+        "has_string_or_number_value": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "anyOf": [
+                        { "type": "string", "minLength": 1, "maxLength": 20 },
+                        { "type": "integer", "minimum": 0, "maximum": 100 }
+                    ]
+                }
+            },
+            "required": ["value"]
+        },
+        "has_status_oneof": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "oneOf": [
+                        { "const": "active" },
+                        { "const": "inactive" }
+                    ]
+                }
+            },
+            "required": ["status"]
+        },
+        "has_flexible_label": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "anyOf": [
+                        { "type": "string", "minLength": 1, "maxLength": 30 },
+                        { "type": "null" }
+                    ]
+                }
+            }
+        }
+    },
+    "properties": {
+        "allof_ref_with_anyof_property": {
+            "description": "allOf merging base_object with a def that has an anyOf property. Should produce object with 'id' and 'value' (string or number).",
+            "allOf": [
+                { "$ref": "#/$defs/base_object" },
+                { "$ref": "#/$defs/has_string_or_number_value" }
+            ]
+        },
+        "allof_ref_with_oneof_property": {
+            "description": "allOf merging base_object with a def that has a oneOf property. Should produce object with 'id' and 'status' (active or inactive).",
+            "allOf": [
+                { "$ref": "#/$defs/base_object" },
+                { "$ref": "#/$defs/has_status_oneof" }
+            ]
+        },
+        "allof_three_refs_mixed_combinators": {
+            "description": "allOf merging three $refs: base, one with anyOf, one with oneOf.",
+            "allOf": [
+                { "$ref": "#/$defs/base_object" },
+                { "$ref": "#/$defs/has_string_or_number_value" },
+                { "$ref": "#/$defs/has_status_oneof" }
+            ]
+        },
+        "allof_ref_nullable_label": {
+            "description": "allOf merging base_object with flexible_label (anyOf with null). Should produce object with 'id' and optionally null 'label'.",
+            "allOf": [
+                { "$ref": "#/$defs/base_object" },
+                { "$ref": "#/$defs/has_flexible_label" }
+            ]
+        },
+        "allof_all_combinator_defs": {
+            "description": "allOf merging all four $refs: base + anyOf + oneOf + nullable.",
+            "allOf": [
+                { "$ref": "#/$defs/base_object" },
+                { "$ref": "#/$defs/has_string_or_number_value" },
+                { "$ref": "#/$defs/has_status_oneof" },
+                { "$ref": "#/$defs/has_flexible_label" }
+            ]
+        }
+    },
+    "required": [
+        "allof_ref_with_anyof_property",
+        "allof_ref_with_oneof_property",
+        "allof_three_refs_mixed_combinators",
+        "allof_ref_nullable_label",
+        "allof_all_combinator_defs"
+    ]
+}

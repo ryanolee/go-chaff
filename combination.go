@@ -63,8 +63,8 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 		}
 
 		refPath := fmt.Sprintf("/%s/%d", nodeType, i)
+		generator, err := ref.ParseNodeInScope(refPath, mergedNode, metadata, subSchema)
 
-		generator, err := ref.ParseNodeInScope(refPath, mergedNode, metadata)
 		if err != nil {
 			metadata.Errors.AddErrorWithSubpath(refPath, fmt.Errorf("failed to parse %s sub-schema: %w", nodeType, err))
 			generators = append(generators, nullGenerator{})
@@ -114,6 +114,10 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 }
 
 func (g combinationGenerator) Generate(opts *GeneratorOptions) interface{} {
+	opts.overallComplexity++
+	if opts.ShouldCutoff() {
+		return nil
+	}
 	// Select a random generator
 	generator := g.Generators[opts.Rand.RandomInt(0, len(g.Generators))]
 	return generator.Generate(opts)
@@ -151,7 +155,8 @@ func NewOneOfConstraint(node schemaNode, metadata *parserMetadata) (*oneOfConstr
 }
 
 func (oc *oneOfConstraint) Apply(generator Generator, generatorOptions *GeneratorOptions, generatedValue interface{}) interface{} {
-	for i := 0; i < generatorOptions.MaximumOneOfAttempts; i++ {
+	maxAttempts := generatorOptions.ScaledRetryBudget(generatorOptions.MaximumOneOfAttempts)
+	for i := 0; i < maxAttempts; i++ {
 		generatorOptions.overallComplexity++
 		if oc.constraintPassed(generatedValue) {
 			return generatedValue
@@ -160,7 +165,7 @@ func (oc *oneOfConstraint) Apply(generator Generator, generatorOptions *Generato
 		generatedValue = generator.Generate(generatorOptions)
 	}
 
-	return fmt.Sprintf("Failed to generate a valid value for the following oneOf constraint after %d attempts", generatorOptions.MaximumOneOfAttempts)
+	return fmt.Sprintf("Failed to generate a valid value for the following oneOf constraint after %d attempts", maxAttempts)
 }
 
 func (oc *oneOfConstraint) constraintPassed(value interface{}) bool {
@@ -185,6 +190,9 @@ func (oc *oneOfConstraint) String() string {
 
 func (g constrainedGenerator) Generate(opts *GeneratorOptions) interface{} {
 	generatedValue := g.internalGenerator.Generate(opts)
+	if opts.ShouldCutoff() {
+		return generatedValue
+	}
 	for _, constraint := range g.constraints {
 		opts.overallComplexity++
 		generatedValue = constraint.Apply(g.internalGenerator, opts, generatedValue)

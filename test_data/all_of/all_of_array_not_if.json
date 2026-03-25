@@ -1,0 +1,91 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "allOf inside array items and tuple positions with not constraints and conditional logic",
+    "type": "object",
+    "properties": {
+        "tagged_list": {
+            "type": "array",
+            "items": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "tag": { "type": "string", "minLength": 1, "maxLength": 10 },
+                            "value": { "type": "integer", "minimum": 0, "maximum": 100 }
+                        },
+                        "required": ["tag", "value"]
+                    },
+                    {
+                        "not": {
+                            "properties": { "tag": { "const": "banned" } },
+                            "required": ["tag"]
+                        }
+                    }
+                ]
+            },
+            "minItems": 1,
+            "maxItems": 3
+        },
+        "mixed_tuple": {
+            "type": "array",
+            "prefixItems": [
+                {
+                    "allOf": [
+                        { "type": "string", "minLength": 1, "maxLength": 5 },
+                        { "not": { "const": "bad" } }
+                    ]
+                },
+                {
+                    "allOf": [
+                        { "type": "integer", "minimum": 0, "maximum": 100 },
+                        { "not": { "enum": [13, 42, 666] } }
+                    ]
+                },
+                {
+                    "oneOf": [
+                        {
+                            "allOf": [
+                                { "type": "boolean" }
+                            ]
+                        },
+                        { "type": "null" }
+                    ]
+                }
+            ],
+            "minItems": 3,
+            "maxItems": 3
+        },
+        "conditional_items": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "type": { "type": "string", "enum": ["header", "body"] },
+                    "content": { "type": "string", "minLength": 1, "maxLength": 30 }
+                },
+                "required": ["type", "content"],
+                "allOf": [
+                    {
+                        "if": {
+                            "properties": { "type": { "const": "header" } },
+                            "required": ["type"]
+                        },
+                        "then": {
+                            "properties": {
+                                "content": { "type": "string", "maxLength": 10 }
+                            }
+                        },
+                        "else": {
+                            "properties": {
+                                "content": { "type": "string", "minLength": 5 }
+                            }
+                        }
+                    }
+                ]
+            },
+            "minItems": 1,
+            "maxItems": 3
+        }
+    },
+    "required": ["tagged_list", "mixed_tuple", "conditional_items"]
+}

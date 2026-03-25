@@ -94,7 +94,10 @@ func parseIfBody(metadata *parserMetadata, field string, parentScope schemaNode,
 		return nil
 	}
 
-	generator, err := metadata.ReferenceHandler.ParseNodeInScope(field, mergedNode, metadata)
+	// Pass bodyNode as a source schema so ParseNodeInScope tracks any $ref
+	// on the resolution stack, preventing cyclic re-parsing.
+	generator, err := metadata.ReferenceHandler.ParseNodeInScope(field, mergedNode, metadata, *bodyNode)
+
 	if err != nil {
 		warnField(metadata, field, err)
 		return nil
@@ -146,9 +149,8 @@ func (s ifStatement) Compile(node schemaNode, metadata *parserMetadata, field st
 func (g ifConstraint) AttemptToSatisfyIfStatement(generatorOptions *GeneratorOptions, generatedValue interface{}, mustExactlySatisfy bool) (interface{}, bool) {
 	if g.conditionFunc(generatedValue) {
 		if g.thenGenerator == nil {
-			if mustExactlySatisfy {
-				return nil, false
-			}
+			// Per JSON Schema: if the condition matches and there is no "then",
+			// no additional constraints apply — the value is valid as-is.
 			return generatedValue, true
 		}
 
@@ -158,9 +160,8 @@ func (g ifConstraint) AttemptToSatisfyIfStatement(generatorOptions *GeneratorOpt
 		}
 	} else {
 		if g.elseGenerator == nil {
-			if mustExactlySatisfy {
-				return nil, false
-			}
+			// Per JSON Schema: if the condition does not match and there is no "else",
+			// no additional constraints apply — the value is valid as-is.
 			return generatedValue, true
 		}
 
@@ -176,7 +177,8 @@ func (g ifConstraint) AttemptToSatisfyIfStatement(generatorOptions *GeneratorOpt
 // Attempt to satisfy the if constraint by shoving the generated value through the then subschma
 // and attempting to satisfy the clause again with the subsequent value.
 func (g ifConstraint) Apply(generator Generator, generatorOptions *GeneratorOptions, generatedValue interface{}) interface{} {
-	for i := 0; i < generatorOptions.MaximumIfAttempts; i++ {
+	maxAttempts := generatorOptions.ScaledRetryBudget(generatorOptions.MaximumIfAttempts)
+	for i := 0; i < maxAttempts; i++ {
 		generatorOptions.overallComplexity++
 		if satisfiedValue, satisfied := g.AttemptToSatisfyIfStatement(generatorOptions, generatedValue, false); satisfied {
 			return satisfiedValue
@@ -185,7 +187,7 @@ func (g ifConstraint) Apply(generator Generator, generatorOptions *GeneratorOpti
 		generatedValue = generator.Generate(generatorOptions)
 	}
 
-	return fmt.Sprintf("Failed to generate a valid value for the following if constraint after %d attempts", generatorOptions.MaximumUniqueGeneratorAttempts)
+	return fmt.Sprintf("Failed to generate a valid value for the following if constraint after %d attempts", maxAttempts)
 }
 
 func (g ifConstraint) String() string {
@@ -193,16 +195,31 @@ func (g ifConstraint) String() string {
 }
 
 func (g multipleIfConstraints) Apply(generator Generator, generatorOptions *GeneratorOptions, generatedValue interface{}) interface{} {
-	// Behavior change if there are multiple if constraints (Where only a direct hit on the then/else will satisfy the constraint)
-	mustExactlySatisfy := len(g.constraints) >= 1
+	maxAttempts := generatorOptions.ScaledRetryBudget(generatorOptions.MaximumIfAttempts)
 
-	// Brute force against all constraints in random order to try and satisfy at least one
-	for i := 0; i < generatorOptions.MaximumIfAttempts; i++ {
+	// Brute force: regenerate until all constraints are satisfied
+	for i := 0; i < maxAttempts; i++ {
+		generatorOptions.overallComplexity++
+
+		currentValue := generatedValue
+		allSatisfied := true
+
 		for _, constraintIdx := range generatorOptions.Rand.Rand.Perm(len(g.constraints)) {
-			if satisfiedValue, satisfied := g.constraints[constraintIdx].AttemptToSatisfyIfStatement(generatorOptions, generatedValue, mustExactlySatisfy); satisfied {
-				return satisfiedValue
+			if satisfiedValue, satisfied := g.constraints[constraintIdx].AttemptToSatisfyIfStatement(generatorOptions, currentValue, true); satisfied {
+				currentValue = satisfiedValue
+			} else {
+				allSatisfied = false
+				break
 			}
 		}
+
+		if allSatisfied {
+			return currentValue
+		}
+
+		// Regenerate the value for the next attempt, so different random choices
+		// (e.g. enum values, oneOf branches) can lead to satisfiable conditions.
+		generatedValue = generator.Generate(generatorOptions)
 	}
 
 	return fmt.Sprintf("Failed to generate a valid value for the following if constraints after %d attempts: [%s]",

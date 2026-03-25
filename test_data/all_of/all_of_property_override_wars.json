@@ -1,0 +1,124 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "allOf property override wars: multiple allOf branches try to constrain the same property in conflicting/overlapping ways using not, enum, const, min/max, and if/then/else",
+    "type": "object",
+    "properties": {
+        "constrained_number": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "val": { "type": "integer", "minimum": 0, "maximum": 100 }
+                    },
+                    "required": ["val"]
+                },
+                {
+                    "properties": {
+                        "val": { "type": "integer", "minimum": 10, "maximum": 90 }
+                    }
+                },
+                {
+                    "properties": {
+                        "val": { "type": "integer", "minimum": 20, "maximum": 80 }
+                    }
+                },
+                {
+                    "not": {
+                        "properties": { "val": { "const": 50 } },
+                        "required": ["val"]
+                    }
+                },
+                {
+                    "not": {
+                        "properties": { "val": { "enum": [30, 40, 60, 70] } },
+                        "required": ["val"]
+                    }
+                }
+            ]
+        },
+        "string_tightening": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "label": { "type": "string", "minLength": 1, "maxLength": 100 }
+                    },
+                    "required": ["label"]
+                },
+                {
+                    "properties": {
+                        "label": { "maxLength": 50 }
+                    }
+                },
+                {
+                    "properties": {
+                        "label": { "minLength": 3, "maxLength": 30 }
+                    }
+                },
+                {
+                    "properties": {
+                        "label": { "minLength": 5, "maxLength": 20 }
+                    }
+                }
+            ]
+        },
+        "required_accumulation": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "a": { "type": "string", "minLength": 1, "maxLength": 5 },
+                        "b": { "type": "integer", "minimum": 0, "maximum": 10 },
+                        "c": { "type": "boolean" },
+                        "d": { "type": "string", "enum": ["x", "y"] }
+                    },
+                    "required": ["a"]
+                },
+                {
+                    "required": ["b"]
+                },
+                {
+                    "required": ["c"]
+                },
+                {
+                    "required": ["d"]
+                }
+            ]
+        },
+        "conditional_constraint_war": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "mode": { "type": "string", "enum": ["fast", "slow"] },
+                        "speed": { "type": "integer", "minimum": 1, "maximum": 100 }
+                    },
+                    "required": ["mode", "speed"]
+                },
+                {
+                    "if": {
+                        "properties": { "mode": { "const": "fast" } },
+                        "required": ["mode"]
+                    },
+                    "then": {
+                        "properties": {
+                            "speed": { "type": "integer", "minimum": 50, "maximum": 100 }
+                        }
+                    },
+                    "else": {
+                        "properties": {
+                            "speed": { "type": "integer", "minimum": 1, "maximum": 50 }
+                        }
+                    }
+                },
+                {
+                    "not": {
+                        "properties": { "speed": { "const": 50 } },
+                        "required": ["speed"]
+                    }
+                }
+            ]
+        }
+    },
+    "required": ["constrained_number", "string_tightening", "required_accumulation", "conditional_constraint_war"]
+}

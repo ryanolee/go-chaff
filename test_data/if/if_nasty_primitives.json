@@ -1,0 +1,57 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "if_then_on_number_range": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "if": { "minimum": 50 },
+            "then": { "multipleOf": 10 },
+            "else": { "multipleOf": 5 }
+        },
+        "if_then_string_length": {
+            "type": "string",
+            "enum": ["ab", "cd", "abcdefghijk", "mnopqrstuvwx"],
+            "if": { "maxLength": 5 },
+            "then": { "enum": ["ab", "cd"] },
+            "else": { "enum": ["abcdefghijk", "mnopqrstuvwx"] }
+        },
+        "if_then_only_no_else": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200,
+            "if": { "maximum": 100 },
+            "then": { "multipleOf": 2 }
+        },
+        "if_else_only_no_then": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200,
+            "if": { "maximum": 50 },
+            "else": { "minimum": 100 }
+        },
+        "if_on_boolean_const": {
+            "type": ["boolean", "string"],
+            "if": { "type": "boolean" },
+            "then": { "const": true },
+            "else": { "minLength": 1 }
+        },
+        "if_then_enum_selection": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "if": { "enum": ["low", "medium"] },
+            "then": { "enum": ["low", "medium"] },
+            "else": { "enum": ["high", "critical"] }
+        }
+    },
+    "required": [
+        "if_then_on_number_range",
+        "if_then_string_length",
+        "if_then_only_no_else",
+        "if_else_only_no_then",
+        "if_on_boolean_const",
+        "if_then_enum_selection"
+    ],
+    "additionalProperties": false
+}

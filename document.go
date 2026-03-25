@@ -224,7 +224,7 @@ func (r *documentResolver) HandleDeferredReferenceResolution(ref string, metadat
 
 	// If we have no document, it is a local or relative reference and can be handled as such
 	if !hasDocument || documentID == "" || r.HasNoFetchers() {
-		return r.GetCurrentScope(), ref, nil
+		return r.GetCurrentScope(), path, nil
 	}
 
 	fetcher, err := r.getFetcherForRef(documentID)

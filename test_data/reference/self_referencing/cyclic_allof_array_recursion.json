@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Array-based recursion through allOf: a list node whose items allOf-extend a base and optionally contain nested list nodes. Tests cyclic references in array items through allOf merging.",
+    "type": "object",
+    "$defs": {
+        "base_item": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string", "minLength": 1, "maxLength": 10 }
+            },
+            "required": ["name"]
+        },
+        "list_node": {
+            "allOf": [
+                { "$ref": "#/$defs/base_item" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "children": {
+                            "type": "array",
+                            "items": { "$ref": "#/$defs/list_node" },
+                            "maxItems": 2
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "properties": {
+        "root_list": { "$ref": "#/$defs/list_node" }
+    },
+    "required": ["root_list"]
+}

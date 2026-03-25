@@ -1,0 +1,109 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "allOf wrapping oneOf wrapping anyOf wrapping allOf, multiple layers deep with not constraints mixed in",
+    "type": "object",
+    "properties": {
+        "layer_cake": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "base": { "type": "string", "minLength": 1, "maxLength": 5 }
+                    },
+                    "required": ["base"]
+                },
+                {
+                    "oneOf": [
+                        {
+                            "properties": {
+                                "flavor": { "const": "chocolate" },
+                                "layers": {
+                                    "anyOf": [
+                                        {
+                                            "allOf": [
+                                                { "type": "integer", "minimum": 1, "maximum": 3 },
+                                                { "not": { "const": 2 } }
+                                            ]
+                                        },
+                                        { "type": "integer", "minimum": 4, "maximum": 6 }
+                                    ]
+                                }
+                            },
+                            "required": ["flavor", "layers"]
+                        },
+                        {
+                            "properties": {
+                                "flavor": { "const": "vanilla" },
+                                "layers": { "type": "integer", "minimum": 1, "maximum": 2 }
+                            },
+                            "required": ["flavor", "layers"]
+                        }
+                    ]
+                }
+            ]
+        },
+        "combinator_tower": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "integer", "minimum": 1, "maximum": 100 }
+                    },
+                    "required": ["id"]
+                },
+                {
+                    "oneOf": [
+                        {
+                            "properties": {
+                                "category": { "const": "A" },
+                                "detail": {
+                                    "anyOf": [
+                                        {
+                                            "allOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "sub": { "type": "string", "enum": ["x", "y"] }
+                                                    },
+                                                    "required": ["sub"]
+                                                },
+                                                {
+                                                    "not": {
+                                                        "properties": { "sub": { "const": "y" } },
+                                                        "required": ["sub"]
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "sub": { "const": "z" }
+                                            },
+                                            "required": ["sub"]
+                                        }
+                                    ]
+                                }
+                            },
+                            "required": ["category", "detail"]
+                        },
+                        {
+                            "properties": {
+                                "category": { "const": "B" },
+                                "detail": {
+                                    "type": "object",
+                                    "properties": {
+                                        "sub": { "type": "string", "minLength": 1, "maxLength": 3 }
+                                    },
+                                    "required": ["sub"]
+                                }
+                            },
+                            "required": ["category", "detail"]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "required": ["layer_cake", "combinator_tower"]
+}

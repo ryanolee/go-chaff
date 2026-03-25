@@ -1,0 +1,180 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "base_entity": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer", "minimum": 1 },
+                "created": { "type": "string", "format": "date-time" }
+            },
+            "required": ["id"]
+        },
+        "named_entity": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string", "minLength": 1, "maxLength": 100 }
+            },
+            "required": ["name"]
+        },
+        "tagged_entity": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1 },
+                    "minItems": 0,
+                    "maxItems": 5
+                }
+            }
+        }
+    },
+    "properties": {
+        "allOf_merge_three_refs": {
+            "allOf": [
+                { "$ref": "#/$defs/base_entity" },
+                { "$ref": "#/$defs/named_entity" },
+                { "$ref": "#/$defs/tagged_entity" }
+            ]
+        },
+        "allOf_with_not": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "allOf": [
+                { "not": { "const": 13 } },
+                { "not": { "const": 42 } }
+            ]
+        },
+        "allOf_string_constraints": {
+            "type": "string",
+            "allOf": [
+                { "minLength": 5 },
+                { "maxLength": 20 },
+                { "not": { "const": "hello" } }
+            ]
+        },
+        "allOf_number_narrowing": {
+            "type": "number",
+            "allOf": [
+                { "minimum": 0 },
+                { "maximum": 100 },
+                { "exclusiveMinimum": 0 },
+                { "exclusiveMaximum": 100 }
+            ]
+        },
+        "allOf_object_property_merge": {
+            "type": "object",
+            "allOf": [
+                {
+                    "properties": {
+                        "a": { "type": "string" },
+                        "b": { "type": "integer" }
+                    },
+                    "required": ["a"]
+                },
+                {
+                    "properties": {
+                        "c": { "type": "boolean" },
+                        "d": { "type": "number" }
+                    },
+                    "required": ["c"]
+                }
+            ]
+        },
+        "allOf_with_if_then_else": {
+            "type": "object",
+            "properties": {
+                "mode": { "type": "string", "enum": ["read", "write"] },
+                "data": { "type": "string", "minLength": 1 }
+            },
+            "required": ["mode", "data"],
+            "allOf": [
+                {
+                    "if": {
+                        "properties": { "mode": { "const": "write" } },
+                        "required": ["mode"]
+                    },
+                    "then": {
+                        "properties": {
+                            "data": { "minLength": 5, "maxLength": 100 }
+                        }
+                    },
+                    "else": {
+                        "properties": {
+                            "data": { "minLength": 1, "maxLength": 10 }
+                        }
+                    }
+                }
+            ]
+        },
+        "allOf_array_constraints": {
+            "type": "array",
+            "allOf": [
+                { "minItems": 3 },
+                { "maxItems": 7 },
+                { "items": { "type": "integer", "minimum": 0 } }
+            ]
+        },
+        "allOf_with_enum_narrowing": {
+            "type": "string",
+            "allOf": [
+                { "enum": ["alpha", "bravo", "charlie", "delta"] },
+                { "enum": ["bravo", "charlie", "echo", "delta"] }
+            ]
+        },
+        "allOf_deep_property_chain": {
+            "type": "object",
+            "allOf": [
+                {
+                    "properties": {
+                        "meta": {
+                            "type": "object",
+                            "properties": {
+                                "version": { "type": "integer", "minimum": 1 }
+                            },
+                            "required": ["version"]
+                        }
+                    },
+                    "required": ["meta"]
+                },
+                {
+                    "properties": {
+                        "meta": {
+                            "type": "object",
+                            "properties": {
+                                "author": { "type": "string", "minLength": 1 }
+                            },
+                            "required": ["author"]
+                        }
+                    }
+                }
+            ]
+        },
+        "allOf_ref_with_override": {
+            "allOf": [
+                { "$ref": "#/$defs/base_entity" },
+                {
+                    "properties": {
+                        "id": { "minimum": 1000 },
+                        "status": { "type": "string", "enum": ["active", "archived"] }
+                    },
+                    "required": ["status"]
+                }
+            ]
+        }
+    },
+    "required": [
+        "allOf_merge_three_refs",
+        "allOf_with_not",
+        "allOf_string_constraints",
+        "allOf_number_narrowing",
+        "allOf_object_property_merge",
+        "allOf_with_if_then_else",
+        "allOf_array_constraints",
+        "allOf_with_enum_narrowing",
+        "allOf_deep_property_chain",
+        "allOf_ref_with_override"
+    ],
+    "additionalProperties": false
+}

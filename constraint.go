@@ -102,6 +102,23 @@ func (cc *constraintCollection) AddMustNotHaveProperties(properties []string) {
 	cc.mustNotHaveProperties = append(cc.mustNotHaveProperties, properties...)
 }
 
+// Merge incorporates all constraints from another constraintCollection into this one.
+func (cc *constraintCollection) Merge(other *constraintCollection) {
+	if other == nil {
+		return
+	}
+	for k, v := range other.notMatchingRegexConstraints {
+		cc.notMatchingRegexConstraints[k] = v
+	}
+	for k, v := range other.notMatchingFormatConstraints {
+		cc.notMatchingFormatConstraints[k] = v
+	}
+	for k, v := range other.notValueConstraints {
+		cc.notValueConstraints[k] = v
+	}
+	cc.mustNotHaveProperties = append(cc.mustNotHaveProperties, other.mustNotHaveProperties...)
+}
+
 func (cc *constraintCollection) String() string {
 	return fmt.Sprintf("ConstraintCollection[Formats: %s Regexes: %s Values: %s, Properties: %s]",
 		util.ImplodeMapStrings(cc.notMatchingFormatConstraints),
@@ -159,7 +176,8 @@ func (mc *constraintCollection) Compile() *multiConstraint {
 }
 
 func (mc *multiConstraint) Apply(generator Generator, generatorOptions *GeneratorOptions, generatedValue interface{}) interface{} {
-	for i := 0; i < generatorOptions.MaximumUniqueGeneratorAttempts; i++ {
+	maxAttempts := generatorOptions.ScaledRetryBudget(generatorOptions.MaximumUniqueGeneratorAttempts)
+	for i := 0; i < maxAttempts; i++ {
 		if mc.constraintPassed(generatedValue) {
 			return generatedValue
 		}
@@ -167,7 +185,7 @@ func (mc *multiConstraint) Apply(generator Generator, generatorOptions *Generato
 		generatedValue = generator.Generate(generatorOptions)
 	}
 
-	return fmt.Sprintf("Failed to generate a valid value for the following constraints {%s} after %d attempts", mc, generatorOptions.MaximumUniqueGeneratorAttempts)
+	return fmt.Sprintf("Failed to generate a valid value for the following constraints {%s} after %d attempts", mc, maxAttempts)
 }
 
 func (mc *multiConstraint) constraintPassed(value interface{}) bool {

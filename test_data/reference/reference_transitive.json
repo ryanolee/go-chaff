@@ -1,0 +1,56 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "base_type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10
+        },
+        "level1": {
+            "$ref": "#/$defs/base_type"
+        },
+        "level2": {
+            "$ref": "#/$defs/level1"
+        },
+        "level3": {
+            "$ref": "#/$defs/level2"
+        },
+        "numeric_base": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+        },
+        "numeric_ref": {
+            "$ref": "#/$defs/numeric_base"
+        },
+        "obj_with_transitive_refs": {
+            "type": "object",
+            "properties": {
+                "label": { "$ref": "#/$defs/level3" },
+                "count": { "$ref": "#/$defs/numeric_ref" }
+            },
+            "required": ["label", "count"]
+        },
+        "wrapper": {
+            "$ref": "#/$defs/obj_with_transitive_refs"
+        }
+    },
+    "properties": {
+        "direct": { "$ref": "#/$defs/base_type" },
+        "single_hop": { "$ref": "#/$defs/level1" },
+        "double_hop": { "$ref": "#/$defs/level2" },
+        "triple_hop": { "$ref": "#/$defs/level3" },
+        "object_via_chain": { "$ref": "#/$defs/wrapper" },
+        "inline_with_chain": {
+            "type": "object",
+            "properties": {
+                "a": { "$ref": "#/$defs/level3" },
+                "b": { "$ref": "#/$defs/numeric_ref" },
+                "c": { "$ref": "#/$defs/wrapper" }
+            },
+            "required": ["a", "b"]
+        }
+    },
+    "required": ["direct", "triple_hop", "object_via_chain"]
+}

@@ -141,3 +141,30 @@ func (s *schemaNodeOrFalse) MarshalJSON() ([]byte, error) {
 
 	return []byte("null"), nil
 }
+
+// Standard json.Unmarshal treats {"const": null} and an absent "const" key
+// identically (*interface{} → nil in both cases). The secondary raw-key pass
+// below detects when "const" is explicitly present so the pointer is non-nil.
+func (s *schemaNode) UnmarshalJSON(data []byte) error {
+	type schemaNodeAlias schemaNode
+	var alias schemaNodeAlias
+	if err := json.Unmarshal(data, &alias); err != nil {
+		return err
+	}
+	*s = schemaNode(alias)
+
+	// Only ambiguous when the standard pass left Const nil — a non-null
+	// const value is already correctly populated.
+	if s.Const == nil {
+		var raw map[string]json.RawMessage
+		if err := json.Unmarshal(data, &raw); err != nil {
+			return err
+		}
+		if _, ok := raw["const"]; ok {
+			var val interface{}
+			s.Const = &val
+		}
+	}
+
+	return nil
+}

@@ -1,0 +1,72 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "allOf with deeply nested not layers: not(not(X)) == X, plus allOf merging not type constraints across multiple levels",
+    "type": "object",
+    "properties": {
+        "double_negation_string": {
+            "allOf": [
+                {
+                    "not": {
+                        "not": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 10
+                        }
+                    }
+                },
+                {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10
+                }
+            ]
+        },
+        "triple_negation_excludes_number": {
+            "allOf": [
+                {
+                    "not": {
+                        "not": {
+                            "not": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 5
+                }
+            ]
+        },
+        "not_allof_type_exclusion": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "x": { "type": "string", "minLength": 1, "maxLength": 5 }
+                    },
+                    "required": ["x"]
+                },
+                {
+                    "not": {
+                        "type": "array"
+                    }
+                }
+            ]
+        },
+        "not_allof_excludes_null": {
+            "allOf": [
+                {
+                    "not": { "type": "null" }
+                },
+                {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10
+                }
+            ]
+        }
+    },
+    "required": ["double_negation_string", "triple_negation_excludes_number", "not_allof_type_exclusion", "not_allof_excludes_null"]
+}

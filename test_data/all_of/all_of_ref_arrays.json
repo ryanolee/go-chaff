@@ -1,0 +1,84 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Tests allOf with $ref where array schemas must merge: items constraints, minItems/maxItems, and tuple (prefixItems) composition.",
+    "type": "object",
+    "$defs": {
+        "string_array": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1, "maxLength": 10 }
+        },
+        "bounded_array": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5
+        },
+        "small_array": {
+            "type": "array",
+            "maxItems": 3
+        },
+        "int_array": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "minItems": 2,
+            "maxItems": 10
+        }
+    },
+    "properties": {
+        "string_bounded_array": {
+            "description": "allOf: string items + bounded (1..5). Result: array of 1-5 strings.",
+            "allOf": [
+                { "$ref": "#/$defs/string_array" },
+                { "$ref": "#/$defs/bounded_array" }
+            ]
+        },
+        "string_small_array": {
+            "description": "allOf: string items + small (max 3). Result: array of max 3 strings.",
+            "allOf": [
+                { "$ref": "#/$defs/string_array" },
+                { "$ref": "#/$defs/small_array" }
+            ]
+        },
+        "bounded_small_array": {
+            "description": "allOf: bounded (1..5) + small (max 3). Result: 1..3 items.",
+            "allOf": [
+                { "$ref": "#/$defs/bounded_array" },
+                { "$ref": "#/$defs/small_array" }
+            ]
+        },
+        "int_array_tightened": {
+            "description": "allOf: int_array (2..10 items) + inline (max 4 items). Result: 2..4 int items.",
+            "allOf": [
+                { "$ref": "#/$defs/int_array" },
+                {
+                    "type": "array",
+                    "maxItems": 4
+                }
+            ]
+        },
+        "array_in_object_merge": {
+            "description": "Object with array properties merged via allOf refs.",
+            "type": "object",
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "names": { "$ref": "#/$defs/string_array" }
+                    }
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "scores": { "$ref": "#/$defs/int_array" }
+                    }
+                }
+            ]
+        }
+    },
+    "required": [
+        "string_bounded_array",
+        "string_small_array",
+        "bounded_small_array",
+        "int_array_tightened",
+        "array_in_object_merge"
+    ]
+}

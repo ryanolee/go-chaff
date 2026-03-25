@@ -1,0 +1,73 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Cyclic self-referencing allOf with if/then/else, oneOf, anyOf, and not all interleaved across definition layers",
+    "type": "object",
+    "$defs": {
+        "node": {
+            "type": "object",
+            "properties": {
+                "kind": { "type": "string", "enum": ["leaf", "branch", "special"] },
+                "value": { "type": "integer", "minimum": 0, "maximum": 999 }
+            },
+            "required": ["kind", "value"],
+            "allOf": [
+                {
+                    "if": {
+                        "properties": { "kind": { "const": "branch" } },
+                        "required": ["kind"]
+                    },
+                    "then": {
+                        "properties": {
+                            "children": {
+                                "type": "array",
+                                "items": { "$ref": "#/$defs/node" },
+                                "minItems": 1,
+                                "maxItems": 2
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": { "kind": { "const": "special" } },
+                        "required": ["kind"]
+                    },
+                    "then": {
+                        "properties": {
+                            "payload": {
+                                "oneOf": [
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": { "const": "nested" },
+                                            "inner": { "$ref": "#/$defs/node" }
+                                        },
+                                        "required": ["type"]
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": { "const": "terminal" },
+                                            "data": { "type": "string", "minLength": 1, "maxLength": 10 }
+                                        },
+                                        "required": ["type", "data"]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "not": {
+                        "properties": { "value": { "const": 666 } },
+                        "required": ["value"]
+                    }
+                }
+            ]
+        }
+    },
+    "properties": {
+        "tree": { "$ref": "#/$defs/node" }
+    },
+    "required": ["tree"]
+}

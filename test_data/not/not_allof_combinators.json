@@ -1,0 +1,68 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "positive_int": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+        }
+    },
+    "properties": {
+        "allOf_multiple_nots": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "allOf": [
+                { "not": { "const": 13 } },
+                { "not": { "const": 42 } },
+                { "not": { "const": 77 } }
+            ]
+        },
+
+        "not_with_allOf_inline": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "not": {
+                "allOf": [
+                    { "minimum": 40 },
+                    { "maximum": 60 }
+                ]
+            }
+        },
+        "not_type_with_ref": {
+            "allOf": [
+                { "$ref": "#/$defs/positive_int" },
+                { "not": { "multipleOf": 10 } }
+            ]
+        },
+        "double_negation_with_allOf": {
+            "type": "string",
+            "not": {
+                "not": {
+                    "allOf": [
+                        { "minLength": 3 },
+                        { "maxLength": 10 }
+                    ]
+                }
+            }
+        },
+        "not_enum_via_allOf": {
+            "type": "string",
+            "enum": ["a", "b", "c", "d", "e", "f"],
+            "allOf": [
+                { "not": { "const": "a" } },
+                { "not": { "const": "b" } }
+            ]
+        }
+    },
+    "required": [
+        "allOf_multiple_nots",
+        "not_with_allOf_inline",
+        "not_type_with_ref",
+        "double_negation_with_allOf",
+        "not_enum_via_allOf"
+    ],
+    "additionalProperties": false
+}

@@ -1,0 +1,53 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Mixed combinator cycle: allOf references a def that uses oneOf, and one oneOf branch references back via anyOf. Tests cycle detection across allOf -> oneOf -> anyOf boundaries.",
+    "type": "object",
+    "$defs": {
+        "wrapper": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer", "minimum": 1, "maximum": 999 },
+                "content": { "$ref": "#/$defs/content_union" }
+            },
+            "required": ["id"]
+        },
+        "content_union": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "text" },
+                        "text": { "type": "string", "minLength": 1, "maxLength": 20 }
+                    },
+                    "required": ["kind", "text"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "container" },
+                        "children": {
+                            "type": "array",
+                            "items": { "$ref": "#/$defs/wrapper" },
+                            "maxItems": 2
+                        }
+                    },
+                    "required": ["kind"]
+                }
+            ]
+        }
+    },
+    "properties": {
+        "document": {
+            "allOf": [
+                { "$ref": "#/$defs/wrapper" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "title": { "type": "string", "minLength": 1, "maxLength": 30 }
+                    }
+                }
+            ]
+        }
+    },
+    "required": ["document"]
+}

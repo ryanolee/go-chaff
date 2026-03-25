@@ -1,0 +1,68 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Deeply nested combinator sandwich: allOf wraps an anyOf that contains a oneOf, and the oneOf recurses back to the top via allOf. Tests cycle detection through allOf->anyOf->oneOf->allOf boundaries.",
+    "type": "object",
+    "$defs": {
+        "sandwich_node": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "integer", "minimum": 1, "maximum": 9999 }
+                    },
+                    "required": ["id"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "payload": { "$ref": "#/$defs/payload_anyof" }
+                    }
+                }
+            ]
+        },
+        "payload_anyof": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "simple" },
+                        "data": { "type": "string", "minLength": 1, "maxLength": 10 }
+                    },
+                    "required": ["kind", "data"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "nested" },
+                        "inner": { "$ref": "#/$defs/inner_oneof" }
+                    },
+                    "required": ["kind"]
+                }
+            ]
+        },
+        "inner_oneof": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "variant": { "const": "leaf" },
+                        "value": { "type": "integer", "minimum": 0, "maximum": 100 }
+                    },
+                    "required": ["variant", "value"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "variant": { "const": "recurse" },
+                        "child": { "$ref": "#/$defs/sandwich_node" }
+                    },
+                    "required": ["variant"]
+                }
+            ]
+        }
+    },
+    "properties": {
+        "root": { "$ref": "#/$defs/sandwich_node" }
+    },
+    "required": ["root"]
+}
