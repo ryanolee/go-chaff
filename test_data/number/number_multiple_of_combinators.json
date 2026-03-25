@@ -1,0 +1,352 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "allOf_merge_two_multipleOf": {
+            "description": "allOf merges two multipleOf via HCF/LCM — result must be a multiple of both 6 and 10 (i.e. 30)",
+            "allOf": [
+                { "type": "integer", "minimum": 0, "maximum": 300, "multipleOf": 6 },
+                { "multipleOf": 10 }
+            ]
+        },
+        "allOf_merge_float_multipleOf": {
+            "description": "allOf merges fractional multipleOf values — result must be a multiple of both 0.2 and 0.3",
+            "allOf": [
+                { "type": "number", "minimum": 0, "maximum": 10, "multipleOf": 0.2 },
+                { "multipleOf": 0.3 }
+            ]
+        },
+        "allOf_multipleOf_with_bounds_tightening": {
+            "description": "allOf merges multipleOf alongside narrowing min/max from separate branches",
+            "allOf": [
+                { "type": "integer", "minimum": 0, "multipleOf": 4 },
+                { "maximum": 50 },
+                { "minimum": 10 }
+            ]
+        },
+        "allOf_multipleOf_with_enum_intersection": {
+            "description": "allOf merges multipleOf alongside enum — result must satisfy both",
+            "allOf": [
+                { "type": "integer", "multipleOf": 3, "minimum": 0, "maximum": 100 },
+                { "enum": [3, 6, 9, 12, 15, 20, 25, 30] }
+            ]
+        },
+        "allOf_multipleOf_with_const": {
+            "description": "allOf where one branch has multipleOf and another has const",
+            "allOf": [
+                { "type": "integer", "multipleOf": 7 },
+                { "const": 21 }
+            ]
+        },
+
+        "oneOf_different_multipleOf_branches": {
+            "description": "oneOf picks exactly one branch — each with different multipleOf",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "oneOf": [
+                { "multipleOf": 3 },
+                { "multipleOf": 7 }
+            ]
+        },
+        "oneOf_multipleOf_vs_enum": {
+            "description": "oneOf: branch A is multipleOf, branch B is an explicit enum",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "oneOf": [
+                { "multipleOf": 11 },
+                { "enum": [1, 2, 3, 4, 5] }
+            ]
+        },
+        "oneOf_float_multipleOf_branches": {
+            "description": "oneOf picks between different fractional multipleOf steps",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5,
+            "oneOf": [
+                { "multipleOf": 0.5 },
+                { "multipleOf": 0.7 }
+            ]
+        },
+
+        "anyOf_multipleOf_integer_branches": {
+            "description": "anyOf allows any branch — each with a different multipleOf",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60,
+            "anyOf": [
+                { "multipleOf": 5 },
+                { "multipleOf": 7 }
+            ]
+        },
+        "anyOf_multipleOf_with_bounds": {
+            "description": "anyOf where branches combine multipleOf with different bounds",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "anyOf": [
+                { "multipleOf": 0.25, "maximum": 10 },
+                { "multipleOf": 10 }
+            ]
+        },
+        "anyOf_multipleOf_or_const": {
+            "description": "anyOf: value is either a multiple of 13 or exactly 1",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "anyOf": [
+                { "multipleOf": 13 },
+                { "const": 1 }
+            ]
+        },
+
+        "not_multipleOf_integer": {
+            "description": "Integer that is NOT a multiple of 5",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30,
+            "not": { "multipleOf": 5 }
+        },
+        "not_multipleOf_float": {
+            "description": "Number that is NOT a multiple of 0.5",
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 2.0,
+            "not": { "multipleOf": 0.5 }
+        },
+
+        "if_then_else_multipleOf": {
+            "description": "if value >= 50 then multipleOf 10, else multipleOf 3",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "if": { "minimum": 50 },
+            "then": { "multipleOf": 10 },
+            "else": { "multipleOf": 3 }
+        },
+        "if_then_multipleOf_no_else": {
+            "description": "if value <= 20 then multipleOf 4, no else constraint",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 40,
+            "if": { "maximum": 20 },
+            "then": { "multipleOf": 4 }
+        },
+
+        "allOf_not_multipleOf_combined": {
+            "description": "allOf tightens bounds, then not excludes a multipleOf",
+            "allOf": [
+                { "type": "integer", "minimum": 1, "maximum": 30 },
+                { "not": { "multipleOf": 6 } }
+            ]
+        },
+        "allOf_with_oneOf_multipleOf_branches": {
+            "description": "allOf sets base constraints, oneOf picks the multipleOf",
+            "allOf": [
+                { "type": "integer", "minimum": 1, "maximum": 200 },
+                {
+                    "oneOf": [
+                        { "multipleOf": 9 },
+                        { "multipleOf": 11 }
+                    ]
+                }
+            ]
+        },
+        "allOf_with_if_then_multipleOf": {
+            "description": "allOf merges base range with a conditional multipleOf",
+            "allOf": [
+                { "type": "integer", "minimum": 0, "maximum": 100 },
+                {
+                    "if": { "minimum": 50 },
+                    "then": { "multipleOf": 5 },
+                    "else": { "multipleOf": 2 }
+                }
+            ]
+        },
+
+        "ref_multipleOf_allOf_merge": {
+            "description": "allOf merging multipleOf from a $ref definition with an inline multipleOf",
+            "allOf": [
+                { "$ref": "#/$defs/base_multiple_of_4" },
+                { "multipleOf": 6 }
+            ]
+        },
+        "ref_multipleOf_not": {
+            "description": "$ref provides base constraints, not excludes a multipleOf",
+            "allOf": [
+                { "$ref": "#/$defs/base_multiple_of_4" },
+                { "not": { "multipleOf": 8 } }
+            ]
+        },
+        "ref_multipleOf_with_enum": {
+            "description": "$ref provides multipleOf, allOf intersects with enum",
+            "allOf": [
+                { "$ref": "#/$defs/base_multiple_of_4" },
+                { "enum": [4, 8, 12, 16, 20, 24, 28, 50, 99] }
+            ]
+        },
+
+        "deeply_nested_allOf_multipleOf": {
+            "description": "Three levels of allOf each contributing a multipleOf constraint",
+            "allOf": [
+                {
+                    "allOf": [
+                        { "type": "integer", "minimum": 0, "maximum": 1000 },
+                        { "multipleOf": 2 }
+                    ]
+                },
+                { "multipleOf": 3 },
+                { "multipleOf": 5 }
+            ]
+        },
+        "anyOf_with_not_multipleOf": {
+            "description": "anyOf branches where each excludes a different multipleOf",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "anyOf": [
+                { "not": { "multipleOf": 2 } },
+                { "not": { "multipleOf": 3 } }
+            ]
+        },
+
+        "multipleOf_with_not_range": {
+            "description": "multipleOf 3 but NOT in the range 12..18 — mixes a positive multipleOf with a not on bounds",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30,
+            "multipleOf": 3,
+            "not": { "minimum": 12, "maximum": 18 }
+        },
+        "multipleOf_with_not_const": {
+            "description": "multipleOf 5 but NOT exactly 25 — positive multipleOf with not-const",
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 50,
+            "multipleOf": 5,
+            "not": { "const": 25 }
+        },
+        "multipleOf_with_not_enum": {
+            "description": "multipleOf 4 but NOT any of [8, 16, 24] — excludes specific multiples",
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 40,
+            "multipleOf": 4,
+            "not": { "enum": [8, 16, 24] }
+        },
+        "multipleOf_with_not_exclusive_bounds": {
+            "description": "multipleOf 7 with not excluding a narrow exclusive window",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "multipleOf": 7,
+            "not": { "exclusiveMinimum": 20, "exclusiveMaximum": 50 }
+        },
+        "allOf_multipleOf_and_not_multipleOf": {
+            "description": "allOf: one branch sets multipleOf 3, another excludes multipleOf 9 — result is multiples of 3 that are not multiples of 9",
+            "allOf": [
+                { "type": "integer", "minimum": 1, "maximum": 50, "multipleOf": 3 },
+                { "not": { "multipleOf": 9 } }
+            ]
+        },
+        "allOf_multipleOf_not_range_not_const": {
+            "description": "allOf: multipleOf 5, not in range 30..40, and not exactly 10",
+            "allOf": [
+                { "type": "integer", "minimum": 5, "maximum": 50, "multipleOf": 5 },
+                { "not": { "minimum": 30, "maximum": 40 } },
+                { "not": { "const": 10 } }
+            ]
+        },
+        "oneOf_multipleOf_with_not_vs_plain": {
+            "description": "oneOf: branch A is multipleOf 6 excluding 18, branch B is plain multipleOf 7",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60,
+            "oneOf": [
+                { "multipleOf": 6, "not": { "const": 18 } },
+                { "multipleOf": 7 }
+            ]
+        },
+        "anyOf_multipleOf_mixed_not": {
+            "description": "anyOf: branch A is multipleOf 4 not in [8,16], branch B is multipleOf 5 not > 30",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "anyOf": [
+                { "multipleOf": 4, "not": { "enum": [8, 16] } },
+                { "multipleOf": 5, "not": { "minimum": 31 } }
+            ]
+        },
+        "if_not_range_then_multipleOf": {
+            "description": "if value is NOT in 40..60 then multipleOf 3, else multipleOf 10",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "if": { "not": { "minimum": 40, "maximum": 60 } },
+            "then": { "multipleOf": 3 },
+            "else": { "multipleOf": 10 }
+        },
+        "float_multipleOf_not_half_integers": {
+            "description": "multipleOf 0.25 but NOT a multiple of 1.0 — fractional values only",
+            "type": "number",
+            "minimum": 0.25,
+            "maximum": 5.0,
+            "multipleOf": 0.25,
+            "not": { "multipleOf": 1 }
+        },
+        "ref_multipleOf_with_two_nots": {
+            "description": "$ref gives multipleOf 4, two not branches exclude specific values and a range",
+            "allOf": [
+                { "$ref": "#/$defs/base_multiple_of_4" },
+                { "not": { "const": 48 } },
+                { "not": { "minimum": 20, "maximum": 30 } }
+            ]
+        }
+    },
+    "$defs": {
+        "base_multiple_of_4": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "multipleOf": 4
+        }
+    },
+    "required": [
+        "allOf_merge_two_multipleOf",
+        "allOf_merge_float_multipleOf",
+        "allOf_multipleOf_with_bounds_tightening",
+        "allOf_multipleOf_with_enum_intersection",
+        "allOf_multipleOf_with_const",
+        "oneOf_different_multipleOf_branches",
+        "oneOf_multipleOf_vs_enum",
+        "oneOf_float_multipleOf_branches",
+        "anyOf_multipleOf_integer_branches",
+        "anyOf_multipleOf_with_bounds",
+        "anyOf_multipleOf_or_const",
+        "not_multipleOf_integer",
+        "not_multipleOf_float",
+        "if_then_else_multipleOf",
+        "if_then_multipleOf_no_else",
+        "allOf_not_multipleOf_combined",
+        "allOf_with_oneOf_multipleOf_branches",
+        "allOf_with_if_then_multipleOf",
+        "ref_multipleOf_allOf_merge",
+        "ref_multipleOf_not",
+        "ref_multipleOf_with_enum",
+        "deeply_nested_allOf_multipleOf",
+        "anyOf_with_not_multipleOf",
+        "multipleOf_with_not_range",
+        "multipleOf_with_not_const",
+        "multipleOf_with_not_enum",
+        "multipleOf_with_not_exclusive_bounds",
+        "allOf_multipleOf_and_not_multipleOf",
+        "allOf_multipleOf_not_range_not_const",
+        "oneOf_multipleOf_with_not_vs_plain",
+        "anyOf_multipleOf_mixed_not",
+        "if_not_range_then_multipleOf",
+        "float_multipleOf_not_half_integers",
+        "ref_multipleOf_with_two_nots"
+    ],
+    "additionalProperties": false
+}
