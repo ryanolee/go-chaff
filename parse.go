@@ -13,38 +13,38 @@ type (
 	// Options to take into account when parsing a json schema
 	ParserOptions struct {
 		// Options for the regex generator used for generating strings with the "pattern property"
-		RegexStringOptions *regen.GeneratorArgs
+		RegexStringOptions *regen.GeneratorArgs `json:"regexStringOptions,omitempty" jsonschema:"title=Regex String Options"`
 
 		// Options for the regex generator used for pattern properties
-		RegexPatternPropertyOptions *regen.GeneratorArgs
+		RegexPatternPropertyOptions *regen.GeneratorArgs `json:"regexPatternPropertyOptions,omitempty" jsonschema:"title=Regex Pattern Property Options"`
 
 		// Parser fetch configurations for external document fetching
-		DocumentFetchOptions DocumentFetchOptions
+		DocumentFetchOptions DocumentFetchOptions `json:"documentFetchOptions,omitempty" jsonschema:"title=Document Fetch Options"`
 
 		// Base path to resolve relative document references against for $ref resolution when fetching external documents
-		RelativeTo string
+		RelativeTo string `json:"relativeTo,omitempty" jsonschema:"title=Relative To"`
 	}
 
 	// Options for fetching external documents during parsing.
 	// Should be used with cautions Especially if schemas passed to the schema faker can be from untrusted sources.
 	DocumentFetchOptions struct {
 		// HTTP Fetch Options
-		HTTPFetchOptions HTTPFetchOptions
+		HTTPFetchOptions HTTPFetchOptions `json:"httpFetchOptions,omitempty" jsonschema:"title=HTTP Document Resolver Options"`
 
 		// File System Fetch Options
-		FileSystemFetchOptions FileSystemFetchOptions
+		FileSystemFetchOptions FileSystemFetchOptions `json:"fileSystemFetchOptions,omitempty" jsonschema:"title=File System Document Resolver Options"`
 	}
 
 	// Options for fetching external documents over HTTP
 	HTTPFetchOptions struct {
 		// If go-chaff is allowed to make HTTP requests to resolve schema references
-		Enabled bool
+		Enabled bool `json:"enabled,omitempty" jsonschema:"title=Fetch documents Over HTTP(s) Enabled"`
 
 		// Allowed hosts to fetch from (If empty, all hosts are allowed)
-		AllowedHosts []string
+		AllowedHosts []string `json:"allowedHosts,omitempty" jsonschema:"title=Allowed Hosts"`
 
 		// Allow insecure connections (http)
-		AllowInsecure bool
+		AllowInsecure bool `json:"allowInsecure,omitempty" jsonschema:"title=Allow Insecure Connections"`
 	}
 
 	// Options for fetching external documents from the file system
@@ -52,15 +52,15 @@ type (
 		// If go-chaff is allowed to access the file system to resolve schema references
 		//    THIS SHOULD BE DISABLED UNLESS YOU REALLY REALLY NEED IT
 		//    Please if doing so, limit the AllowedPaths field as much as possible )
-		Enabled bool
+		Enabled bool `json:"enabled,omitempty" jsonschema:"title=Fetch documents From File System Enabled"`
 
 		// Overrides allowOutsideCwd to specifically allow for access to a list of paths schemas might reference
 		// relative paths will be resolved against the current working directory at the time the parser is initialized
 		// Symlinks that resolve to outside of the allowed paths will still be blocked
-		AllowedPaths []string
+		AllowedPaths []string `json:"allowedPaths,omitempty" jsonschema:"title=Allowed Paths"`
 
 		// Failsafe to prevent directory traversal attacks
-		AllowOutsideCwd bool
+		AllowOutsideCwd bool `json:"allowOutsideCwd,omitempty" jsonschema:"title=Allow Access To Paths Outside Of Current Working Directory"`
 	}
 
 	// Struct containing metadata for parse operations within the JSON Schema
@@ -113,12 +113,12 @@ type (
 
 		// Array Properties
 		Items    *itemsData `json:"items,omitempty"`
-		MinItems *int       `json:"minItems,omitempty"` // N Done
-		MaxItems *int       `json:"maxItems,omitempty"` // N Done
+		MinItems *int       `json:"minItems,omitempty"`
+		MaxItems *int       `json:"maxItems,omitempty"`
 
 		Contains    *schemaNode `json:"contains,omitempty"`
-		MinContains *int        `json:"minContains,omitempty"` // N Done
-		MaxContains *int        `json:"maxContains,omitempty"` // N Done
+		MinContains *int        `json:"minContains,omitempty"`
+		MaxContains *int        `json:"maxContains,omitempty"`
 
 		PrefixItems      *[]schemaNode      `json:"prefixItems,omitempty"`
 		AdditionalItems  *schemaNodeOrFalse `json:"additionalItems,omitempty"`
