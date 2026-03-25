@@ -1067,7 +1067,19 @@ func computeValidMultipleOfValues(metadata *parserMetadata, min float64, max flo
 	iterations := 0
 	validValues := []float64{}
 
-	for value := min; value <= max; value += multipleOf {
+	// Start from the first multiple of multipleOf that is >= min.
+	// Guard against overflow: when multipleOf is tiny (e.g. infinitesimal)
+	// and min is large, min/multipleOf overflows to ±Inf, so fall back to
+	// starting from min directly
+	start := min
+	if multipleOf > infinitesimal {
+		aligned := math.Ceil(min/multipleOf) * multipleOf
+		if !math.IsInf(aligned, 0) && !math.IsNaN(aligned) {
+			start = aligned
+		}
+	}
+
+	for value := start; value <= max; value += multipleOf {
 		if math.Mod(value, notMultipleOf) != 0 {
 			validValues = append(validValues, value)
 		}
