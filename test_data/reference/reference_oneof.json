@@ -1,0 +1,46 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "cat": {
+            "type": "object",
+            "properties": {
+                "animal_type": { "type": "string", "const": "cat" },
+                "indoor": { "type": "boolean" }
+            },
+            "required": ["animal_type"]
+        },
+        "dog": {
+            "type": "object",
+            "properties": {
+                "animal_type": { "type": "string", "const": "dog" },
+                "breed": { "type": "string", "minLength": 1 }
+            },
+            "required": ["animal_type"]
+        },
+        "fish": {
+            "type": "object",
+            "properties": {
+                "animal_type": { "type": "string", "const": "fish" },
+                "saltwater": { "type": "boolean" }
+            },
+            "required": ["animal_type"]
+        }
+    },
+    "properties": {
+        "pet": {
+            "oneOf": [
+                { "$ref": "#/$defs/cat" },
+                { "$ref": "#/$defs/dog" },
+                { "$ref": "#/$defs/fish" }
+            ]
+        },
+        "another_pet": {
+            "oneOf": [
+                { "$ref": "#/$defs/cat" },
+                { "$ref": "#/$defs/dog" }
+            ]
+        }
+    },
+    "required": ["pet"]
+}

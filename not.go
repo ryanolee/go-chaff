@@ -1,10 +1,8 @@
 package chaff
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
-	"strings"
 
 	"github.com/ryanolee/go-chaff/internal/util"
 	"github.com/thoas/go-funk"
@@ -32,36 +30,60 @@ func init() {
 
 // Parses the "not" type of a schema
 // Example:
-// {
-//   "not": {"type": "null"}
-// }
-
+//
+//	{
+//	  "not": {"type": "null"}
+//	}
+//
 // Strategy:
-//   Recursively coerces the node tree to account for the "not" node where possible
-//   and applying constraints post the value being generated if not
-//   then hands off the node for regular parsing based on the new node
-
+//  1. Collect all not sub-schemas from both node.Not (single) and
+//     node.mergedNot (accumulated during allOf merges where
+//     not(A) AND not(B) must stay independent).
+//  2. Flatten each not node via mergeSchemaNodes to resolve any $ref,
+//     then partition into single-negation nodes and double-negation
+//     nodes. Double negation (not(not(X))) cancels out and is merged
+//     back into the parent as an additive constraint.
+//  3. If only double-negated nodes remain, the not is fully unwound
+//     and the node is parsed normally.
+//  4. Otherwise each remaining single-not node is applied sequentially
+//     through notMerge, which coerces bounds/types where possible and
+//     accumulates post-generation constraints (regex, format, value
+//     exclusions) for cases that cannot be statically resolved.
+//  5. The resulting node is handed to parseNode and wrapped in a
+//     constrainedGenerator that enforces the accumulated constraints.
 func parseNot(node schemaNode, metadata *parserMetadata) (Generator, error) {
-	// Flatten the not node structure
-	metadata.ReferenceHandler.PushToPath("/not")
-	notNode, err := mergeSchemaNodes(metadata, schemaNode{}, *node.Not)
-	metadata.ReferenceHandler.PopFromPath("/not")
+	rawNotNodes := collectNotNodes(node)
 
-	if err != nil {
-		return nullGenerator{}, err
+	notNodes, doubleNegatedNodes := flattenAndPartitionNotNodes(metadata, rawNotNodes)
+
+	// Clear not fields to avoid recursion
+	node.Not = nil
+	node.mergedNot = nil
+
+	// Merge double-negated nodes back into the parent (they are additive constraints)
+	if len(doubleNegatedNodes) > 0 {
+		mergeNodes := append([]schemaNode{node}, doubleNegatedNodes...)
+		var err error
+		node, err = mergeSchemaNodes(metadata, mergeNodes...)
+		if err != nil {
+			return nullGenerator{}, err
+		}
+	}
+
+	if len(notNodes) == 0 {
+		// No single-not nodes remain — parse normally
+		return parseSchemaNode(node, metadata)
 	}
 
 	// Flatten the existing structure
 	flatNode, err := mergeSchemaNodes(metadata, node)
-	flatNode.Not = nil
 	if err != nil {
 		return nullGenerator{}, err
 	}
 
-	// Cascade merge the flattened nodes & Create a generator from said nodes
-	newNode, constraints := notMerge(metadata, flatNode, notNode)
-	internalGenerator, err := parseNode(newNode, metadata)
+	currentNode, allConstraints := applyNotConstraints(metadata, flatNode, notNodes)
 
+	internalGenerator, err := parseNode(currentNode, metadata)
 	if err != nil {
 		return nullGenerator{}, err
 	}
@@ -69,78 +91,74 @@ func parseNot(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	return constrainedGenerator{
 		internalGenerator: internalGenerator,
 		constraints: []constraint{
-			constraints.Compile(),
+			allConstraints.Compile(),
 		},
 	}, nil
 }
 
-// Handles cases where double negation occurs in not nodes (e.g. not/not)
-// or triple negation (not/not/not) etc where every second order not is merged into its parent
-func handleNotSimplification(node schemaNode, metadata *parserMetadata) (schemaNode, error) {
-	currentNode := node
-
-	// Separate not nodes from double inverted nodes
-	notNodes := []schemaNode{}
-	doubleInvertedNodes := []schemaNode{}
-	for currentNode.Not != nil {
-		notNodes = append(notNodes, *node.Not)
-		if currentNode.Not.Not == nil {
-			break
-		}
-
-		doubleInvertedNodes = append(doubleInvertedNodes, *currentNode.Not.Not)
-		currentNode = *currentNode.Not.Not
+// collectNotNodes gathers all not sub-schemas from a node into a single slice.
+// This includes node.Not (the inline "not" keyword) and node.mergedNot (not
+// nodes accumulated during allOf merges where each branch's "not" must be
+// kept independent).
+func collectNotNodes(node schemaNode) []*schemaNode {
+	rawNotNodes := []*schemaNode{}
+	if node.Not != nil {
+		rawNotNodes = append(rawNotNodes, node.Not)
 	}
-
-	// If we have no double inverted nodes then nothing to do and we can leave it early
-	if len(doubleInvertedNodes) == 0 {
-		return node, nil
+	if len(node.mergedNot) > 0 {
+		rawNotNodes = append(rawNotNodes, node.mergedNot...)
 	}
+	return rawNotNodes
+}
 
-	// Begin merging double inverted nodes back into the parent nodes
-	for i, doubleInvertedNode := range doubleInvertedNodes {
-		node.Not = nil
-		path := strings.Repeat("/not/not", i+1)
-		metadata.ReferenceHandler.PushToPath(path)
-		var err error
-		node, err = mergeSchemaNodes(metadata, node, doubleInvertedNode)
-		metadata.ReferenceHandler.PopFromPath(path)
-		if err != nil {
-			warnField(metadata, path, fmt.Errorf("failed to simplify double negation: %w", err))
+// flattenAndPartitionNotNodes flattens each raw not node (resolving any $ref)
+// and partitions them into single-negation nodes (to be applied via notMerge)
+// and double-negated nodes (not(not(X)) = X, to be merged back into the parent).
+func flattenAndPartitionNotNodes(metadata *parserMetadata, rawNotNodes []*schemaNode) (notNodes []schemaNode, doubleNegatedNodes []schemaNode) {
+	for i, raw := range rawNotNodes {
+		if raw == nil {
 			continue
 		}
-	}
-
-	// Rebuild the not node from the remaining not nodes that were not double inverted
-	notNode := schemaNode{}
-	metadata.ReferenceHandler.PushToPath("/not")
-	for i, notNode := range notNodes {
-		notNode.Not = nil
-		path := strings.Repeat("/not/not", i)
+		path := fmt.Sprintf("/not/%d", i)
 		metadata.ReferenceHandler.PushToPath(path)
-		var err error
-		notNode, err = mergeSchemaNodes(metadata, notNode, notNode)
+		flatNot, err := mergeSchemaNodes(metadata, schemaNode{}, *raw)
 		metadata.ReferenceHandler.PopFromPath(path)
 		if err != nil {
-			warnField(metadata, path, fmt.Errorf("failed to simplify negation: %w", err))
+			warnField(metadata, path, fmt.Errorf("failed to flatten not node: %w", err))
 			continue
 		}
+
+		// Unwind double negation: not(not(X)) = X
+		// Collect the inner content as a double-negated node to merge into the parent.
+		if flatNot.Not != nil {
+			innerPath := fmt.Sprintf("/not/%d/not", i)
+			metadata.ReferenceHandler.PushToPath(innerPath)
+			flatInner, err := mergeSchemaNodes(metadata, schemaNode{}, *flatNot.Not)
+			metadata.ReferenceHandler.PopFromPath(innerPath)
+			if err != nil {
+				warnField(metadata, innerPath, fmt.Errorf("failed to flatten double-negated not node: %w", err))
+				continue
+			}
+			doubleNegatedNodes = append(doubleNegatedNodes, flatInner)
+		} else {
+			notNodes = append(notNodes, flatNot)
+		}
 	}
-	metadata.ReferenceHandler.PopFromPath("/not")
+	return notNodes, doubleNegatedNodes
+}
 
-	// Serialize to check if not node is empty
-	notNodeAsJson, err := json.Marshal(notNode)
-	if err != nil {
-		return node, err
+// applyNotConstraints applies each not node sequentially to the base node via
+// notMerge, accumulating constraints that cannot be statically resolved into a
+// single constraintCollection.
+func applyNotConstraints(metadata *parserMetadata, baseNode schemaNode, notNodes []schemaNode) (schemaNode, constraintCollection) {
+	currentNode := baseNode
+	allConstraints := newConstraintCollection()
+	for _, notNode := range notNodes {
+		newNode, cc := notMerge(metadata, currentNode, notNode)
+		currentNode = newNode
+		allConstraints.Merge(cc)
 	}
-
-	if string(notNodeAsJson) == "{}" {
-		return node, nil
-	}
-
-	node.Not = &notNode
-
-	return node, nil
+	return currentNode, allConstraints
 }
 
 // Merges two nodes, one with candidate
@@ -157,24 +175,32 @@ func notMerge(metadata *parserMetadata, node schemaNode, notNode schemaNode) (sc
 
 	newNode.Not = nil
 
+	// Preserve internal/combination fields from the source node that
+	// notMergeFunctions don't handle, so they survive through to parsing.
+	newNode.mergedIf = node.mergedIf
+	// Preserve Not from the source node so sub-properties retain their own
+	// not constraints for later parsing. Also preserve already-collected mergedNot.
+	if node.Not != nil || len(node.mergedNot) > 0 {
+		newNode.mergedNot = append(newNode.mergedNot, node.mergedNot...)
+		if node.Not != nil {
+			newNode.mergedNot = append(newNode.mergedNot, node.Not)
+		}
+	}
+	newNode.OneOf = node.OneOf
+	newNode.AnyOf = node.AnyOf
+	newNode.Ref = node.Ref
+	newNode.Defs = node.Defs
+	newNode.Definitions = node.Definitions
+	newNode.Id = node.Id
+	newNode.Length = node.Length
+	newNode.DependentRequired = node.DependentRequired
+	newNode.DependentSchemas = node.DependentSchemas
+	newNode.If = node.If
+	newNode.Then = node.Then
+	newNode.Else = node.Else
+	newNode.constraints = node.constraints
+
 	return newNode, &constraints
-
-	// Note unsupported patterns (Regexes and formats are to complex to "not" generate)
-
-	// Handle bounds
-	// - Min/Max Items
-	// - Min/Max Contains
-	// - Min/Max Properties
-
-	//
-	//newNode.MinProperties, newNode.MaxProperties = resolveBoundsInt(
-	//	metadata,
-	//	"minProperties", "maxProperties",
-	//	node.MinProperties, node.MaxProperties,
-	//	notNode.MinProperties, notNode.MaxProperties,
-	//)
-
-	// Make sure to disaccociate the exiting node
 
 }
 
@@ -504,8 +530,22 @@ func notApplyObject(metadata *parserMetadata, newNode *schemaNode, constraintCol
 	// Merge down properties
 	properties := util.MapKeysToStringSlice(node.Properties, notNode.Properties)
 	mergedProperties := map[string]schemaNode{}
+	notProperties := util.GetZeroIfNil(notNode.Properties, map[string]schemaNode{})
 
 	for _, propertyKey := range properties {
+		// If the not schema doesn't mention this property, preserve it
+		// as-is. Running it through notMerge against an empty node would
+		// needlessly recurse into its sub-schemas (arrays, nested objects)
+		// and trigger unsupported-feature warnings for fields that aren't
+		// being negated at all.
+		if _, inNot := notProperties[propertyKey]; !inNot {
+			nodeProps := util.GetZeroIfNil(node.Properties, map[string]schemaNode{})
+			if prop, ok := nodeProps[propertyKey]; ok {
+				mergedProperties[propertyKey] = prop
+			}
+			continue
+		}
+
 		mergedProperties[propertyKey] = notMergeSubNode(
 			fmt.Sprintf("/not/properties/%s", propertyKey),
 			metadata,
@@ -532,7 +572,11 @@ func notApplyObject(metadata *parserMetadata, newNode *schemaNode, constraintCol
 
 	for _, notRequiredProperty := range notRequiredProperties {
 		if funk.ContainsString(requiredProperties, notRequiredProperty) {
-			warnField(metadata, "not/required", fmt.Errorf("cannot have 'required' and 'not/required' contain the same property '%s', they are mutually exclusive", notRequiredProperty))
+			// When a property is both required by the parent and listed in not/required,
+			// it means the not sub-schema's condition depends on the property being present.
+			// The actual value exclusion comes from the property-level constraints (const, enum, etc.)
+			// which are already handled by the property merge above. Do NOT make the property
+			// absent — just let the property constraints handle the negation.
 			continue
 		}
 
@@ -546,7 +590,18 @@ func notApplyObject(metadata *parserMetadata, newNode *schemaNode, constraintCol
 		delete(mergedProperties, notRequiredProperty)
 	}
 
-	constraintCollection.AddMustNotHaveProperties(notRequiredProperties)
+	// Only add must-not-have-properties for properties that are NOT required by the parent.
+	// If the parent requires a property, the not constraint is about the property's VALUE,
+	// not its presence, and that is handled by the property merge above.
+	nonConflictingNotRequired := []string{}
+	for _, prop := range notRequiredProperties {
+		if !funk.ContainsString(requiredProperties, prop) {
+			nonConflictingNotRequired = append(nonConflictingNotRequired, prop)
+		}
+	}
+	if len(nonConflictingNotRequired) > 0 {
+		constraintCollection.AddMustNotHaveProperties(nonConflictingNotRequired)
+	}
 
 	if len(mergedProperties) > 0 {
 		newNode.Properties = &mergedProperties
@@ -601,6 +656,11 @@ func notMergeSubNode(scope string, metadata *parserMetadata, node schemaNode, no
 	defer metadata.ReferenceHandler.PopFromPath(scope)
 
 	mergedNode, constraintCollection := notMerge(metadata, node, notNode)
+	// Preserve constraints from previous not applications so that sequential
+	// not merges don't silently discard earlier exclusions.
+	if node.constraints != nil {
+		constraintCollection.Merge(node.constraints)
+	}
 	mergedNode.constraints = constraintCollection
 	return mergedNode
 }
@@ -621,8 +681,13 @@ func notMergeItemData(metadata *parserMetadata, nodePtr *itemsData, notNodePtr *
 		return nil
 	}
 
+	// Nothing to negate — preserve the original items data as-is.
+	if notNodePtr == nil {
+		return nodePtr
+	}
+
 	node := util.GetZeroIfNil(nodePtr, itemsData{})
-	notNode := util.GetZeroIfNil(notNodePtr, itemsData{})
+	notNode := *notNodePtr
 
 	if node.DisallowAdditionalItems == true && notNode.DisallowAdditionalItems == true {
 		warnField(metadata, "not/additionalItems", fmt.Errorf("cannot have 'additionalItems' and 'not/additionalItems' set to false, they are mutually exclusive"))
@@ -702,14 +767,47 @@ func notMergePrefixNodes(metadata *parserMetadata, nodePrefixItemsPtr *[]schemaN
 	return &mergedPrefixItems
 }
 
+// notNodeHasValueConstraints checks whether a not-node has value-level constraints
+// beyond just a type declaration. When the not-node has constraints like minLength,
+// maxLength, pattern, minimum, maximum, properties, items, etc., the negation is
+// about VALUE exclusion (e.g., "not a string shorter than 5") rather than TYPE
+// exclusion (e.g., "not a string at all"). In that case the type should be kept
+// and the constraint-level not handling (notApplyString, notApplyNumber, etc.)
+// will apply the narrowed bounds.
+func notNodeHasValueConstraints(notNode schemaNode) bool {
+	// String constraints
+	if notNode.MinLength != nil || notNode.MaxLength != nil || notNode.Pattern != nil || notNode.Format != nil {
+		return true
+	}
+	// Number constraints
+	if notNode.Minimum != nil || notNode.Maximum != nil || notNode.ExclusiveMinimum != nil || notNode.ExclusiveMaximum != nil || notNode.MultipleOf != nil {
+		return true
+	}
+	// Object constraints
+	if notNode.Properties != nil || notNode.Required != nil || notNode.MinProperties != nil || notNode.MaxProperties != nil {
+		return true
+	}
+	// Array constraints
+	if notNode.Items != nil || notNode.MinItems != nil || notNode.MaxItems != nil || notNode.PrefixItems != nil {
+		return true
+	}
+	// Value constraints
+	if notNode.Const != nil || notNode.Enum != nil {
+		return true
+	}
+	return false
+}
+
 // Resolves the type for a node given the not node types
 func resolveType(node schemaNode, notNode schemaNode) (multipleType, error) {
 	nodeTypes := getNodeTypes(node, false)
-	notNodeTypes := getNodeTypes(notNode, true)
+	notNodeTypes := expandNotTypes(getNodeTypes(notNode, true))
+	hasValueConstraints := notNodeHasValueConstraints(notNode)
 	candidateNodeTypes := []string{}
 
 	for _, nodeType := range nodeTypes {
-		if funk.ContainsString(notNodeTypes, nodeType) {
+		if funk.ContainsString(notNodeTypes, nodeType) && !hasValueConstraints {
+			// This is a pure type exclusion (e.g., "not a string at all") — skip the type.
 			continue
 		}
 
@@ -744,6 +842,22 @@ func getNodeTypes(node schemaNode, notType bool) []string {
 	} else {
 		return typeAll
 	}
+}
+
+// expandNotTypes expands the set of excluded types to account for JSON Schema
+// subtype relationships. In JSON Schema, "integer" is a subtype of "number":
+// any integer value is also a valid number. So when "number" is excluded via
+// `not`, "integer" must also be excluded, otherwise the generator might produce
+// an integer value that still validates as a number.
+func expandNotTypes(notTypes []string) []string {
+	expanded := make([]string, len(notTypes))
+	copy(expanded, notTypes)
+
+	if funk.ContainsString(expanded, typeNumber) && !funk.ContainsString(expanded, typeInteger) {
+		expanded = append(expanded, typeInteger)
+	}
+
+	return expanded
 }
 
 func nodeTypeContains(node *schemaNode, candidateType string) bool {

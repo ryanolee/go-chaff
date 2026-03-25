@@ -1,0 +1,137 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Tests allOf where each element is a $ref to a $defs entry. Validates that properties, types, and constraints from all referenced definitions are correctly merged.",
+    "type": "object",
+    "$defs": {
+        "has_id": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer", "minimum": 1, "maximum": 10000 }
+            },
+            "required": ["id"]
+        },
+        "has_name": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string", "minLength": 1, "maxLength": 50 }
+            },
+            "required": ["name"]
+        },
+        "has_email": {
+            "type": "object",
+            "properties": {
+                "email": { "type": "string", "format": "email" }
+            },
+            "required": ["email"]
+        },
+        "has_age": {
+            "type": "object",
+            "properties": {
+                "age": { "type": "integer", "minimum": 0, "maximum": 150 }
+            }
+        },
+        "has_active_flag": {
+            "type": "object",
+            "properties": {
+                "active": { "type": "boolean" }
+            }
+        },
+        "has_tags": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1, "maxLength": 20 },
+                    "minItems": 0,
+                    "maxItems": 5
+                }
+            }
+        },
+        "has_metadata": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "type": "object",
+                    "properties": {
+                        "created_at": { "type": "string", "format": "date-time" },
+                        "version": { "type": "integer", "minimum": 1, "maximum": 99 }
+                    },
+                    "required": ["version"]
+                }
+            }
+        }
+    },
+    "properties": {
+        "two_ref_merge": {
+            "description": "Merge two simple $ref defs: should produce an object with both 'id' and 'name'",
+            "allOf": [
+                { "$ref": "#/$defs/has_id" },
+                { "$ref": "#/$defs/has_name" }
+            ]
+        },
+        "three_ref_merge": {
+            "description": "Merge three $ref defs: should produce an object with 'id', 'name', and 'email'",
+            "allOf": [
+                { "$ref": "#/$defs/has_id" },
+                { "$ref": "#/$defs/has_name" },
+                { "$ref": "#/$defs/has_email" }
+            ]
+        },
+        "four_ref_merge": {
+            "description": "Merge four $ref defs with different property types",
+            "allOf": [
+                { "$ref": "#/$defs/has_id" },
+                { "$ref": "#/$defs/has_name" },
+                { "$ref": "#/$defs/has_age" },
+                { "$ref": "#/$defs/has_active_flag" }
+            ]
+        },
+        "ref_merge_with_inline": {
+            "description": "Merge $ref defs with an inline schema",
+            "allOf": [
+                { "$ref": "#/$defs/has_id" },
+                { "$ref": "#/$defs/has_name" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "role": { "type": "string", "enum": ["admin", "user", "guest"] }
+                    },
+                    "required": ["role"]
+                }
+            ]
+        },
+        "ref_merge_with_array_property": {
+            "description": "Merge $ref defs where one has an array property",
+            "allOf": [
+                { "$ref": "#/$defs/has_id" },
+                { "$ref": "#/$defs/has_tags" }
+            ]
+        },
+        "ref_merge_with_nested_object": {
+            "description": "Merge $ref defs where one has a nested object property",
+            "allOf": [
+                { "$ref": "#/$defs/has_id" },
+                { "$ref": "#/$defs/has_metadata" }
+            ]
+        },
+        "five_ref_merge": {
+            "description": "Merge five different $ref defs into one object",
+            "allOf": [
+                { "$ref": "#/$defs/has_id" },
+                { "$ref": "#/$defs/has_name" },
+                { "$ref": "#/$defs/has_age" },
+                { "$ref": "#/$defs/has_active_flag" },
+                { "$ref": "#/$defs/has_tags" }
+            ]
+        }
+    },
+    "required": [
+        "two_ref_merge",
+        "three_ref_merge",
+        "four_ref_merge",
+        "ref_merge_with_inline",
+        "ref_merge_with_array_property",
+        "ref_merge_with_nested_object",
+        "five_ref_merge"
+    ]
+}

@@ -1,0 +1,49 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Deeply nested not layers (3-4 deep) combined with allOf and self-referencing $ref cycles. Tests that not-inversion logic survives cyclic resolution.",
+    "type": "object",
+    "$defs": {
+        "invertible": {
+            "type": "object",
+            "properties": {
+                "polarity": { "type": "string", "enum": ["positive", "negative", "neutral"] },
+                "magnitude": { "type": "integer", "minimum": 1, "maximum": 100 }
+            },
+            "required": ["polarity", "magnitude"],
+            "allOf": [
+                {
+                    "not": {
+                        "not": {
+                            "not": {
+                                "properties": { "polarity": { "const": "forbidden" } },
+                                "required": ["polarity"]
+                            }
+                        }
+                    }
+                },
+                {
+                    "not": {
+                        "not": {
+                            "type": "object"
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": { "polarity": { "const": "positive" } },
+                        "required": ["polarity"]
+                    },
+                    "then": {
+                        "properties": {
+                            "child": { "$ref": "#/$defs/invertible" }
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "properties": {
+        "signal": { "$ref": "#/$defs/invertible" }
+    },
+    "required": ["signal"]
+}

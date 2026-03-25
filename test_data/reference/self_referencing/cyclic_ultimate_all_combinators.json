@@ -1,0 +1,233 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "The ultimate cyclic test: every combinator (allOf, oneOf, anyOf, not, if/then/else) woven across 5 mutually-referencing definitions that form a complex cycle graph. Tests that parse-time recursion detection, generation-time depth limits, and constraint satisfaction all work together under maximum combinatorial pressure.",
+    "type": "object",
+    "$defs": {
+        "entity": {
+            "description": "Base entity with allOf pulling in tagged + validated, plus an if/then/else that conditionally recurses into container. Forms cycle: entity -> container -> wrapper -> entity.",
+            "allOf": [
+                { "$ref": "#/$defs/tagged" },
+                { "$ref": "#/$defs/validated" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "integer", "minimum": 1, "maximum": 9999 },
+                        "kind": { "type": "string", "enum": ["leaf", "branch", "special"] }
+                    },
+                    "required": ["id", "kind"]
+                },
+                {
+                    "if": {
+                        "properties": { "kind": { "const": "branch" } },
+                        "required": ["kind"]
+                    },
+                    "then": {
+                        "properties": {
+                            "children": {
+                                "type": "array",
+                                "items": { "$ref": "#/$defs/container" },
+                                "minItems": 1,
+                                "maxItems": 2
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": { "kind": { "const": "special" } },
+                        "required": ["kind"]
+                    },
+                    "then": {
+                        "properties": {
+                            "payload": { "$ref": "#/$defs/payload" }
+                        }
+                    }
+                },
+                {
+                    "not": {
+                        "properties": { "id": { "const": 666 } },
+                        "required": ["id"]
+                    }
+                },
+                {
+                    "not": {
+                        "properties": { "id": { "const": 13 } },
+                        "required": ["id"]
+                    }
+                }
+            ]
+        },
+        "tagged": {
+            "description": "Mixin that adds a tags array with not constraint. Pulled into entity via allOf.",
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "allOf": [
+                            { "type": "string", "minLength": 1, "maxLength": 10 },
+                            { "not": { "const": "" } },
+                            { "not": { "const": "banned" } }
+                        ]
+                    },
+                    "maxItems": 3
+                }
+            }
+        },
+        "validated": {
+            "description": "Mixin with double-negation (not-not = must be object) and a not-value constraint.",
+            "allOf": [
+                {
+                    "not": {
+                        "not": {
+                            "type": "object"
+                        }
+                    }
+                },
+                {
+                    "not": {
+                        "properties": { "kind": { "const": "forbidden" } },
+                        "required": ["kind"]
+                    }
+                }
+            ]
+        },
+        "container": {
+            "description": "oneOf union: either wraps an entity directly, or wraps via the wrapper intermediary. Forms cycle: container -> entity, container -> wrapper -> entity.",
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "direct" },
+                        "item": { "$ref": "#/$defs/entity" }
+                    },
+                    "required": ["type"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "wrapped" },
+                        "wrapper": { "$ref": "#/$defs/wrapper" }
+                    },
+                    "required": ["type"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "terminal" },
+                        "data": { "type": "string", "minLength": 1, "maxLength": 15 }
+                    },
+                    "required": ["type", "data"]
+                }
+            ]
+        },
+        "wrapper": {
+            "description": "anyOf wrapper: can hold an entity with metadata, or recurse through payload. Forms cycle: wrapper -> entity, wrapper -> payload -> entity.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "style": { "const": "simple" },
+                        "content": { "$ref": "#/$defs/entity" }
+                    },
+                    "required": ["style"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "style": { "const": "rich" },
+                        "content": { "$ref": "#/$defs/payload" },
+                        "label": { "type": "string", "minLength": 1, "maxLength": 10 }
+                    },
+                    "required": ["style"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "style": { "const": "empty" },
+                        "note": { "type": "string", "maxLength": 5 }
+                    },
+                    "required": ["style"]
+                }
+            ]
+        },
+        "payload": {
+            "description": "allOf + if/then/else + not payload. Conditionally recurses back to entity. Forms cycle: payload -> entity.",
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "format": { "type": "string", "enum": ["json", "xml", "binary"] },
+                        "size": { "type": "integer", "minimum": 0, "maximum": 1000 }
+                    },
+                    "required": ["format", "size"]
+                },
+                {
+                    "if": {
+                        "properties": { "format": { "const": "json" } },
+                        "required": ["format"]
+                    },
+                    "then": {
+                        "properties": {
+                            "parsed": { "$ref": "#/$defs/entity" }
+                        }
+                    },
+                    "else": {
+                        "properties": {
+                            "raw": { "type": "string", "minLength": 1, "maxLength": 20 }
+                        }
+                    }
+                },
+                {
+                    "not": {
+                        "properties": { "size": { "const": 0 } },
+                        "required": ["size"]
+                    }
+                },
+                {
+                    "not": {
+                        "not": {
+                            "type": "object"
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "properties": {
+        "root": {
+            "description": "Entry point: allOf merging entity base with an additional layer of constraints.",
+            "allOf": [
+                { "$ref": "#/$defs/entity" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "version": { "type": "integer", "minimum": 1, "maximum": 5 }
+                    },
+                    "required": ["version"]
+                },
+                {
+                    "not": {
+                        "properties": { "version": { "const": 0 } },
+                        "required": ["version"]
+                    }
+                }
+            ]
+        },
+        "sidebar": {
+            "description": "anyOf choosing between different container types, each potentially cyclic.",
+            "anyOf": [
+                { "$ref": "#/$defs/container" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "sidebar_leaf" },
+                        "text": { "type": "string", "minLength": 1, "maxLength": 20 }
+                    },
+                    "required": ["type", "text"]
+                }
+            ]
+        }
+    },
+    "required": ["root", "sidebar"]
+}

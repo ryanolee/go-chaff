@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Cyclic anyOf: a tree node that can be a leaf string or a branch with children referencing back to the node type.",
+    "type": "object",
+    "$defs": {
+        "tree_node": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "leaf" },
+                        "data": { "type": "string", "minLength": 1, "maxLength": 10 }
+                    },
+                    "required": ["kind", "data"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "branch" },
+                        "left": { "$ref": "#/$defs/tree_node" },
+                        "right": { "$ref": "#/$defs/tree_node" }
+                    },
+                    "required": ["kind"]
+                }
+            ]
+        }
+    },
+    "properties": {
+        "tree": { "$ref": "#/$defs/tree_node" }
+    },
+    "required": ["tree"]
+}

@@ -1,0 +1,104 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "infer_object_from_deep_properties": {
+            "properties": {
+                "nested": {
+                    "properties": {
+                        "deep": { "type": "string" }
+                    },
+                    "required": ["deep"]
+                }
+            },
+            "required": ["nested"]
+        },
+        "infer_array_from_prefixItems_and_contains": {
+            "prefixItems": [
+                { "type": "string" },
+                { "type": "integer" }
+            ],
+            "contains": { "type": "string" },
+            "minItems": 2,
+            "maxItems": 5
+        },
+        "infer_number_from_multipleOf_and_bounds": {
+            "minimum": 10,
+            "maximum": 1000,
+            "multipleOf": 5
+        },
+        "infer_string_from_pattern_and_length": {
+            "pattern": "^[a-z]+$"
+        },
+        "infer_object_from_patternProperties_and_required": {
+            "patternProperties": {
+                "^field_": { "type": "integer" }
+            },
+            "properties": {
+                "field_a": { "type": "integer", "minimum": 0 },
+                "field_b": { "type": "integer", "minimum": 0 }
+            },
+            "required": ["field_a"],
+            "minProperties": 1,
+            "maxProperties": 3,
+            "additionalProperties": false
+        },
+        "infer_string_from_format_only": {
+            "format": "date"
+        },
+        "infer_array_from_items_only": {
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "integer" }
+                },
+                "required": ["id"]
+            },
+            "minItems": 1,
+            "maxItems": 3
+        },
+        "explicit_multiple_types": {
+            "type": ["string", "integer", "boolean", "null"]
+        },
+        "enum_without_type": {
+            "enum": ["alpha", "bravo", "charlie"]
+        },
+        "const_without_type": {
+            "const": 42
+        },
+        "boolean_const": {
+            "const": true
+        },
+        "null_const": {
+            "const": null
+        },
+        "object_enum": {
+            "enum": [
+                { "a": 1 },
+                { "b": 2 }
+            ]
+        },
+        "array_enum": {
+            "enum": [
+                [1, 2, 3],
+                [4, 5, 6]
+            ]
+        }
+    },
+    "required": [
+        "infer_object_from_deep_properties",
+        "infer_array_from_prefixItems_and_contains",
+        "infer_number_from_multipleOf_and_bounds",
+        "infer_string_from_pattern_and_length",
+        "infer_object_from_patternProperties_and_required",
+        "infer_string_from_format_only",
+        "infer_array_from_items_only",
+        "explicit_multiple_types",
+        "enum_without_type",
+        "const_without_type",
+        "boolean_const",
+        "null_const",
+        "object_enum",
+        "array_enum"
+    ]
+}

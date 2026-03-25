@@ -3,6 +3,7 @@ package chaff
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/ryanolee/go-chaff/internal/util"
 	"github.com/santhosh-tekuri/jsonschema/v6"
@@ -64,7 +65,15 @@ func (sm *schemaManager) replaceRefs(data interface{}) interface{} {
 	case map[string]interface{}:
 		if ref, ok := v["$ref"]; ok {
 			if refStr, ok := ref.(string); ok {
-				v["$ref"] = sm.documentResolver.GetCurrentScope() + refStr
+				if strings.Contains(refStr, "://") {
+					// External cross-document refs (full URLs) can't be resolved
+					// by the internal-only compiler. Strip them so the sub-schema
+					// becomes permissive for that part. The go-chaff parser handles
+					// cross-document resolution separately at the parse level.
+					delete(v, "$ref")
+				} else {
+					v["$ref"] = sm.documentResolver.GetCurrentScope() + refStr
+				}
 			}
 		}
 		for key, value := range v {
@@ -86,5 +95,5 @@ func (sm *schemaManager) CompilePath(path string) (*jsonschemaV6.Schema, error) 
 }
 
 func (l internalOnlyLoader) Load(url string) (any, error) {
-	return nil, nil
+	return nil, fmt.Errorf("internal-only loader: external resource %q not available for schema validation", url)
 }

@@ -104,7 +104,27 @@ func AnyNotNil(values ...interface{}) bool {
 }
 
 func Round(x, unit float64) float64 {
-	return math.Round(x/unit) * unit
+	r := math.Round(x/unit) * unit
+	// Snap to the number of decimal places implied by `unit` to eliminate
+	// trailing floating-point noise (e.g. 0.6000000000000001 → 0.6).
+	if unit != 0 {
+		prec := decimalPrecision(unit)
+		pow := math.Pow(10, float64(prec))
+		r = math.Round(r*pow) / pow
+	}
+	return r
+}
+
+// decimalPrecision returns the number of decimal digits needed to represent v.
+// e.g. 0.1 → 1, 0.25 → 2, 5 → 0.
+func decimalPrecision(v float64) int {
+	v = math.Abs(v)
+	prec := 0
+	for v != math.Floor(v) && prec < 15 {
+		v *= 10
+		prec++
+	}
+	return prec
 }
 
 // Returns the true if value or defaultValue are true

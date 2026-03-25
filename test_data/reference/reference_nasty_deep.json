@@ -1,0 +1,132 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "level_a": {
+            "type": "object",
+            "properties": {
+                "value": { "type": "string", "minLength": 1 },
+                "next": { "$ref": "#/$defs/level_b" }
+            },
+            "required": ["value"]
+        },
+        "level_b": {
+            "type": "object",
+            "properties": {
+                "count": { "type": "integer", "minimum": 0 },
+                "next": { "$ref": "#/$defs/level_c" }
+            },
+            "required": ["count"]
+        },
+        "level_c": {
+            "type": "object",
+            "properties": {
+                "flag": { "type": "boolean" },
+                "label": { "type": "string", "maxLength": 20 }
+            },
+            "required": ["flag"]
+        },
+        "color": {
+            "type": "string",
+            "enum": ["red", "green", "blue"]
+        },
+        "sized_string": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 50
+        },
+        "bounded_integer": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+        },
+        "point": {
+            "type": "object",
+            "properties": {
+                "x": { "$ref": "#/$defs/bounded_integer" },
+                "y": { "$ref": "#/$defs/bounded_integer" }
+            },
+            "required": ["x", "y"]
+        },
+        "labeled_point": {
+            "allOf": [
+                { "$ref": "#/$defs/point" },
+                {
+                    "properties": {
+                        "label": { "$ref": "#/$defs/sized_string" }
+                    },
+                    "required": ["label"]
+                }
+            ]
+        }
+    },
+    "properties": {
+        "deep_ref_chain": {
+            "$ref": "#/$defs/level_a"
+        },
+        "ref_in_array_items": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/point" },
+            "minItems": 2,
+            "maxItems": 5
+        },
+        "ref_in_oneOf": {
+            "oneOf": [
+                { "$ref": "#/$defs/color" },
+                { "$ref": "#/$defs/bounded_integer" }
+            ]
+        },
+        "ref_in_allOf": {
+            "$ref": "#/$defs/labeled_point"
+        },
+        "ref_in_property_values": {
+            "type": "object",
+            "properties": {
+                "name": { "$ref": "#/$defs/sized_string" },
+                "primary_color": { "$ref": "#/$defs/color" },
+                "secondary_color": { "$ref": "#/$defs/color" },
+                "score": { "$ref": "#/$defs/bounded_integer" },
+                "position": { "$ref": "#/$defs/point" }
+            },
+            "required": ["name", "primary_color", "score", "position"],
+            "additionalProperties": false
+        },
+        "ref_with_not": {
+            "allOf": [
+                { "$ref": "#/$defs/bounded_integer" },
+                { "not": { "multipleOf": 10 } }
+            ]
+        },
+        "triple_indirection": {
+            "type": "object",
+            "properties": {
+                "origin": { "$ref": "#/$defs/labeled_point" },
+                "destination": { "$ref": "#/$defs/labeled_point" },
+                "color": { "$ref": "#/$defs/color" }
+            },
+            "required": ["origin", "destination"],
+            "additionalProperties": false
+        },
+        "ref_in_prefixItems": {
+            "type": "array",
+            "prefixItems": [
+                { "$ref": "#/$defs/sized_string" },
+                { "$ref": "#/$defs/bounded_integer" },
+                { "$ref": "#/$defs/color" }
+            ],
+            "minItems": 3,
+            "maxItems": 3
+        }
+    },
+    "required": [
+        "deep_ref_chain",
+        "ref_in_array_items",
+        "ref_in_oneOf",
+        "ref_in_allOf",
+        "ref_in_property_values",
+        "ref_with_not",
+        "triple_indirection",
+        "ref_in_prefixItems"
+    ],
+    "additionalProperties": false
+}

@@ -1,0 +1,109 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "allOf with $ref to definitions that themselves contain allOf, oneOf, anyOf, if/then/else, and not - maximum combinator depth via references",
+    "type": "object",
+    "$defs": {
+        "base_entity": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer", "minimum": 1, "maximum": 9999 },
+                "created": { "type": "string", "minLength": 10, "maxLength": 10 }
+            },
+            "required": ["id", "created"]
+        },
+        "tagged": {
+            "allOf": [
+                { "$ref": "#/$defs/base_entity" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "tags": {
+                            "type": "array",
+                            "items": { "type": "string", "minLength": 1, "maxLength": 10 },
+                            "minItems": 1,
+                            "maxItems": 3
+                        }
+                    },
+                    "required": ["tags"]
+                }
+            ]
+        },
+        "status_mixin": {
+            "type": "object",
+            "properties": {
+                "status": { "type": "string", "enum": ["draft", "published", "archived"] }
+            },
+            "required": ["status"],
+            "if": {
+                "properties": { "status": { "const": "published" } },
+                "required": ["status"]
+            },
+            "then": {
+                "properties": {
+                    "published_at": { "type": "string", "minLength": 10, "maxLength": 10 }
+                },
+                "required": ["published_at"]
+            }
+        },
+        "categorized": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "category": { "const": "article" },
+                        "word_count": { "type": "integer", "minimum": 100, "maximum": 5000 }
+                    },
+                    "required": ["category", "word_count"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "category": { "const": "image" },
+                        "width": { "type": "integer", "minimum": 1, "maximum": 4096 },
+                        "height": { "type": "integer", "minimum": 1, "maximum": 4096 }
+                    },
+                    "required": ["category", "width", "height"]
+                }
+            ]
+        },
+        "access_control": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "visibility": { "const": "public" }
+                    },
+                    "required": ["visibility"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "visibility": { "const": "private" },
+                        "owner": { "type": "string", "minLength": 1, "maxLength": 30 }
+                    },
+                    "required": ["visibility", "owner"]
+                }
+            ]
+        },
+        "not_deleted": {
+            "not": {
+                "properties": {
+                    "status": { "const": "deleted" }
+                },
+                "required": ["status"]
+            }
+        }
+    },
+    "properties": {
+        "content": {
+            "allOf": [
+                { "$ref": "#/$defs/tagged" },
+                { "$ref": "#/$defs/status_mixin" },
+                { "$ref": "#/$defs/categorized" },
+                { "$ref": "#/$defs/access_control" },
+                { "$ref": "#/$defs/not_deleted" }
+            ]
+        }
+    },
+    "required": ["content"]
+}

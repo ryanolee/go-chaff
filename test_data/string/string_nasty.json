@@ -1,0 +1,122 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "format_with_min_max_length": {
+            "type": "string",
+            "format": "email"
+        },
+        "ipv4_with_length": {
+            "type": "string",
+            "format": "ipv4"
+        },
+        "date_with_length_bounds": {
+            "type": "string",
+            "format": "date"
+        },
+        "uri_with_min_length": {
+            "type": "string",
+            "format": "uri"
+        },
+        "hostname_constrained": {
+            "type": "string",
+            "format": "hostname"
+        },
+        "pattern_with_min_max_length": {
+            "type": "string",
+            "pattern": "^[a-z]+$"
+        },
+        "pattern_digits_fixed": {
+            "type": "string",
+            "pattern": "^[0-9]{5}$"
+        },
+        "pattern_alternation_with_length": {
+            "type": "string",
+            "pattern": "^(foo|bar|baz|qux)$"
+        },
+        "enum_string_values": {
+            "type": "string",
+            "enum": ["alpha", "bravo", "charlie", "delta", "echo"]
+        },
+        "const_string_value": {
+            "type": "string",
+            "const": "immutable"
+        },
+        "enum_with_min_length": {
+            "type": "string",
+            "enum": ["a", "ab", "abc", "abcd", "abcde"],
+            "minLength": 3
+        },
+        "very_long_min_length": {
+            "type": "string",
+            "minLength": 100,
+            "maxLength": 200
+        },
+        "exact_length_one": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1
+        },
+        "pattern_hex_color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "pattern_semver": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "pattern_uuid_like": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "multiple_type_including_string": {
+            "type": ["string", "null"]
+        },
+        "string_with_default": {
+            "type": "string",
+            "default": "fallback",
+            "minLength": 1
+        },
+        "ipv6_format": {
+            "type": "string",
+            "format": "ipv6"
+        },
+        "date_time_format": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "pattern_alphanumeric_underscore": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+        },
+        "pattern_email_like": {
+            "type": "string",
+            "pattern": "^[a-z]+@[a-z]+\\.[a-z]{2,4}$"
+        }
+    },
+    "required": [
+        "format_with_min_max_length",
+        "ipv4_with_length",
+        "date_with_length_bounds",
+        "uri_with_min_length",
+        "hostname_constrained",
+        "pattern_with_min_max_length",
+        "pattern_digits_fixed",
+        "pattern_alternation_with_length",
+        "enum_string_values",
+        "const_string_value",
+        "enum_with_min_length",
+        "very_long_min_length",
+        "exact_length_one",
+        "pattern_hex_color",
+        "pattern_semver",
+        "pattern_uuid_like",
+        "multiple_type_including_string",
+        "string_with_default",
+        "ipv6_format",
+        "date_time_format",
+        "pattern_alphanumeric_underscore",
+        "pattern_email_like"
+    ],
+    "additionalProperties": false
+}

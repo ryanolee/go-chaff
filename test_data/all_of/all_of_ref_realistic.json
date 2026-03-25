@@ -1,0 +1,156 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Tests realistic patterns: OOP-style inheritance via allOf + $ref, discriminated types, and composition patterns common in real-world API schemas.",
+    "type": "object",
+    "$defs": {
+        "base_resource": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer", "minimum": 1, "maximum": 99999 },
+                "type": { "type": "string", "minLength": 1, "maxLength": 30 },
+                "created_at": { "type": "string", "format": "date-time" }
+            },
+            "required": ["id", "type"]
+        },
+        "auditable": {
+            "type": "object",
+            "properties": {
+                "updated_by": { "type": "string", "minLength": 1, "maxLength": 50 },
+                "version": { "type": "integer", "minimum": 1, "maximum": 999 }
+            },
+            "required": ["version"]
+        },
+        "soft_deletable": {
+            "type": "object",
+            "properties": {
+                "deleted": { "type": "boolean" }
+            }
+        },
+        "user_resource": {
+            "description": "A user extends base_resource + auditable + soft_deletable",
+            "allOf": [
+                { "$ref": "#/$defs/base_resource" },
+                { "$ref": "#/$defs/auditable" },
+                { "$ref": "#/$defs/soft_deletable" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "username": { "type": "string", "minLength": 3, "maxLength": 30 },
+                        "email": { "type": "string", "format": "email" },
+                        "role": { "type": "string", "enum": ["admin", "editor", "viewer"] }
+                    },
+                    "required": ["username", "email", "role"]
+                }
+            ]
+        },
+        "post_resource": {
+            "description": "A post extends base_resource + auditable",
+            "allOf": [
+                { "$ref": "#/$defs/base_resource" },
+                { "$ref": "#/$defs/auditable" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+                        "body": { "type": "string", "minLength": 1, "maxLength": 1000 },
+                        "published": { "type": "boolean" }
+                    },
+                    "required": ["title", "body"]
+                }
+            ]
+        },
+        "comment_resource": {
+            "description": "A comment extends base_resource only",
+            "allOf": [
+                { "$ref": "#/$defs/base_resource" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "text": { "type": "string", "minLength": 1, "maxLength": 500 },
+                        "author_id": { "type": "integer", "minimum": 1, "maximum": 99999 }
+                    },
+                    "required": ["text", "author_id"]
+                }
+            ]
+        },
+        "paginated_response": {
+            "type": "object",
+            "properties": {
+                "page": { "type": "integer", "minimum": 1, "maximum": 1000 },
+                "per_page": { "type": "integer", "minimum": 1, "maximum": 100 },
+                "total": { "type": "integer", "minimum": 0, "maximum": 99999 }
+            },
+            "required": ["page", "per_page", "total"]
+        }
+    },
+    "properties": {
+        "user": {
+            "description": "A user resource with full inheritance chain.",
+            "$ref": "#/$defs/user_resource"
+        },
+        "post": {
+            "description": "A post resource.",
+            "$ref": "#/$defs/post_resource"
+        },
+        "comment": {
+            "description": "A comment resource.",
+            "$ref": "#/$defs/comment_resource"
+        },
+        "paginated_users": {
+            "description": "Paginated response merged with a data array of user resources.",
+            "allOf": [
+                { "$ref": "#/$defs/paginated_response" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "data": {
+                            "type": "array",
+                            "items": { "$ref": "#/$defs/user_resource" },
+                            "minItems": 1,
+                            "maxItems": 3
+                        }
+                    },
+                    "required": ["data"]
+                }
+            ]
+        },
+        "paginated_posts": {
+            "description": "Paginated response merged with a data array of post resources.",
+            "allOf": [
+                { "$ref": "#/$defs/paginated_response" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "data": {
+                            "type": "array",
+                            "items": { "$ref": "#/$defs/post_resource" },
+                            "minItems": 1,
+                            "maxItems": 3
+                        }
+                    },
+                    "required": ["data"]
+                }
+            ]
+        },
+        "extended_user": {
+            "description": "Further extension of user_resource with an extra inline property.",
+            "allOf": [
+                { "$ref": "#/$defs/user_resource" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "bio": { "type": "string", "minLength": 0, "maxLength": 300 }
+                    }
+                }
+            ]
+        }
+    },
+    "required": [
+        "user",
+        "post",
+        "comment",
+        "paginated_users",
+        "paginated_posts",
+        "extended_user"
+    ]
+}

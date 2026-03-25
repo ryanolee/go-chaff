@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Cyclic reference via allOf: node_a allOf-refs node_b which allOf-refs node_a. Both are objects with a leaf property so the generator can terminate via the depth limit.",
+    "type": "object",
+    "$defs": {
+        "node_a": {
+            "type": "object",
+            "properties": {
+                "label": { "type": "string", "minLength": 1, "maxLength": 5 },
+                "link_to_b": { "$ref": "#/$defs/node_b" }
+            },
+            "required": ["label"]
+        },
+        "node_b": {
+            "type": "object",
+            "properties": {
+                "value": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "link_to_a": { "$ref": "#/$defs/node_a" }
+            },
+            "required": ["value"]
+        }
+    },
+    "properties": {
+        "root": {
+            "allOf": [
+                { "$ref": "#/$defs/node_a" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "root_flag": { "type": "boolean" }
+                    }
+                }
+            ]
+        }
+    },
+    "required": ["root"]
+}

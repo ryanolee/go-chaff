@@ -1,0 +1,124 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Tests allOf with $ref where object property constraints must merge: overlapping properties, required merging, additionalProperties, and nested objects.",
+    "type": "object",
+    "$defs": {
+        "identifiable": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer", "minimum": 1, "maximum": 9999 }
+            },
+            "required": ["id"]
+        },
+        "named": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string", "minLength": 1, "maxLength": 100 }
+            },
+            "required": ["name"]
+        },
+        "describable": {
+            "type": "object",
+            "properties": {
+                "description": { "type": "string", "minLength": 0, "maxLength": 500 }
+            }
+        },
+        "with_address": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "object",
+                    "properties": {
+                        "street": { "type": "string", "minLength": 1, "maxLength": 200 },
+                        "city": { "type": "string", "minLength": 1, "maxLength": 100 },
+                        "zip": { "type": "string", "minLength": 1, "maxLength": 10 }
+                    },
+                    "required": ["street", "city"]
+                }
+            },
+            "required": ["address"]
+        },
+        "with_scores": {
+            "type": "object",
+            "properties": {
+                "scores": {
+                    "type": "array",
+                    "items": { "type": "integer", "minimum": 0, "maximum": 100 },
+                    "minItems": 1,
+                    "maxItems": 5
+                }
+            }
+        },
+        "with_bool_flags": {
+            "type": "object",
+            "properties": {
+                "active": { "type": "boolean" },
+                "verified": { "type": "boolean" }
+            }
+        }
+    },
+    "properties": {
+        "id_and_name": {
+            "description": "Merge identifiable (required: id) + named (required: name). Both required should merge.",
+            "allOf": [
+                { "$ref": "#/$defs/identifiable" },
+                { "$ref": "#/$defs/named" }
+            ]
+        },
+        "id_name_description": {
+            "description": "Merge three: identifiable + named + describable. Required: [id, name].",
+            "allOf": [
+                { "$ref": "#/$defs/identifiable" },
+                { "$ref": "#/$defs/named" },
+                { "$ref": "#/$defs/describable" }
+            ]
+        },
+        "nested_object_merge": {
+            "description": "Merge identifiable + with_address. Both are objects; address is a nested object. Required: [id, address].",
+            "allOf": [
+                { "$ref": "#/$defs/identifiable" },
+                { "$ref": "#/$defs/with_address" }
+            ]
+        },
+        "merge_with_array_property": {
+            "description": "Merge identifiable + with_scores. Object should have id (int) and scores (array).",
+            "allOf": [
+                { "$ref": "#/$defs/identifiable" },
+                { "$ref": "#/$defs/with_scores" }
+            ]
+        },
+        "full_merge_six_defs": {
+            "description": "Merge all six $defs together into one object with all properties.",
+            "allOf": [
+                { "$ref": "#/$defs/identifiable" },
+                { "$ref": "#/$defs/named" },
+                { "$ref": "#/$defs/describable" },
+                { "$ref": "#/$defs/with_address" },
+                { "$ref": "#/$defs/with_scores" },
+                { "$ref": "#/$defs/with_bool_flags" }
+            ]
+        },
+        "merge_with_inline_required": {
+            "description": "Merge refs with an inline schema adding a new required property.",
+            "allOf": [
+                { "$ref": "#/$defs/identifiable" },
+                { "$ref": "#/$defs/describable" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "priority": { "type": "integer", "minimum": 1, "maximum": 5 }
+                    },
+                    "required": ["priority", "description"]
+                }
+            ]
+        }
+    },
+    "required": [
+        "id_and_name",
+        "id_name_description",
+        "nested_object_merge",
+        "merge_with_array_property",
+        "full_merge_six_defs",
+        "merge_with_inline_required"
+    ]
+}

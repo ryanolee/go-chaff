@@ -44,7 +44,7 @@ func parseAllOf(node schemaNode, metadata *parserMetadata) (Generator, error) {
 		return &nullGenerator{}, err
 	}
 
-	generator, err := parseSchemaNode(mergedNode, metadata)
+	generator, err := metadata.ReferenceHandler.ParseNodeInScope("/allOf", mergedNode, metadata, nodesToCombine...)
 
 	if err != nil {
 		return &nullGenerator{}, err

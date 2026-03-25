@@ -47,15 +47,20 @@ func parseReference(node schemaNode, metadata *parserMetadata) (Generator, error
 
 func (g referenceGenerator) Generate(opts *GeneratorOptions) interface{} {
 	opts.overallComplexity++
+
+	if opts.ShouldCutoff() {
+		return nil
+	}
+
 	reference, ok := g.ReferenceHandler.Lookup(g.Document, g.ReferenceStr)
 
 	if !ok {
-		return nil
+		return fmt.Sprintf("Unresolvable reference: document '%s' with path '%s'", g.Document, g.ReferenceStr)
 	}
 
 	refResolver := &opts.ReferenceResolver
 	if len(refResolver.GetResolutions()) > opts.MaximumReferenceDepth {
-		return fmt.Sprintf("Maximum reference depth exceeded: %d \n %s", opts.MaximumReferenceDepth, refResolver.GetFormattedResolutions())
+		return fmt.Sprintf("Maximum reference resolution depth of %d exceeded: %s", opts.MaximumReferenceDepth, refResolver.GetFormattedResolutions())
 	}
 
 	if refResolver.HasResolved(g.Document, g.ReferenceStr) && !opts.BypassCyclicReferenceCheck {

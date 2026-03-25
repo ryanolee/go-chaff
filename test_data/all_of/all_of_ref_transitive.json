@@ -1,0 +1,124 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Tests transitive $ref chains through allOf: A refs B which refs C, testing multi-hop reference resolution during allOf merging.",
+    "type": "object",
+    "$defs": {
+        "level_0": {
+            "type": "object",
+            "properties": {
+                "base_field": { "type": "string", "minLength": 1, "maxLength": 10 }
+            },
+            "required": ["base_field"]
+        },
+        "level_1": {
+            "description": "Extends level_0 via allOf, adds field_1",
+            "allOf": [
+                { "$ref": "#/$defs/level_0" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "field_1": { "type": "integer", "minimum": 1, "maximum": 100 }
+                    },
+                    "required": ["field_1"]
+                }
+            ]
+        },
+        "level_2": {
+            "description": "Extends level_1 via allOf, adds field_2. Transitive: inherits base_field and field_1.",
+            "allOf": [
+                { "$ref": "#/$defs/level_1" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "field_2": { "type": "boolean" }
+                    },
+                    "required": ["field_2"]
+                }
+            ]
+        },
+        "level_3": {
+            "description": "Extends level_2 via allOf, adds field_3. Transitive: inherits base_field, field_1, field_2.",
+            "allOf": [
+                { "$ref": "#/$defs/level_2" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "field_3": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+                    }
+                }
+            ]
+        },
+        "branch_a": {
+            "description": "A branch that extends level_1 differently.",
+            "allOf": [
+                { "$ref": "#/$defs/level_1" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "branch_a_field": { "type": "string", "enum": ["x", "y", "z"] }
+                    },
+                    "required": ["branch_a_field"]
+                }
+            ]
+        },
+        "branch_b": {
+            "description": "Another branch that extends level_1 differently.",
+            "allOf": [
+                { "$ref": "#/$defs/level_1" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "branch_b_field": { "type": "integer", "minimum": 100, "maximum": 999 }
+                    },
+                    "required": ["branch_b_field"]
+                }
+            ]
+        }
+    },
+    "properties": {
+        "use_level_1": {
+            "description": "Direct ref to level_1. Should have base_field + field_1.",
+            "$ref": "#/$defs/level_1"
+        },
+        "use_level_2": {
+            "description": "Direct ref to level_2. Should have base_field + field_1 + field_2.",
+            "$ref": "#/$defs/level_2"
+        },
+        "use_level_3": {
+            "description": "Direct ref to level_3. 4-deep inheritance chain.",
+            "$ref": "#/$defs/level_3"
+        },
+        "use_branch_a": {
+            "description": "Direct ref to branch_a. Should have base_field + field_1 + branch_a_field.",
+            "$ref": "#/$defs/branch_a"
+        },
+        "merge_branches": {
+            "description": "allOf merging both branches. Both extend level_1 so base_field and field_1 come from both sides.",
+            "allOf": [
+                { "$ref": "#/$defs/branch_a" },
+                { "$ref": "#/$defs/branch_b" }
+            ]
+        },
+        "level_3_with_extra": {
+            "description": "allOf extending level_3 with additional inline properties.",
+            "allOf": [
+                { "$ref": "#/$defs/level_3" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "extra_field": { "type": "string", "minLength": 1, "maxLength": 5 }
+                    },
+                    "required": ["extra_field"]
+                }
+            ]
+        }
+    },
+    "required": [
+        "use_level_1",
+        "use_level_2",
+        "use_level_3",
+        "use_branch_a",
+        "merge_branches",
+        "level_3_with_extra"
+    ]
+}

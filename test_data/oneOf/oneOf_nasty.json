@@ -1,0 +1,91 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "oneOf_typed_objects": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "type": "string", "const": "circle" },
+                        "radius": { "type": "number", "minimum": 0.1 }
+                    },
+                    "required": ["kind", "radius"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "type": "string", "const": "rectangle" },
+                        "width": { "type": "number", "minimum": 0.1 },
+                        "height": { "type": "number", "minimum": 0.1 }
+                    },
+                    "required": ["kind", "width", "height"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "type": "string", "const": "triangle" },
+                        "base": { "type": "number", "minimum": 0.1 },
+                        "height": { "type": "number", "minimum": 0.1 }
+                    },
+                    "required": ["kind", "base", "height"],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "oneOf_primitives": {
+            "oneOf": [
+                { "type": "string", "minLength": 5 },
+                { "type": "integer", "minimum": 100 },
+                { "type": "boolean" }
+            ]
+        },
+        "oneOf_with_enum": {
+            "oneOf": [
+                { "type": "string", "enum": ["red", "green", "blue"] },
+                { "type": "integer", "enum": [1, 2, 3] },
+                { "type": "null" }
+            ]
+        },
+        "oneOf_constrained_numbers": {
+            "oneOf": [
+                { "type": "integer", "minimum": 0, "maximum": 10 },
+                { "type": "integer", "minimum": 100, "maximum": 110 },
+                { "type": "integer", "minimum": 1000, "maximum": 1010 }
+            ]
+        },
+        "oneOf_nested_objects": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "leaf" },
+                        "value": { "type": "string", "minLength": 1 }
+                    },
+                    "required": ["type", "value"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "branch" },
+                        "label": { "type": "string" },
+                        "count": { "type": "integer", "minimum": 1, "maximum": 100 }
+                    },
+                    "required": ["type", "label", "count"],
+                    "additionalProperties": false
+                }
+            ]
+        }
+    },
+    "required": [
+        "oneOf_typed_objects",
+        "oneOf_primitives",
+        "oneOf_with_enum",
+        "oneOf_constrained_numbers",
+        "oneOf_nested_objects"
+    ],
+    "additionalProperties": false
+}

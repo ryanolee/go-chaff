@@ -53,7 +53,14 @@ func parseDefinitions(path string, metadata *parserMetadata, definitions map[str
 	generators := make(map[string]Generator)
 	for key, value := range definitions {
 		refPath := fmt.Sprintf("/%s/%s", path, key)
-		generator, _ := ref.ParseNodeInScope(refPath, value, metadata)
+
+		// Pass a synthetic schema node whose Ref points to this definition
+		// so that ParseNodeInScope tracks it on the resolution stack. This
+		// ensures any $ref back to this definition is detected as a cycle
+		// during merge, preventing infinite recursion when the definition
+		// references itself.
+		defPath := fmt.Sprintf("#/%s/%s", path, key)
+		generator, _ := ref.ParseNodeInScope(refPath, value, metadata, schemaNode{Ref: &defPath})
 
 		generators[key] = generator
 	}

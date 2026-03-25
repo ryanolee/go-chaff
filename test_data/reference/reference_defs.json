@@ -1,0 +1,52 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "address": {
+            "type": "object",
+            "properties": {
+                "street": { "type": "string", "minLength": 1 },
+                "city": { "type": "string", "minLength": 1 },
+                "zip": { "type": "string", "pattern": "^[0-9]{5}$" }
+            },
+            "required": ["street", "city"]
+        },
+        "name_field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+        },
+        "age_field": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 150
+        },
+        "email_field": {
+            "type": "string",
+            "format": "email"
+        },
+        "tag_list": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1,
+            "maxItems": 5,
+            "uniqueItems": true
+        },
+        "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "multipleOf": 0.5
+        }
+    },
+    "properties": {
+        "name": { "$ref": "#/$defs/name_field" },
+        "age": { "$ref": "#/$defs/age_field" },
+        "email": { "$ref": "#/$defs/email_field" },
+        "home_address": { "$ref": "#/$defs/address" },
+        "work_address": { "$ref": "#/$defs/address" },
+        "tags": { "$ref": "#/$defs/tag_list" },
+        "score": { "$ref": "#/$defs/score" }
+    },
+    "required": ["name", "age", "home_address"]
+}

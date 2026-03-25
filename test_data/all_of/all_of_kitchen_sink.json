@@ -1,0 +1,169 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Kitchen sink: allOf with every combinator interleaved across 4+ nesting levels with refs, not chains, if/then/else, enums, const, patterns, min/max constraints",
+    "type": "object",
+    "$defs": {
+        "name_field": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string", "minLength": 2, "maxLength": 20 }
+            },
+            "required": ["name"]
+        },
+        "scored": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "score": { "type": "number", "minimum": 0, "maximum": 100 }
+                    },
+                    "required": ["score"]
+                },
+                {
+                    "not": {
+                        "properties": { "score": { "const": 0 } },
+                        "required": ["score"]
+                    }
+                }
+            ]
+        },
+        "rank_badge": {
+            "if": {
+                "properties": { "score": { "type": "number", "minimum": 80 } },
+                "required": ["score"]
+            },
+            "then": {
+                "properties": {
+                    "badge": { "const": "gold" }
+                },
+                "required": ["badge"]
+            },
+            "else": {
+                "if": {
+                    "properties": { "score": { "type": "number", "minimum": 50 } },
+                    "required": ["score"]
+                },
+                "then": {
+                    "properties": {
+                        "badge": { "const": "silver" }
+                    },
+                    "required": ["badge"]
+                },
+                "else": {
+                    "properties": {
+                        "badge": { "const": "bronze" }
+                    },
+                    "required": ["badge"]
+                }
+            }
+        }
+    },
+    "properties": {
+        "player": {
+            "allOf": [
+                { "$ref": "#/$defs/name_field" },
+                { "$ref": "#/$defs/scored" },
+                { "$ref": "#/$defs/rank_badge" },
+                {
+                    "oneOf": [
+                        {
+                            "properties": {
+                                "role": { "const": "attacker" },
+                                "weapon": {
+                                    "anyOf": [
+                                        {
+                                            "allOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "type": { "const": "sword" },
+                                                        "damage": { "type": "integer", "minimum": 10, "maximum": 50 }
+                                                    },
+                                                    "required": ["type", "damage"]
+                                                },
+                                                {
+                                                    "not": {
+                                                        "properties": { "damage": { "const": 13 } },
+                                                        "required": ["damage"]
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "type": { "const": "bow" },
+                                                "range": { "type": "integer", "minimum": 20, "maximum": 100 }
+                                            },
+                                            "required": ["type", "range"]
+                                        }
+                                    ]
+                                }
+                            },
+                            "required": ["role", "weapon"]
+                        },
+                        {
+                            "properties": {
+                                "role": { "const": "defender" },
+                                "shield": {
+                                    "allOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "material": { "type": "string", "enum": ["wood", "iron", "steel"] },
+                                                "durability": { "type": "integer", "minimum": 1, "maximum": 100 }
+                                            },
+                                            "required": ["material", "durability"]
+                                        },
+                                        {
+                                            "if": {
+                                                "properties": { "material": { "const": "steel" } },
+                                                "required": ["material"]
+                                            },
+                                            "then": {
+                                                "properties": {
+                                                    "durability": { "type": "integer", "minimum": 50 }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            "required": ["role", "shield"]
+                        }
+                    ]
+                }
+            ]
+        },
+        "metadata": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "version": { "type": "integer", "minimum": 1, "maximum": 5 },
+                        "tags": {
+                            "type": "array",
+                            "items": {
+                                "allOf": [
+                                    { "type": "string", "minLength": 1, "maxLength": 15 },
+                                    { "not": { "const": "" } }
+                                ]
+                            },
+                            "minItems": 1,
+                            "maxItems": 3
+                        }
+                    },
+                    "required": ["version", "tags"]
+                },
+                {
+                    "not": {
+                        "not": {
+                            "type": "object"
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "required": ["player", "metadata"]
+}

@@ -1,0 +1,53 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Deep nesting: 4 layers of allOf inheritance where the deepest layer references back to the top. Tests that cycle detection works through multiple layers of allOf merging.",
+    "type": "object",
+    "$defs": {
+        "layer_0": {
+            "type": "object",
+            "properties": {
+                "l0_id": { "type": "integer", "minimum": 1, "maximum": 100 }
+            },
+            "required": ["l0_id"]
+        },
+        "layer_1": {
+            "allOf": [
+                { "$ref": "#/$defs/layer_0" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "l1_name": { "type": "string", "minLength": 1, "maxLength": 10 }
+                    },
+                    "required": ["l1_name"]
+                }
+            ]
+        },
+        "layer_2": {
+            "allOf": [
+                { "$ref": "#/$defs/layer_1" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "l2_flag": { "type": "boolean" }
+                    }
+                }
+            ]
+        },
+        "layer_3": {
+            "allOf": [
+                { "$ref": "#/$defs/layer_2" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "l3_score": { "type": "integer", "minimum": 0, "maximum": 10 },
+                        "recurse": { "$ref": "#/$defs/layer_0" }
+                    }
+                }
+            ]
+        }
+    },
+    "properties": {
+        "deep": { "$ref": "#/$defs/layer_3" }
+    },
+    "required": ["deep"]
+}

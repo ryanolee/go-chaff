@@ -1,0 +1,56 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Diamond-shaped cycle: D extends B and C via allOf, both B and C extend A, and A has an optional ref back to D. Tests that diamond inheritance with a back-edge does not stack overflow.",
+    "type": "object",
+    "$defs": {
+        "node_A": {
+            "type": "object",
+            "properties": {
+                "a_val": { "type": "string", "minLength": 1, "maxLength": 5 },
+                "back_to_d": { "$ref": "#/$defs/node_D" }
+            },
+            "required": ["a_val"]
+        },
+        "node_B": {
+            "allOf": [
+                { "$ref": "#/$defs/node_A" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "b_val": { "type": "integer", "minimum": 0, "maximum": 10 }
+                    },
+                    "required": ["b_val"]
+                }
+            ]
+        },
+        "node_C": {
+            "allOf": [
+                { "$ref": "#/$defs/node_A" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "c_val": { "type": "boolean" }
+                    },
+                    "required": ["c_val"]
+                }
+            ]
+        },
+        "node_D": {
+            "allOf": [
+                { "$ref": "#/$defs/node_B" },
+                { "$ref": "#/$defs/node_C" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "d_val": { "type": "string", "enum": ["x", "y"] }
+                    },
+                    "required": ["d_val"]
+                }
+            ]
+        }
+    },
+    "properties": {
+        "diamond": { "$ref": "#/$defs/node_D" }
+    },
+    "required": ["diamond"]
+}
