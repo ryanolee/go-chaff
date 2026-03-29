@@ -521,7 +521,7 @@ func mergeIf(metadata *parserMetadata, mergedNode schemaNode, node schemaNode) s
 
 	if node.If != nil {
 		path := fmt.Sprintf("%s/if", metadata.ReferenceHandler.CurrentPath)
-		mergedNode.mergedIf = append(mergedNode.mergedIf, NewIfStatement(node, path))
+		mergedNode.mergedIf = append(mergedNode.mergedIf, newIfStatement(node, path))
 	}
 
 	return mergedNode

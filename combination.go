@@ -87,7 +87,7 @@ func parseCombination(node schemaNode, metadata *parserMetadata) (Generator, err
 		}
 
 		stubNode.OneOf = &resolvedNodes
-		oneOfConstraint, err := NewOneOfConstraint(stubNode, metadata)
+		oneOfConstraint, err := newOneOfConstraint(stubNode, metadata)
 		if err != nil {
 			return nullGenerator{}, err
 		}
@@ -130,7 +130,7 @@ func (g combinationGenerator) String() string {
 	return fmt.Sprintf("CombinationGenerator[%s]{%s}", g.Type, strings.Join(formattedGenerators, ","))
 }
 
-func NewOneOfConstraint(node schemaNode, metadata *parserMetadata) (*oneOfConstraint, error) {
+func newOneOfConstraint(node schemaNode, metadata *parserMetadata) (*oneOfConstraint, error) {
 	schemas := []*jsonschemaV6.Schema{}
 
 	if node.OneOf == nil || len(*node.OneOf) == 0 {

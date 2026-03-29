@@ -356,7 +356,7 @@ func collectSubSchemaIds(baseURI string, documentId string, node *schemaNode) ma
 	result := make(map[string]idAlias)
 	baseAtPath := map[string]string{"": baseURI}
 
-	WalkSchema(raw, "", func(n map[string]interface{}, path string) {
+	walkSchema(raw, "", func(n map[string]interface{}, path string) {
 		idVal, ok := n["$id"]
 		if !ok {
 			return

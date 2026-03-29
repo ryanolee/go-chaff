@@ -869,8 +869,8 @@ func nodeTypeContains(node *schemaNode, candidateType string) bool {
 }
 
 // Given we shift the bounds +1 or -1 we need to ensure we don't overflow
-const MinInt = math.MinInt32 + 1
-const MaxInt = math.MaxInt32 - 1
+const minInt = math.MinInt32 + 1
+const maxInt = math.MaxInt32 - 1
 
 func resolveBoundsInt(metadata *parserMetadata,
 	minFieldName string,
@@ -899,12 +899,12 @@ func resolveBoundsInt(metadata *parserMetadata,
 	}
 
 	// Inclusive bounds
-	x1 := util.GetZeroIfNil(minPtr, MinInt)
-	x2 := util.GetZeroIfNil(maxPtr, MaxInt)
+	x1 := util.GetZeroIfNil(minPtr, minInt)
+	x2 := util.GetZeroIfNil(maxPtr, maxInt)
 
 	// Not bounds are inverted (notMax -> min, notMin -> max)
-	y1 := util.GetZeroIfNil(notMinPtr, MinInt)
-	y2 := util.GetZeroIfNil(addIfNotNilInt(notMaxPtr, 1), MaxInt)
+	y1 := util.GetZeroIfNil(notMinPtr, minInt)
+	y2 := util.GetZeroIfNil(addIfNotNilInt(notMaxPtr, 1), maxInt)
 
 	// No bounds overlap return original
 	if y2 < x1 || y1 > x2 {
@@ -1013,7 +1013,7 @@ func resolveBoundsFloat64(metadata *parserMetadata,
 // Helper to convert min/max int to nil where unbounded
 // We use a small buffer to avoid edge cases to do with shifted bounds
 func minToNil(min int) *int {
-	if min <= MinInt+10 {
+	if min <= minInt+10 {
 		return nil
 	}
 
@@ -1021,7 +1021,7 @@ func minToNil(min int) *int {
 }
 
 func maxToNil(max int) *int {
-	if max >= MaxInt-10 {
+	if max >= maxInt-10 {
 		return nil
 	}
 	return &max

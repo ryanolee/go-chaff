@@ -288,7 +288,7 @@ func ParseSchemaWithDefaults(schema []byte) (RootGenerator, error) {
 
 // DefaultMaxParseDepth is the recursion depth limit during parsing when no
 // custom value is provided via ParserOptions.MaxParseDepth.
-const DefaultMaxParseDepth = 100
+const defaultMaxParseDepth = 100
 
 func parseNode(node schemaNode, metadata *parserMetadata) (Generator, error) {
 	metadata.ParseDepth++
@@ -424,7 +424,7 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 		RegexPatternPropertyOptions: opts.RegexPatternPropertyOptions,
 		DocumentFetchOptions:        opts.DocumentFetchOptions,
 		RelativeTo:                  opts.RelativeTo,
-		MaxParseDepth:               util.GetInt(opts.MaxParseDepth, DefaultMaxParseDepth),
+		MaxParseDepth:               util.GetInt(opts.MaxParseDepth, defaultMaxParseDepth),
 	}
 
 	defaultRegexOpts := &regen.GeneratorArgs{

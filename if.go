@@ -42,7 +42,7 @@ type (
 func parseIf(node schemaNode, metadata *parserMetadata) (Generator, error) {
 
 	if node.If != nil {
-		node.mergedIf = append(node.mergedIf, NewIfStatement(node, metadata.ReferenceHandler.CurrentPath))
+		node.mergedIf = append(node.mergedIf, newIfStatement(node, metadata.ReferenceHandler.CurrentPath))
 	}
 
 	//nullify subschemas to avoid infinite recursion during merge
@@ -107,7 +107,7 @@ func parseIfBody(metadata *parserMetadata, field string, parentScope schemaNode,
 }
 
 // Internal if statement used to apply the if then then else logic
-func NewIfStatement(node schemaNode, nodePath string) ifStatement {
+func newIfStatement(node schemaNode, nodePath string) ifStatement {
 	return ifStatement{
 		OriginalPath: nodePath,
 		If:           node.If,
