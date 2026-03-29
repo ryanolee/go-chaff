@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_not.json",
+  "type": "object",
+  "properties": {
+    "nonNull": {
+      "type": "string",
+      "minLength": 1,
+      "not": {
+        "$id": "null-type-schema",
+        "type": "null"
+      }
+    },
+    "actualNull": { "$ref": "null-type-schema" }
+  },
+  "required": ["nonNull", "actualNull"]
+}

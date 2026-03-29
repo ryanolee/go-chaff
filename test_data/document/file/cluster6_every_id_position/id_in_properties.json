@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_properties.json",
+  "type": "object",
+  "properties": {
+    "original": {
+      "$id": "prop-schema",
+      "type": "string",
+      "enum": ["alpha", "beta"]
+    },
+    "copy": { "$ref": "prop-schema" }
+  },
+  "required": ["original", "copy"]
+}

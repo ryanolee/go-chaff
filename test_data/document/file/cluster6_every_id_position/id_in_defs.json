@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_defs.json",
+  "type": "object",
+  "properties": {
+    "value": { "$ref": "def-schema" }
+  },
+  "required": ["value"],
+  "$defs": {
+    "myDef": {
+      "$id": "def-schema",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    }
+  }
+}

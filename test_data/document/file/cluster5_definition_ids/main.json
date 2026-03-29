@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "main.json",
+  "title": "Main schema referencing definitions with $id-based $ref",
+  "type": "object",
+  "properties": {
+    "primaryColor": {
+      "$ref": "base_definitions.json#/$defs/color"
+    },
+    "secondaryColor": {
+      "$ref": "base_definitions.json#/$defs/nullable-color"
+    },
+    "title": {
+      "$ref": "base_definitions.json#/$defs/label"
+    },
+    "subtitle": {
+      "$ref": "base_definitions.json#/$defs/nullable-label"
+    },
+    "brightness": {
+      "$ref": "base_definitions.json#/$defs/percentage"
+    },
+    "highlight": {
+      "$ref": "base_definitions.json#/$defs/color-with-opacity"
+    },
+    "currentStatus": {
+      "$comment": "Cross-document ref to a $id-declared property via explicit path",
+      "$ref": "base_definitions.json#/properties/inlineStatus"
+    }
+  },
+  "required": ["primaryColor", "title", "brightness", "highlight", "currentStatus"]
+}

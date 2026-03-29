@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_additional_properties.json",
+  "type": "object",
+  "properties": {
+    "container": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 20 }
+      },
+      "required": ["name"],
+      "additionalProperties": {
+        "$id": "addl-prop-schema",
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 50
+      }
+    },
+    "intRef": { "$ref": "addl-prop-schema" }
+  },
+  "required": ["container", "intRef"]
+}

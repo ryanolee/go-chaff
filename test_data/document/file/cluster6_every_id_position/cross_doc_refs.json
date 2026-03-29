@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cross_doc_refs.json",
+  "type": "object",
+  "properties": {
+    "fromProperty": {
+      "$comment": "Cross-doc ref to a property with $id in id_in_properties.json",
+      "$ref": "id_in_properties.json#/properties/original"
+    },
+    "fromDef": {
+      "$comment": "Cross-doc ref to a $defs entry with $id in id_in_defs.json",
+      "$ref": "id_in_defs.json#/$defs/myDef"
+    },
+    "fromItems": {
+      "$comment": "Cross-doc ref to items with $id in id_in_items.json",
+      "$ref": "id_in_items.json#/properties/list/items"
+    },
+    "fromContains": {
+      "$comment": "Cross-doc ref to contains with $id in id_in_contains.json",
+      "$ref": "id_in_contains.json#/properties/list/contains"
+    },
+    "fromNot": {
+      "$comment": "Cross-doc ref to not schema with $id in id_in_not.json",
+      "$ref": "id_in_not.json#/properties/nonNull/not"
+    }
+  },
+  "required": ["fromProperty", "fromDef", "fromItems", "fromContains", "fromNot"]
+}
