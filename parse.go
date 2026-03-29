@@ -442,27 +442,53 @@ func withDefaultParseOptions(opts ParserOptions) ParserOptions {
 // Infers the type of a schema node based on its properties
 func inferType(node schemaNode) string {
 	// Object Properties
-	if util.AnyNotNil(node.Properties, node.PatternProperties, node.MinProperties, node.MaxProperties, node.Required) ||
-		(node.AdditionalProperties != nil && node.AdditionalProperties.Schema != nil) {
+	hasObjectProps := node.Properties != nil ||
+		node.PatternProperties != nil ||
+		node.MinProperties != nil ||
+		node.MaxProperties != nil ||
+		node.Required != nil ||
+		(node.AdditionalProperties != nil && node.AdditionalProperties.Schema != nil)
+
+	if hasObjectProps {
 		return typeObject
 	}
 
 	// String Properties
-	if util.AnyNotNil(node.Pattern, node.Format, node.MinLength, node.MaxLength) {
+	hasStringProps := node.Pattern != nil ||
+		node.Format != nil ||
+		node.MinLength != nil ||
+		node.MaxLength != nil
+
+	if hasStringProps {
 		return typeString
 	}
 
 	// Number Properties
-	if util.AnyNotNil(node.Minimum, node.Maximum, node.ExclusiveMinimum, node.ExclusiveMaximum, node.MultipleOf) {
+	hasNumberProps := node.Minimum != nil ||
+		node.Maximum != nil ||
+		node.ExclusiveMinimum != nil ||
+		node.ExclusiveMaximum != nil ||
+		node.MultipleOf != nil
+
+	if hasNumberProps {
 		return typeNumber
 	}
 
 	// Array Properties
-	if (node.Items != nil && node.Items.Node != nil) ||
-		util.AnyNotNil(node.MinItems, node.MaxItems, node.Contains, node.MinContains, node.MaxContains, node.PrefixItems, node.AdditionalItems, node.UnevaluatedItems) {
+	hasArrayProps := (node.Items != nil && node.Items.Node != nil) ||
+		node.MinItems != nil ||
+		node.MaxItems != nil ||
+		node.Contains != nil ||
+		node.MinContains != nil ||
+		node.MaxContains != nil ||
+		node.PrefixItems != nil ||
+		node.AdditionalItems != nil ||
+		node.UnevaluatedItems != nil
+
+	if hasArrayProps {
 		return typeArray
 	}
 
-	// If we can't infer the type, default to null
+	// If we can't infer the type, default to unknown
 	return typeUnknown
 }

@@ -1,0 +1,37 @@
+{
+    "inferred_string_from_pattern": {
+        "generator_schema": {
+            "pattern": "^[a-z]+$"
+        },
+        "test_schema": {
+            "type": "string",
+            "pattern": "^[a-z]+$"
+        }
+    },
+    "inferred_string_from_format": {
+        "generator_schema": {
+            "format": "email"
+        },
+        "test_schema": {
+            "type": "string"
+        }
+    },
+    "inferred_string_from_minLength": {
+        "generator_schema": {
+            "minLength": 3
+        },
+        "test_schema": {
+            "type": "string",
+            "minLength": 3
+        }
+    },
+    "inferred_string_from_maxLength": {
+        "generator_schema": {
+            "maxLength": 50
+        },
+        "test_schema": {
+            "type": "string",
+            "maxLength": 50
+        }
+    }
+}

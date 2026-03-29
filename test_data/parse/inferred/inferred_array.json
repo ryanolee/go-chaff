@@ -1,0 +1,62 @@
+{
+    "inferred_array_from_items": {
+        "generator_schema": {
+            "items": { "type": "string", "minLength": 1, "maxLength": 5 }
+        },
+        "test_schema": {
+            "type": "array",
+            "items": { "type": "string" }
+        }
+    },
+    "inferred_array_from_minItems": {
+        "generator_schema": {
+            "minItems": 1
+        },
+        "test_schema": {
+            "type": "array",
+            "minItems": 1
+        }
+    },
+    "inferred_array_from_maxItems": {
+        "generator_schema": {
+            "maxItems": 3
+        },
+        "test_schema": {
+            "type": "array",
+            "maxItems": 3
+        }
+    },
+    "inferred_array_from_prefixItems": {
+        "generator_schema": {
+            "prefixItems": [
+                { "type": "string", "const": "fixed" },
+                { "type": "integer", "minimum": 0, "maximum": 99 }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "test_schema": {
+            "type": "array",
+            "prefixItems": [
+                { "type": "string" },
+                { "type": "integer" }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+        }
+    },
+    "inferred_array_from_contains": {
+        "generator_schema": {
+            "items": { "type": "string", "const": "x" },
+            "contains": { "type": "string", "const": "x" },
+            "minItems": 1,
+            "maxItems": 1
+        },
+        "test_schema": {
+            "type": "array",
+            "contains": { "type": "string", "const": "x" },
+            "minItems": 1,
+            "maxItems": 1
+        }
+    }
+}
