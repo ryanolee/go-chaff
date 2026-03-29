@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_contains.json",
+  "type": "object",
+  "properties": {
+    "list": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "const": "special"
+      },
+      "contains": {
+        "$id": "contains-item-schema",
+        "type": "string",
+        "const": "special"
+      },
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "special": { "$ref": "contains-item-schema" }
+  },
+  "required": ["list", "special"]
+}

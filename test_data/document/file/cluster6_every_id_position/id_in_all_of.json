@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_all_of.json",
+  "type": "object",
+  "properties": {
+    "merged": {
+      "allOf": [
+        {
+          "$id": "allof-base",
+          "type": "object",
+          "properties": {
+            "name": { "type": "string", "minLength": 1, "maxLength": 10 }
+          },
+          "required": ["name"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "age": { "type": "integer", "minimum": 0, "maximum": 150 }
+          },
+          "required": ["age"]
+        }
+      ]
+    },
+    "baseCopy": { "$ref": "allof-base" }
+  },
+  "required": ["merged", "baseCopy"]
+}

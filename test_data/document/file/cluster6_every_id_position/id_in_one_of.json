@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_one_of.json",
+  "type": "object",
+  "properties": {
+    "choice": {
+      "oneOf": [
+        {
+          "$id": "circle-schema",
+          "type": "object",
+          "properties": {
+            "kind": { "const": "circle" },
+            "radius": { "type": "number", "minimum": 1, "maximum": 100 }
+          },
+          "required": ["kind", "radius"],
+          "additionalProperties": false
+        },
+        {
+          "$id": "rect-schema",
+          "type": "object",
+          "properties": {
+            "kind": { "const": "rect" },
+            "width": { "type": "number", "minimum": 1, "maximum": 100 },
+            "height": { "type": "number", "minimum": 1, "maximum": 100 }
+          },
+          "required": ["kind", "width", "height"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "alwaysCircle": { "$ref": "circle-schema" },
+    "alwaysRect": { "$ref": "rect-schema" }
+  },
+  "required": ["choice", "alwaysCircle", "alwaysRect"]
+}

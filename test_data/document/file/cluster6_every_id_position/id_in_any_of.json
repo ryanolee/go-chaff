@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_any_of.json",
+  "type": "object",
+  "properties": {
+    "flexible": {
+      "anyOf": [
+        {
+          "$id": "anyof-str",
+          "type": "string",
+          "enum": ["hello", "world"]
+        },
+        {
+          "$id": "anyof-num",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        }
+      ]
+    },
+    "strOnly": { "$ref": "anyof-str" },
+    "numOnly": { "$ref": "anyof-num" }
+  },
+  "required": ["flexible", "strOnly", "numOnly"]
+}

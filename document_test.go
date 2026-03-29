@@ -50,6 +50,20 @@ func TestDeeplyNestedDocumentCluster(t *testing.T) {
 	test.TestJsonSchemaDirWithConfig(t, "test_data/document/file/cluster4_deep_nested", 100, getDocumentChaffConfig(), nil)
 }
 
+func TestDefinitionIdDocumentCluster(t *testing.T) {
+	t.Parallel()
+	test.TestJsonSchemaDirWithConfig(t, "test_data/document/file/cluster5_definition_ids", 100, getDocumentChaffConfig(), nil)
+}
+
+func TestEveryIdPositionCluster(t *testing.T) {
+	t.Parallel()
+	test.TestJsonSchemaDirWithConfig(t, "test_data/document/file/cluster6_every_id_position", 100, getDocumentChaffConfig(), func() *chaff.GeneratorOptions {
+		return &chaff.GeneratorOptions{
+			MaximumOneOfAttempts: 10000,
+		}
+	})
+}
+
 func TestHttpDocuments(t *testing.T) {
 	server, err := http_schema_server.StartTestServer()
 	if err != nil {

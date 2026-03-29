@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_prefix_items.json",
+  "type": "object",
+  "properties": {
+    "tuple": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$id": "first-element",
+          "type": "string",
+          "const": "fixed"
+        },
+        {
+          "$id": "second-element",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "firstCopy": { "$ref": "first-element" },
+    "secondCopy": { "$ref": "second-element" }
+  },
+  "required": ["tuple", "firstCopy", "secondCopy"]
+}

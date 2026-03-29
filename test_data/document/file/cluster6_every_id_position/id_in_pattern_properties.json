@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_pattern_properties.json",
+  "type": "object",
+  "properties": {
+    "container": {
+      "type": "object",
+      "patternProperties": {
+        "^s_": {
+          "$id": "str-pattern-schema",
+          "type": "string",
+          "enum": ["x", "y", "z"]
+        }
+      }
+    },
+    "patRef": { "$ref": "str-pattern-schema" }
+  },
+  "required": ["container", "patRef"]
+}

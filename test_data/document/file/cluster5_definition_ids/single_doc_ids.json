@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "single_doc_ids.json",
+  "title": "Single document with $id on arbitrary schema positions",
+  "type": "object",
+  "properties": {
+    "name": {
+      "$id": "name-schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "age": {
+      "$id": "age-schema",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 150
+    },
+    "nameRef": {
+      "$comment": "$ref to $id on a sibling property",
+      "$ref": "name-schema"
+    },
+    "ageRef": {
+      "$comment": "$ref to $id on a sibling property",
+      "$ref": "age-schema"
+    },
+    "tag": {
+      "$ref": "#/$defs/tag"
+    },
+    "tagById": {
+      "$comment": "$ref to $id declared in $defs",
+      "$ref": "tag-schema"
+    },
+    "metadata": {
+      "$comment": "Nested object whose children $ref $id-declared schemas",
+      "$ref": "#/$defs/metadata"
+    }
+  },
+  "required": ["name", "age", "nameRef", "ageRef", "tag", "tagById", "metadata"],
+  "$defs": {
+    "tag": {
+      "$id": "tag-schema",
+      "type": "string",
+      "enum": ["alpha", "beta", "release"]
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "createdBy": { "$ref": "name-schema" },
+        "version": { "$ref": "tag-schema" }
+      },
+      "required": ["createdBy", "version"]
+    }
+  }
+}

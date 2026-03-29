@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "base_definitions.json",
+  "title": "Base definitions with $id-addressable sub-schemas",
+  "type": "object",
+  "properties": {
+    "inlineStatus": {
+      "$id": "status",
+      "type": "string",
+      "enum": ["active", "inactive", "pending"]
+    },
+    "statusCopy": {
+      "$comment": "Intra-document $ref to a $id on a sibling property",
+      "$ref": "status"
+    }
+  },
+  "$defs": {
+    "color": {
+      "$id": "color",
+      "type": "string",
+      "enum": ["red", "green", "blue", "yellow", "purple"]
+    },
+    "percentage": {
+      "$id": "percentage",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "label": {
+      "$id": "label",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "nullable-color": {
+      "$id": "nullable-color",
+      "oneOf": [
+        { "$ref": "color" },
+        { "type": "null" }
+      ]
+    },
+    "nullable-label": {
+      "$id": "nullable-label",
+      "oneOf": [
+        { "$ref": "label" },
+        { "type": "null" }
+      ]
+    },
+    "color-with-opacity": {
+      "$id": "color-with-opacity",
+      "type": "object",
+      "properties": {
+        "color": { "$ref": "color" },
+        "opacity": { "$ref": "percentage" }
+      },
+      "required": ["color", "opacity"]
+    }
+  }
+}

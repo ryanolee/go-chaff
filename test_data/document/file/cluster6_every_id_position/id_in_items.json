@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "id_in_items.json",
+  "type": "object",
+  "properties": {
+    "list": {
+      "type": "array",
+      "items": {
+        "$id": "item-schema",
+        "type": "string",
+        "enum": ["x", "y", "z"]
+      },
+      "minItems": 1,
+      "maxItems": 3
+    },
+    "single": { "$ref": "item-schema" }
+  },
+  "required": ["list", "single"]
+}
