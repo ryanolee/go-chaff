@@ -94,16 +94,6 @@ func MergeSlicePtrs[T any](slices ...*[]T) *[]T {
 	return &result
 }
 
-func AnyNotNil(values ...interface{}) bool {
-	for _, value := range values {
-		if value != nil {
-			return true
-		}
-	}
-
-	return false
-}
-
 func Round(x, unit float64) float64 {
 	r := math.Round(x/unit) * unit
 	// Snap to the number of decimal places implied by `unit` to eliminate
