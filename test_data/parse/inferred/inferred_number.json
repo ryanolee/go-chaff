@@ -1,0 +1,60 @@
+{
+    "inferred_number_from_minimum": {
+        "generator_schema": {
+            "minimum": 0
+        },
+        "test_schema": {
+            "type": "number",
+            "minimum": 0
+        }
+    },
+    "inferred_number_from_maximum": {
+        "generator_schema": {
+            "maximum": 100
+        },
+        "test_schema": {
+            "type": "number",
+            "maximum": 100
+        }
+    },
+    "inferred_number_from_exclusiveMinimum": {
+        "generator_schema": {
+            "exclusiveMinimum": 0
+        },
+        "test_schema": {
+            "type": "number",
+            "exclusiveMinimum": 0
+        }
+    },
+    "inferred_number_from_exclusiveMaximum": {
+        "generator_schema": {
+            "exclusiveMaximum": 100
+        },
+        "test_schema": {
+            "type": "number",
+            "exclusiveMaximum": 100
+        }
+    },
+    "inferred_number_from_multipleOf": {
+        "generator_schema": {
+            "multipleOf": 0.1
+        },
+        "test_schema": {
+            "type": "number",
+            "multipleOf": 0.1
+        }
+    },
+    "inferred_number_from_range": {
+        "generator_schema": {
+            "minimum": -10,
+            "maximum": 10,
+            "multipleOf": 5
+        },
+        "test_schema": {
+            "type": "number",
+            "minimum": -10,
+            "maximum": 10,
+            "multipleOf": 5
+        }
+    }
+}

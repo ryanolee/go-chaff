@@ -10,3 +10,8 @@ func TestParse(t *testing.T) {
 	t.Parallel()
 	test.TestJsonSchemaDir(t, "test_data/parse", 100)
 }
+
+func TestInferredTypes(t *testing.T) {
+	t.Parallel()
+	test.TestInferredTypeDir(t, "test_data/parse/inferred", 100)
+}
