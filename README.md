@@ -1,7 +1,9 @@
 # go-chaff
 A [Json Schema](https://json-schema.org/) Faker for Go 🙈.
 
-It will generate random data that _should_ validate against a given schema.
+[Try it out online!](https://chaff.ryan.gd/)
+
+It will generate random data that _should_ validate against a given schema. 
 
 <img src='docs/images/logo.png' width='350'>
 
